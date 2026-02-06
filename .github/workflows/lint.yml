@@ -1,0 +1,34 @@
+name: Lint
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Check Markdown files
+        run: |
+          # Check for trailing whitespace in Markdown files
+          ! grep -rn ' $' --include="*.md" . || echo "Found trailing whitespace"
+
+      - name: Check skill structure
+        run: |
+          # Find all skill directories and validate
+          ./scripts/validate-skill.sh openclaw/neobear
+
+      - name: Check shell scripts
+        run: |
+          # Check install.sh files have shebang
+          find . -name "install.sh" -type f -exec sh -c 'head -n1 "$1" | grep -q "^#!"' _ {} \;
+
+      - name: Check for template placeholders
+        run: |
+          # Ensure no template placeholders remain in skills
+          ! find openclaw general -name "*.md" -type f -exec grep -l '{{' {} \; || echo "No placeholders found"

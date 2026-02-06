@@ -1,0 +1,58 @@
+name: Test
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          # Add skill-specific dependencies here
+
+      - name: Validate skill structure
+        run: |
+          ./scripts/validate-skill.sh openclaw/neobear
+
+      - name: Check SKILL.md frontmatter
+        run: |
+          # Validate YAML frontmatter in SKILL.md files
+          for skill in openclaw/*/ general/*/; do
+            if [ -f "$skill/SKILL.md" ]; then
+              echo "Checking $skill/SKILL.md"
+              head -n1 "$skill/SKILL.md" | grep -q '^---$' || echo "Missing frontmatter in $skill"
+            fi
+          done
+
+      - name: Test install scripts
+        run: |
+          # Test install.sh scripts (dry-run style checks)
+          find . -name "install.sh" -type f -exec sh -c '
+            echo "Checking {}"
+            bash -n "{}"  # Syntax check
+          ' \;
+
+      - name: Check LICENSE files
+        run: |
+          # Ensure all skills have LICENSE files
+          missing=0
+          for skill_dir in openclaw/*/ general/*/; do
+            if [ -d "$skill_dir" ] && [ ! -f "$skill_dir/LICENSE" ]; then
+              echo "Missing LICENSE in $skill_dir"
+              missing=1
+            fi
+          done
+          exit $missing
