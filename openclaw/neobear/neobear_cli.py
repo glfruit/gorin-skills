@@ -19,7 +19,7 @@ from pathlib import Path
 from typing import Optional, Dict, Any, List
 
 
-class NeoNeoBearCLI:
+class NeoBearCLI:
     """NeoBear notes command-line interface with perfect URL encoding."""
     
     def __init__(self, token_file: Optional[str] = None, verbose: bool = False):
@@ -353,7 +353,7 @@ def main():
         return 1
     
     # Initialize CLI
-    cli = NeoNeoBearCLI(token_file=args.token_file, verbose=args.verbose)
+    cli = NeoBearCLI(token_file=args.token_file, verbose=args.verbose)
     
     # Execute command
     success = False

@@ -14,7 +14,7 @@ metadata:
             {
               "id": "neobear-cli",
               "kind": "download",
-              "url": "https://raw.githubusercontent.com/YOUR_USERNAME/neobear/main/neobear_cli.py",
+              "url": "https://raw.githubusercontent.com/glfruit/neobear/main/neobear_cli.py",
               "extract": false,
               "targetDir": "~/.local/bin",
               "bins": ["neobear_cli.py"],
@@ -86,7 +86,7 @@ export PATH="$HOME/.local/bin:$PATH"
 
 ```bash
 # Download script
-curl -o ~/.local/bin/neobear_cli.py https://raw.githubusercontent.com/YOUR_USERNAME/neobear/main/neobear_cli.py
+curl -o ~/.local/bin/neobear_cli.py https://raw.githubusercontent.com/glfruit/neobear/main/neobear_cli.py
 
 # Make executable
 chmod +x ~/.local/bin/neobear_cli.py
