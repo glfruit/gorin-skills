@@ -1,0 +1,82 @@
+# Agent Team Config - 一个投资研究团队
+
+team:
+  name: "一个投资研究团队"
+  slug: "一个投资研究团队"
+  role: "一个投资研究团队协调团队"
+  objective: "A股投资研究支持：信息收集、行业分析、标的研究、风控审查、决策汇总"
+  workflow_mode: "混合"
+  platforms:
+  - "telegram"
+
+agents:
+  - name: "Invest-TL"
+    slug: "invest-tl"
+    role: "Team Lead"
+    domain: "coordination"
+    responsibility: "统筹协调、投资决策汇总和风险管控"
+    config:
+      model: "openai-codex/gpt-5.4"  # tier: quality-first
+    fallbacks:
+      - "openai-codex/gpt-5.3-codex"
+      - "zai/glm-5"
+      - "zai/glm-5-turbo"
+      max_retries: 3
+  - name: "Invest-Scout"
+    slug: "invest-scout"
+    role: "Research Scout"
+    domain: "research"
+    responsibility: "市场动态扫描、新闻监控、公告跟踪"
+    config:
+      model: "zai/glm-4.7-flashx"  # tier: throughput-first
+    fallbacks:
+      - "zai/glm-4.7-flash"
+      - "zai/glm-4.7"
+      - "kimi-coding/k2p5"
+      max_retries: 3
+  - name: "Industry-Analyst"
+    slug: "industry-analyst"
+    role: "Research Scout"
+    domain: "research"
+    responsibility: "行业趋势分析、板块轮动研究"
+    config:
+      model: "zai/glm-5-turbo"  # tier: balanced
+    fallbacks:
+      - "zai/glm-5"
+      - "minimax/MiniMax-M2.5"
+      - "zai/glm-4.7"
+      max_retries: 3
+  - name: "Stock-Analyst"
+    slug: "stock-analyst"
+    role: "Specialist"
+    domain: "stock-analyst"
+    responsibility: "个股深度分析、财务数据解读"
+    config:
+      model: "zai/glm-5-turbo"  # tier: balanced
+    fallbacks:
+      - "zai/glm-5"
+      - "minimax/MiniMax-M2.5"
+      - "zai/glm-4.7"
+      max_retries: 3
+  - name: "Risk-Reviewer"
+    slug: "risk-reviewer"
+    role: "Reviewer"
+    domain: "review"
+    responsibility: "投资建议风险审查、仓位建议评估"
+    config:
+      model: "openai-codex/gpt-5.4"  # tier: quality-first
+    fallbacks:
+      - "openai-codex/gpt-5.3-codex"
+      - "zai/glm-5"
+      - "zai/glm-5-turbo"
+      max_retries: 3
+
+channels:
+  alert: "pending-alert-channel"
+  report: "pending-report-channel"
+  default: "pending-report-channel"
+
+limits:
+  max_concurrent: 5
+  timeout_per_agent: 300
+  timeout_total: 900

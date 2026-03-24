@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Human Use of Human Beings - 第一章：介绍</title>
+  <style>
+    /* Grace Theme - Elegant cards, shadows */
+    :root {
+      --theme-primary: #4f46e5;
+      --theme-secondary: #818cf8;
+      --theme-text: #1f2937;
+      --theme-background: #f3f4f6;
+      --theme-card-bg: #ffffff;
+      --theme-card-border: #e5e7eb;
+      --theme-heading-text: #111827;
+      --theme-heading-bg: #ffffff;
+      --spacing-unit: 8px;
+      --font-size-base: 16px;
+      --font-size-large: 20px;
+      --font-size-small: 14px;
+      --border-radius: 12px;
+      --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      --shadow-hover: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    }
+    
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background-color: var(--theme-background);
+      color: var(--theme-text);
+      line-height: 1.6;
+      padding: 20px;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    
+    /* Hero Section */
+    .hero-section {
+      text-align: center;
+      padding: 3rem 2rem;
+      margin-bottom: 2rem;
+    }
+    
+    .hero-section h1 {
+      font-size: 2.5rem;
+      font-weight: 800;
+      color: var(--theme-heading-text);
+      margin-bottom: 1rem;
+    }
+    
+    .hero-section .subtitle {
+      font-size: 1.25rem;
+      color: var(--theme-text);
+      font-weight: 500;
+    }
+    
+    .metadata {
+      margin-top: 2rem;
+      display: flex;
+      gap: 2rem;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    
+    .metadata span {
+      padding: 0.5rem 1rem;
+      background: var(--theme-primary);
+      color: white;
+      border-radius: 20px;
+      font-size: var(--font-size-small);
+    }
+    
+    /* Learning Objectives */
+    .learning-objectives {
+      background: var(--theme-card-bg);
+      border-radius: var(--border-radius);
+      padding: 2rem;
+      margin-bottom: 2rem;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--theme-card-border);
+    }
+    
+    .learning-objectives h2 {
+      font-size: 1.5rem;
+      color: var(--theme-heading-text);
+      margin-bottom: 1.5rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 2px solid var(--theme-primary);
+    }
+    
+    .learning-objectives li::before {
+      content: '🎯';
+      color: var(--theme-primary);
+      font-weight: bold;
+      position: absolute;
+      left: 0;
+    }
+    
+    /* Modules */
+    .modules {
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+    }
+    
+    .module {
+      background: var(--theme-card-bg);
+      border-radius: var(--border-radius);
+      padding: 2rem;
+      box-shadow: var(--shadow);
+      transition: transform 0.2s, box-shadow 0.2s;
+      border: 1px solid var(--theme-card-border);
+    }
+    
+    .module:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-hover);
+    }
+    
+    .module h3 {
+      font-size: 1.5rem;
+      color: var(--theme-heading-text);
+      margin-bottom: 1.5rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 2px solid var(--theme-secondary);
+    }
+    
+    .module p { margin-bottom: 1rem; }
+    
+    .example {
+      background: #f8fafc;
+      border-radius: 8px;
+      padding: 1.25rem;
+      margin: 1.5rem 0;
+      border-left: 4px solid var(--theme-primary);
+    }
+    
+    .example h4 {
+      font-size: 1.25rem;
+      color: var(--theme-heading-text);
+      margin-bottom: 1rem;
+    }
+    
+    .example pre,
+    .example code {
+      background: #0f172a;
+      color: #e2e8f0;
+      padding: 1rem;
+      border-radius: 6px;
+      font-family: 'SFMono-Regular', Consolas, monospace;
+      font-size: 0.9rem;
+      overflow-x: auto;
+      display: block;
+    }
+    
+    .common-mistakes {
+      background: #fef2f2;
+      border-radius: 8px;
+      padding: 1.25rem;
+      margin: 1.5rem 0;
+      border-left: 4px solid #ef4444;
+    }
+    
+    .common-mistakes h4 {
+      font-size: 1.25rem;
+      color: #991b1b;
+      margin-bottom: 1rem;
+    }
+    
+    .common-mistakes li::before {
+      content: '⚠️';
+      position: absolute;
+      left: 0;
+    }
+    
+    /* Summary / Reference */
+    .summary,
+    .reference {
+      background: var(--theme-card-bg);
+      border-radius: var(--border-radius);
+      padding: 2rem;
+      margin-top: 2rem;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--theme-card-border);
+    }
+    
+    .summary h2,
+    .reference h2 {
+      font-size: 1.5rem;
+      color: var(--theme-heading-text);
+      margin-bottom: 1.5rem;
+    }
+    
+    .summary li::before,
+    .reference li::before {
+      content: '📌';
+      position: absolute;
+      left: 0;
+    }
+    
+    /* Learning Overview */
+    .learning-overview {
+      grid-column: 1 / -1;
+      background: #ecfdf5;
+      border: 1px solid #d1fae5;
+      border-radius: var(--border-radius);
+      padding: 2rem;
+      margin-bottom: 2rem;
+    }
+    
+    .learning-overview h2 {
+      font-size: 1.5rem;
+      color: #065f46;
+      margin-bottom: 1.25rem;
+    }
+    
+    .learning-overview li::before {
+      content: '✨';
+      position: absolute;
+      left: 0;
+    }
+    
+    /* Quick Overview */
+    .quick-overview {
+      grid-column: 1 / -1;
+      background: #fff3cd;
+      border: 1px solid #ffe69c;
+      border-radius: var(--border-radius);
+      padding: 2rem;
+      margin-bottom: 2rem;
+    }
+    
+    .quick-overview h2 {
+      font-size: 1.5rem;
+      color: #854d0e;
+      margin-bottom: 1.25rem;
+    }
+    
+    .quick-overview li::before {
+      content: '💡';
+      position: absolute;
+      left: 0;
+    }
+    
+    @media (max-width: 768px) {
+      .hero-section h1 { font-size: 1.8rem; }
+      .module { padding: 1.5rem; }
+    }
+  </style>
+</head>
+<body>
+  <article class="explainer-page grace-theme">
+    <header class="hero-section">
+      <h1>The Human Use of Human Beings</h1>
+      <p class="subtitle">第一章：介绍 | Cybernetics and Society</p>
+      <div class="metadata">
+        <span>主题: 控制论</span>
+        <span>难度: 中级</span>
+        <span>时间: ~25 min</span>
+      </div>
+    </header>
+
+    <section class="learning-overview">
+      <h2>核心观点</h2>
+      <ul>
+        <li><strong>控制论 scope</strong>：研究动物和机器中的控制与通信</li>
+        <li><strong>信息 vs 熵</strong>：信息是负熵，通信是减少不确定性</li>
+        <li><strong>人类 vs 机器</strong>：相同点是反馈控制，不同点是有意识学习</li>
+        <li><strong>社会控制</strong>：现代社会中的信息流动影响公众思维</li>
+        <li><strong>伦理考量</strong>：技术进步需要人类价值约束</li>
+      </ul>
+    </section>
+
+    <section class="modules">
+      <!-- Module 1: 控制论 scope -->
+      <article class="module">
+        <h3>模块 1：控制论的 scope</h3>
+        <p>控制论（Cybernetics）是一门跨学科科学，研究动物和机器中的控制与通信。</p>
+        
+        <div class="example">
+          <h4>关键领域</h4>
+          <ul>
+            <li>数学：控制理论、信息论</li>
+            <li>工程学：反馈系统、自动化</li>
+            <li>生物学：神经系统、生物控制</li>
+            <li>心理学：学习、记忆、决策</li>
+          </ul>
+        </div>
+        
+        <div class="common-mistakes">
+          <h4>常见误解</h4>
+          <ul>
+            <li><strong>误解</strong>：控制论只是关于机器人</li>
+            <li><strong>事实</strong>：控制论是关于所有控制系统的科学</li>
+          </ul>
+        </div>
+      </article>
+
+      <!-- Module 2: 信息 vs 熵 -->
+      <article class="module">
+        <h3>模块 2：信息与熵</h3>
+        <p>信息是负熵（negentropy），是减少不确定性的内容。</p>
+        
+        <div class="example">
+          <h4>核心公式</h4>
+          <pre><code>信息 = -熵
+信息 = log₂(1/概率)</code></pre>
+        </div>
+        
+        <p>通信的本质是减少接收者的不确定性。当接收到一个 message 时，如果它降低了我们的预测不确定性，我们就说它传递了信息。</p>
+      </article>
+
+      <!-- Module 3: 人类 vs 机器 -->
+      <article class="module">
+        <h3>模块 3：人类与机器的对比</h3>
+        <p>人类和机器都通过反馈进行控制，但有本质区别。</p>
+        
+        <div class="example">
+          <h4>对比表格</h4>
+          <table style="width: 100%; border-collapse: collapse;">
+            <tr style="background: var(--theme-primary); color: white;">
+              <th style="padding: 0.75rem;">方面</th>
+              <th style="padding: 0.75rem;">机器</th>
+              <th style="padding: 0.75rem;">人类</th>
+            </tr>
+            <tr style="background: #f8fafc;">
+              <td style="padding: 0.75rem; border: 1px solid var(--theme-card-border);">设计</td>
+              <td style="padding: 0.75rem; border: 1px solid var(--theme-card-border);">有目的的设计</td>
+              <td style="padding: 0.75rem; border: 1px solid var(--theme-card-border);">进化 + 学习</td>
+            </tr>
+            <tr style="background: white;">
+              <td style="padding: 0.75rem; border: 1px solid var(--theme-card-border);">控制</td>
+              <td style="padding: 0.75rem; border: 1px solid var(--theme-card-border);">预设程序</td>
+              <td style="padding: 0.75rem; border: 1px solid var(--theme-card-border);">有意识学习</td>
+            </tr>
+            <tr style="background: #f8fafc;">
+              <td style="padding: 0.75rem; border: 1px solid var(--theme-card-border);">适应性</td>
+              <td style="padding: 0.75rem; border: 1px solid var(--theme-card-border);">有限反馈</td>
+              <td style="padding: 0.75rem; border: 1px solid var(--theme-card-border);">创新学习</td>
+            </tr>
+          </table>
+        </div>
+      </article>
+
+      <!-- Module 4: 社会控制 -->
+      <article class="module">
+        <h3>模块 4：社会控制</h3>
+        <p>现代社会中的信息流动影响公众思维和民主进程。</p>
+        
+        <div class="example">
+          <h4>关键概念</h4>
+          <ul>
+            <li><strong>信息 flowing</strong>：媒体、出版、传播</li>
+            <li><strong>公众思维</strong>：受信息塑造</li>
+            <li><strong>民主社会</strong>：需要知情的公民</li>
+          </ul>
+        </div>
+        
+        <p>Wiener 警告：如果信息被少数人控制，民主将受到威胁。</p>
+      </article>
+
+      <!-- Module 5: 伦理考量 -->
+      <article class="module">
+        <h3>模块 5：伦理考量</h3>
+        <p>技术进步带来伦理责任，需要人类价值约束。</p>
+        
+        <div class="example">
+          <h4>核心原则</h4>
+          <ul>
+            <li><strong>技术是中立的？</strong> 否，技术有伦理含义</li>
+            <li><strong>人类价值</strong> 必须优先于技术效率</li>
+            <li><strong>控制论应用</strong> 应服务于人类福祉</li>
+          </ul>
+        </div>
+        
+        <p>Wiener 的名言："我们不是关于 <em>做什么</em>，而是关于 <strong>成为什么</strong> 的问题。"</p>
+      </article>
+    </section>
+
+    <section class="summary">
+      <h2>小结</h2>
+      <ul>
+        <li>控制论是跨学科科学，研究控制与通信</li>
+        <li>信息 = 负熵，通信 = 减少不确定性</li>
+        <li>人类和机器都用反馈，但人类能创新学习</li>
+        <li>社会需要自由的信息流来维持民主</li>
+        <li>技术必须受人类价值约束</li>
+      </ul>
+    </section>
+
+    <section class="reference">
+      <h2>参考</h2>
+      <ul>
+        <li><strong>相关概念</strong>：反馈、信息理论、熵、自组织</li>
+        <li><strong>推荐阅读</strong>：
+          <ul>
+            <li>《信息简史》James Gleick</li>
+            <li>《控制论》Ashby</li>
+            <li>《哥德尔、艾舍尔、巴赫》GEB</li>
+          </ul>
+        </li>
+      </ul>
+    </section>
+  </article>
+
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <script>mermaid.initialize({ startOnLoad: true });</script>
+</body>
+</html>

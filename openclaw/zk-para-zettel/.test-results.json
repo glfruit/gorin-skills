@@ -1,0 +1,19 @@
+{
+  "a": {
+    "passed": true,
+    "issues": [],
+    "recommendations": []
+  },
+  "b": {
+    "passed": true,
+    "issues": [],
+    "recommendations": []
+  },
+  "c": {
+    "passed": true,
+    "issues": [],
+    "recommendations": [],
+    "score": 100
+  },
+  "overall": true
+}

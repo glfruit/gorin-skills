@@ -1,0 +1,23 @@
+# Agent Team Config - {{team_name}}
+
+team:
+  name: "{{team_name}}"
+  slug: "{{team_slug}}"
+  role: "{{team_role}}"
+  objective: "{{objective}}"
+  workflow_mode: "{{workflow_mode_label}}"
+  platforms:
+{{platforms_yaml}}
+
+agents:
+{{agents_yaml}}
+
+channels:
+  alert: "{{alert_channel}}"
+  report: "{{report_channel}}"
+  default: "{{default_channel}}"
+
+limits:
+  max_concurrent: {{max_concurrent}}
+  timeout_per_agent: {{timeout_per_agent}}
+  timeout_total: {{timeout_total}}

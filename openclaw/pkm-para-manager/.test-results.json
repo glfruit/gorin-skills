@@ -1,0 +1,35 @@
+{
+  "a": {
+    "passed": true,
+    "issues": [],
+    "recommendations": [
+      "SKILL.md has valid frontmatter with name, description, triggers",
+      "All required files present: SKILL.md, CHANGELOG.md, scripts/, references/",
+      "Command dispatch properly configured"
+    ]
+  },
+  "b": {
+    "passed": true,
+    "issues": [],
+    "recommendations": [
+      "Triggers cover: para, /para, PARA, weekly review, project status",
+      "Commands documented: review, status, areas, false-projects",
+      "Agent interface documented with TypeScript types"
+    ]
+  },
+  "c": {
+    "passed": true,
+    "score": 95,
+    "issues": [],
+    "recommendations": [
+      "PARA methodology research documented",
+      "Full implementation with all 4 commands",
+      "Frontmatter parsing implemented",
+      "Report generation with markdown tables",
+      "Error handling with try/catch",
+      "Git repository initialized",
+      "CHANGELOG with semantic versioning"
+    ]
+  },
+  "overall": true
+}

@@ -1,0 +1,83 @@
+# Agent Team Config - 新团队
+
+team:
+  name: "新团队"
+  slug: "新团队"
+  role: "新团队协调团队"
+  objective: "高效完成多智能体协作任务"
+  workflow_mode: "混合"
+  platforms:
+  - "telegram"
+  - "discord"
+
+agents:
+  - name: "-team-name 投资研究团队 --objective A股投资研究 --agents - Invest-TL"
+    slug: "team-name-投资研究团队-objective-a股投资研究-agents-invest-tl"
+    role: "Team Lead"
+    domain: "coordination"
+    responsibility: "统筹协调"
+    config:
+      model: "openai-codex/gpt-5.4"  # tier: quality-first
+    fallbacks:
+      - "openai-codex/gpt-5.3-codex"
+      - "zai/glm-5"
+      - "zai/glm-5-turbo"
+      max_retries: 3
+  - name: "Invest-Scout"
+    slug: "invest-scout"
+    role: "Research Scout"
+    domain: "research"
+    responsibility: "市场动态扫描"
+    config:
+      model: "zai/glm-4.7-flashx"  # tier: throughput-first
+    fallbacks:
+      - "zai/glm-4.7-flash"
+      - "zai/glm-4.7"
+      - "kimi-coding/k2p5"
+      max_retries: 3
+  - name: "Industry-Analyst"
+    slug: "industry-analyst"
+    role: "Specialist"
+    domain: "industry-analyst"
+    responsibility: "行业趋势分析"
+    config:
+      model: "zai/glm-5-turbo"  # tier: balanced
+    fallbacks:
+      - "zai/glm-5"
+      - "minimax/MiniMax-M2.5"
+      - "zai/glm-4.7"
+      max_retries: 3
+  - name: "Stock-Analyst"
+    slug: "stock-analyst"
+    role: "Specialist"
+    domain: "stock-analyst"
+    responsibility: "个股深度分析"
+    config:
+      model: "zai/glm-5-turbo"  # tier: balanced
+    fallbacks:
+      - "zai/glm-5"
+      - "minimax/MiniMax-M2.5"
+      - "zai/glm-4.7"
+      max_retries: 3
+  - name: "Risk-Reviewer"
+    slug: "risk-reviewer"
+    role: "Reviewer"
+    domain: "review"
+    responsibility: "投资建议风险审查 --workflow hybrid --platforms telegram,discord --scan-models"
+    config:
+      model: "openai-codex/gpt-5.4"  # tier: quality-first
+    fallbacks:
+      - "openai-codex/gpt-5.3-codex"
+      - "zai/glm-5"
+      - "zai/glm-5-turbo"
+      max_retries: 3
+
+channels:
+  alert: "pending-alert-channel"
+  report: "pending-report-channel"
+  default: "pending-report-channel"
+
+limits:
+  max_concurrent: 5
+  timeout_per_agent: 300
+  timeout_total: 900

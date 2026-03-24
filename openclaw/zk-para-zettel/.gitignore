@@ -1,0 +1,14 @@
+# Skill artifacts
+*.log
+*.tmp
+.DS_Store
+
+# Test outputs
+output/
+coverage/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
