@@ -1,0 +1,6 @@
+{
+  "origin": "self",
+  "author": "gorin",
+  "name": "agent-team-composer",
+  "description": "从自然语言团队需求生成 OpenClaw 多智能体团队脚手架，包括 SOUL.md、AGENTS.md、协作规则和 YAML 配置。用于“组建团队”“创建协作团队”“生成团队配置”等请求。"
+}

@@ -1,0 +1,6 @@
+{
+  "origin": "self",
+  "author": "gorin",
+  "name": "zk-para-zettel",
+  "description": "Zettelkasten + PARA 笔记创建，5-type 关系分类，孤儿预防。用于 web capture、文献摘录、知识沉淀。可由 zk-router 统一调用。"
+}

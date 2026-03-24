@@ -1,0 +1,6 @@
+{
+  "origin": "self",
+  "author": "gorin",
+  "name": "pkm-para-manager",
+  "description": "PARA 方法实现。周报、项目状态、孤儿检测、vault 健康检查。"
+}

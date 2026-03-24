@@ -1,0 +1,6 @@
+{
+  "origin": "self",
+  "author": "gorin",
+  "name": "pkm-save-note",
+  "description": "通用笔记保存接口。基于 PKM Core 智能分类、去重、5-type 关系发现、模板渲染，自动存入正确目录。"
+}

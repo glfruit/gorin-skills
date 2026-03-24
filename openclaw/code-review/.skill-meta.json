@@ -1,0 +1,6 @@
+{
+  "origin": "self",
+  "author": "gorin",
+  "name": "code-review",
+  "description": "Structured code review of git changes with senior engineer rigor. Checks SOLID violations, security risks, race conditions, error handling, performance, boundary bugs, and removal candidates. Outputs severity-classified findings (P0–P3) with actionable fixes. Don't use it for general coding tasks, non-git file editing, or writing new code from scratch."
+}

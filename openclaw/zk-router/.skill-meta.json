@@ -1,0 +1,6 @@
+{
+  "origin": "self",
+  "author": "gorin",
+  "name": "zk-router",
+  "description": "ZK 统一笔记路由系统。单关键词'zk'触发，智能判断内容类型，自动路由到合适的笔记技能。"
+}

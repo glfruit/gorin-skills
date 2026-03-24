@@ -1,0 +1,6 @@
+{
+  "origin": "self",
+  "author": "gorin",
+  "name": "pkm-commands",
+  "description": "PKM Telegram 命令路由器。处理 /pkm_idea、/pkm_clip、/pkm_search、/pkm_para、/pkm_health、/pkm_backup、/pkm_promote。"
+}

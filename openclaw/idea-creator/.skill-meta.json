@@ -1,0 +1,6 @@
+{
+  "origin": "self",
+  "author": "gorin",
+  "name": "idea-creator",
+  "description": "创建和管理想法笔记，自动发现关系。使用 '想法 xxx' 或 '/pkm_idea' 触发。"
+}

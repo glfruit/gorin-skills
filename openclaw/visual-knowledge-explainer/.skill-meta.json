@@ -1,0 +1,6 @@
+{
+  "origin": "self",
+  "author": "gorin",
+  "name": "visual-knowledge-explainer",
+  "description": "把教材、培训资料、读书笔记、文章知识、流程说明、技术内容，转成结构清晰、视觉化、适合讲解、复习、培训、分享的 HTML explainer 页面或 slide-style 页面。Use when user asks for \"visual explainer\", \"知识讲解页\", \"培训资料页\", \"教学 explainer\", or \"讲义页\". NOT for: 单纯摘要、普通 markdown 排版、插画/封面/海报生成、社媒图片卡片、PPTX/DOCX/PDF 操作."
+}

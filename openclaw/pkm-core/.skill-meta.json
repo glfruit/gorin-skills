@@ -1,0 +1,6 @@
+{
+  "origin": "self",
+  "author": "gorin",
+  "name": "pkm-core",
+  "description": "PKM 基础层 — vault 路径、frontmatter 规范、命名规则、Obsidian 语法。所有笔记类 skills 的公共依赖。不要直接触发，由 pkm-save-note、idea-creator、zk-para-zettel 等引用。"
+}

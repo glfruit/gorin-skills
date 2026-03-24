@@ -1,0 +1,6 @@
+{
+  "origin": "self",
+  "author": "gorin",
+  "name": "autoresearch",
+  "description": "Autonomously optimize any OpenClaw skill via repeated sub-agent runs, binary eval scoring, prompt mutation, and improvement retention. Based on Karpathy's autoresearch. Don't use for one-off skill edits, creating new skills, or optimizing non-skill configs."
+}
