@@ -4,21 +4,26 @@
 环境变量:
   GORIN_SKILLS_REPO — 仓库地址 (e.g. git@github.com:glfruit/gorin-skills.git)
   GORIN_SKILLS_DIR  — 本地克隆路径 (默认: ~/.gorin-skills)
+  GORIN_SKILLS_SUBDIR — 仓库内子目录 (默认: 自动检测 openclaw/ 或 skills/)
 
 用法:
-  python3 skill-repo-sync.py clone         # 首次克隆
-  python3 skill-repo-sync.py pull          # 拉取最新
-  python3 skill-repo-sync.py push [msg]    # 提交并推送
-  python3 skill-repo-sync.py link          # 创建 symlink 到 OpenClaw
-  python3 skill-repo-sync.py status        # 查看状态
-  python3 skill-repo-sync.py list          # 列出仓库中的技能
-  python3 skill-repo-sync.py add <name>    # 添加技能到仓库
-  python3 skill-repo-sync.py migrate --all     # 批量迁移所有本地技能到仓库
-  python3 skill-repo-sync.py migrate a b c     # 迁移指定技能
-  python3 skill-repo-sync.py remove <name> # 从仓库移除技能
+  python3 skill-repo-sync.py clone            # 首次克隆
+  python3 skill-repo-sync.py pull             # 拉取最新
+  python3 skill-repo-sync.py push [msg]       # 提交并推送
+  python3 skill-repo-sync.py link             # 创建 symlink 到 OpenClaw
+  python3 skill-repo-sync.py unlink           # 移除 symlink
+  python3 skill-repo-sync.py status           # 查看状态
+  python3 skill-repo-sync.py list             # 列出仓库中的技能
+  python3 skill-repo-sync.py list --origin    # 按来源分类列出
+  python3 skill-repo-sync.py add <name>       # 添加技能到仓库
+  python3 skill-repo-sync.py remove <name>    # 从仓库移除技能
+  python3 skill-repo-sync.py migrate --all    # 批量迁移
+  python3 skill-repo-sync.py tag <name> <origin>  # 标记技能来源 (self/third-party/clawhub)
+  python3 skill-repo-sync.py update [--all | <name>]  # 更新第三方技能
 """
 from __future__ import annotations
 
+import json
 import os
 import subprocess
 import sys
@@ -63,6 +68,183 @@ def _get_repo_skills_dir() -> Path:
                     return d
 
     return REPO_DIR  # root fallback
+
+
+# ── 来源管理 ─────────────────────────────────────────
+
+# Known third-party skill patterns
+_THIRD_PARTY_PREFIXES = ("baoyu-",)
+_THIRD_PARTY_NAMES = {
+    "bearclaw-native", "neobear", "log-watchdog",
+    "visual-knowledge-explainer",
+}
+_CLAWHUB_NAMES = {
+    "docx", "pdf", "pptx", "xlsx",
+    "download-anything", "code-review",
+    "web-reader", "web-content-fetcher",
+    "openmaic", "obsidian-ontology-sync",
+    "safe-mode",
+}
+
+ORIGINS_FILE = REPO_DIR / ".skill-origins.json"
+
+
+def _load_origins() -> dict:
+    if ORIGINS_FILE.exists():
+        try:
+            return json.loads(ORIGINS_FILE.read_text())
+        except Exception:
+            pass
+    return {}
+
+
+def _save_origins(origins: dict) -> None:
+    ORIGINS_FILE.write_text(json.dumps(origins, indent=2, ensure_ascii=False))
+
+
+def _detect_origin(name: str) -> str:
+    """Auto-detect skill origin based on naming patterns."""
+    # First check for .skill-meta.json inside the skill dir
+    repo_skills = _get_repo_skills_dir()
+    meta_file = repo_skills / name / ".skill-meta.json"
+    if meta_file.exists():
+        try:
+            meta = json.loads(meta_file.read_text())
+            origin = meta.get("origin")
+            if origin in ("self", "third-party", "clawhub"):
+                return origin
+        except Exception:
+            pass
+
+    # Fallback: pattern-based detection
+    for prefix in _THIRD_PARTY_PREFIXES:
+        if name.startswith(prefix):
+            return "third-party"
+    if name in _THIRD_PARTY_NAMES:
+        return "third-party"
+    if name in _CLAWHUB_NAMES:
+        return "clawhub"
+    return "self"
+
+
+def _get_origin(name: str) -> str:
+    """Get origin priority: .skill-meta.json > .skill-origins.json > auto-detect."""
+    # Check .skill-meta.json first (canonical, travels with the skill)
+    repo_skills = _get_repo_skills_dir()
+    meta_file = repo_skills / name / ".skill-meta.json"
+    if meta_file.exists():
+        try:
+            meta = json.loads(meta_file.read_text())
+            origin = meta.get("origin")
+            if origin in ("self", "third-party", "clawhub"):
+                return origin
+        except Exception:
+            pass
+
+    # Then check .skill-origins.json (local override)
+    origins = _load_origins()
+    if name in origins:
+        return origins[name]
+
+    # Finally auto-detect
+    return _detect_origin(name)
+
+
+def _origin_icon(origin: str) -> str:
+    return {"self": "✨", "third-party": "📦", "clawhub": "🔌"}.get(origin, "❓")
+
+
+def cmd_tag(name: str, origin: str) -> int:
+    """Tag a skill's origin. Writes to both .skill-meta.json (travels with skill) and .skill-origins.json (local)."""
+    valid = ("self", "third-party", "clawhub")
+    if origin not in valid:
+        print(f"❌ 无效来源: {origin}（可选: {', '.join(valid)}）")
+        return 1
+
+    # 1. Write .skill-meta.json in the skill dir (canonical, travels with git)
+    repo_skills = _get_repo_skills_dir()
+    meta_file = repo_skills / name / ".skill-meta.json"
+    if not meta_file.parent.exists():
+        print(f"❌ 技能 {name} 不在仓库中")
+        return 1
+
+    meta = {}
+    if meta_file.exists():
+        try:
+            meta = json.loads(meta_file.read_text())
+        except Exception:
+            pass
+
+    meta["origin"] = origin
+    if origin == "self" and "author" not in meta:
+        meta["author"] = "gorin"
+    meta_file.write_text(json.dumps(meta, indent=2, ensure_ascii=False))
+
+    # 2. Also update .skill-origins.json (local backup)
+    origins = _load_origins()
+    origins[name] = origin
+    _save_origins(origins)
+
+    print(f"✅ {name} → {origin}")
+    print(f"   .skill-meta.json 已更新 (跟随技能，会进 git)")
+    return 0
+
+
+def cmd_update(*names: str) -> int:
+    """Update third-party/clawhub skills from their upstream source.
+
+    Currently supports ClawHub skills. Usage:
+      update --all          # update all clawhub/third-party skills
+      update docx pdf xlsx  # update specific skills
+    """
+    if not REPO_DIR.exists():
+        print("❌ 仓库未克隆")
+        return 1
+
+    repo_skills = _get_repo_skills_dir()
+    origins = _load_origins()
+
+    # Determine targets
+    if names and names[0] == "--all":
+        targets = [d.name for d in sorted(repo_skills.iterdir())
+                   if d.is_dir() and (d / "SKILL.md").exists()
+                   and _get_origin(d.name) != "self"]
+    elif names:
+        targets = list(names)
+    else:
+        print("用法: update [--all | name1 name2 ...]")
+        return 0
+
+    if not targets:
+        print("✅ 没有需要更新的第三方技能")
+        return 0
+
+    print(f"🔄 检查 {len(targets)} 个第三方技能的更新...")
+    print("")
+
+    updated = 0
+    for name in targets:
+        origin = _get_origin(name)
+        icon = _origin_icon(origin)
+
+        if origin == "clawhub":
+            # Try clawhub update
+            r = subprocess.run(
+                ["clawhub", "update", name],
+                capture_output=True, text=True, timeout=30,
+            )
+            if r.returncode == 0 and "already up to date" not in r.stdout.lower():
+                print(f"  {icon} {name}: 已更新")
+                updated += 1
+            elif "already up to date" in r.stdout.lower():
+                print(f"  {icon} {name}: 已是最新")
+            else:
+                print(f"  {icon} {name}: ⚠️ {r.stderr.strip()[:60] or r.stdout.strip()[:60]}")
+        else:
+            print(f"  {icon} {name}: 非 ClawHub 来源，需手动更新")
+
+    print(f"\n✅ 更新了 {updated} 个技能")
+    return 0
 
 
 def _ensure_repo() -> bool:
@@ -242,28 +424,56 @@ def cmd_status() -> int:
     return 0
 
 
-def cmd_list() -> int:
+def cmd_list(show_origin: bool = False) -> int:
     if not REPO_DIR.exists():
         print("❌ 仓库未克隆")
         return 1
-    skills_src = _get_repo_skills_dir()
-    if not skills_src.exists():
+    repo_skills = _get_repo_skills_dir()
+    if not repo_skills.exists():
         print("ℹ️  仓库中暂无技能")
         return 0
-    print(f"=== 仓库中的技能 ({skills_src}) ===")
-    for d in sorted(skills_src.iterdir()):
+
+    skills = []
+    for d in sorted(repo_skills.iterdir()):
         if not d.is_dir() or d.name.startswith("."):
             continue
         has_skill = (d / "SKILL.md").exists()
         is_linked = (OC_SKILLS_DIR / d.name).is_symlink()
-        icon = "🔗" if is_linked else "  "
-        status = "" if has_skill else " ⚠️ 无 SKILL.md"
-        print(f"  {icon} {d.name}{status}")
+        origin = _get_origin(d.name)
+        skills.append((d.name, has_skill, is_linked, origin))
+
+    if show_origin:
+        # Group by origin
+        groups: dict[str, list] = {}
+        for name, has_skill, is_linked, origin in skills:
+            groups.setdefault(origin, []).append((name, has_skill, is_linked))
+
+        labels = {"self": "✨ 自创建", "third-party": "📦 第三方", "clawhub": "🔌 ClawHub"}
+        for origin in ("self", "clawhub", "third-party"):
+            items = groups.get(origin, [])
+            if not items:
+                continue
+            print(f"{labels.get(origin, origin)} ({len(items)} 个)")
+            for name, has_skill, is_linked in items:
+                link = "🔗" if is_linked else "  "
+                warn = "" if has_skill else " ⚠️"
+                print(f"  {link} {name}{warn}")
+            print("")
+    else:
+        print(f"=== 仓库中的技能 ({repo_skills}) ===")
+        for name, has_skill, is_linked, origin in skills:
+            link = "🔗" if is_linked else "  "
+            warn = "" if has_skill else " ⚠️ 无 SKILL.md"
+            o = _origin_icon(origin)
+            print(f"  {link} {name} [{o} {origin}]{warn}")
     return 0
 
 
-def cmd_add(name: str) -> int:
-    """添加技能到仓库。从 OC skills dir 复制或直接创建。"""
+def cmd_add(name: str, origin: str = "self") -> int:
+    """Add skill to repo. Copies from OC skills dir, creates .skill-meta.json.
+    
+    Usage: add <name> [origin]   origin: self (default), third-party, clawhub
+    """
     if not REPO_DIR.exists():
         print("❌ 仓库未克隆")
         return 1
@@ -272,7 +482,6 @@ def cmd_add(name: str) -> int:
     skills_src.mkdir(parents=True, exist_ok=True)
     target = skills_src / name
 
-    # Check source: is it already in OC_SKILLS_DIR?
     source = OC_SKILLS_DIR / name
     if source.exists():
         if target.exists():
@@ -281,9 +490,34 @@ def cmd_add(name: str) -> int:
         import shutil
         shutil.copytree(source, target)
         print(f"✅ 已从 {source} 复制到 {target}")
+
+        # Create .skill-meta.json
+        meta_file = target / ".skill-meta.json"
+        if not meta_file.exists():
+            meta = {"origin": origin, "author": "gorin" if origin == "self" else "external"}
+            # Extract name/description from SKILL.md frontmatter
+            skill_md = target / "SKILL.md"
+            if skill_md.exists():
+                text = skill_md.read_text()
+                if text.startswith("---"):
+                    try:
+                        end = text.index("---", 3)
+                        for line in text[3:end].splitlines():
+                            if ":" not in line:
+                                continue
+                            key, val = line.split(":", 1)
+                            key = key.strip()
+                            val = val.strip().strip("\"'")
+                            if key == "name":
+                                meta["name"] = val
+                            elif key == "description":
+                                meta["description"] = val
+                    except ValueError:
+                        pass
+            meta_file.write_text(json.dumps(meta, indent=2, ensure_ascii=False))
+            print(f"   📝 .skill-meta.json ({origin})")
     else:
         print(f"⚠️  {name} 不在 {OC_SKILLS_DIR} 中")
-        print(f"   请先创建技能，再执行 add")
         return 1
     return 0
 
@@ -397,6 +631,7 @@ def main() -> int:
         return 0
 
     cmd = sys.argv[1]
+    show_origin = "--origin" in sys.argv
     cmds = {
         "clone": lambda: cmd_clone(),
         "pull": lambda: cmd_pull(),
@@ -404,12 +639,21 @@ def main() -> int:
         "link": lambda: cmd_link(),
         "unlink": lambda: cmd_unlink(),
         "status": lambda: cmd_status(),
-        "list": lambda: cmd_list(),
-        "add": lambda: cmd_add(sys.argv[2]) if len(sys.argv) > 2 else (print("用法: add <skill-name>"), 1),
+        "list": lambda: cmd_list(show_origin=show_origin),
+        "add": lambda: cmd_add(
+            sys.argv[2],
+            sys.argv[3] if len(sys.argv) > 3 else "self"
+        ) if len(sys.argv) > 2 else (print("用法: add <skill-name> [self|third-party|clawhub]"), 1),
         "migrate": lambda: cmd_migrate(*sys.argv[2:]) if len(sys.argv) > 2 else (
             print("用法: migrate [--all | skill1 skill2 ...]") or 1
         ),
         "remove": lambda: cmd_remove(sys.argv[2]) if len(sys.argv) > 2 else (print("用法: remove <skill-name>"), 1),
+        "tag": lambda: cmd_tag(sys.argv[2], sys.argv[3]) if len(sys.argv) > 3 else (
+            print("用法: tag <skill-name> self|third-party|clawhub"), 1
+        ),
+        "update": lambda: cmd_update(*sys.argv[2:]) if len(sys.argv) > 2 else (
+            print("用法: update [--all | skill1 skill2 ...]"), 1
+        ),
     }
 
     fn = cmds.get(cmd)

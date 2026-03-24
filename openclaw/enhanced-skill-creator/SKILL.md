@@ -121,6 +121,8 @@ Clarify what the skill does before researching how. Ask the user:
 
 Consult `references/skill-taxonomy.md` to identify which of the 11 skill types this falls under. The type determines the template emphasis (e.g., Tool Wrapper needs config + error handling, Process Guide needs step-by-step workflow).
 
+**Load creation patterns**: After classifying the type, check if `references/creation-patterns/{type}.md` exists. If it does, read it — it contains accumulated real-world experience from previous skill creations of the same type (effective patterns, common pitfalls, validation checklists). This experience saves time and prevents repeating known mistakes.
+
 Do not overwhelm the user with a long questionnaire. Ask only the minimum set of questions needed to establish:
 - what should trigger the skill,
 - what should not trigger it,
@@ -292,6 +294,7 @@ Every new skill must pass one internal acceptance run before you can consider it
 4. Use `scripts/run-acceptance.sh` when a command-and-artifact path can be executed deterministically.
 5. If the acceptance run fails, keep fixing. Do not report completion to the user.
 6. If the acceptance run is blocked by external constraints, report the blocker explicitly and do not call the skill complete.
+7. **Update creation patterns** (mandatory for new skill types): After acceptance passes, check `references/creation-patterns/{type}.md`. If anything was learned during creation that isn't already documented there (new pitfall discovered, new effective pattern found, validation checklist item missing), append it to the file. This ensures every skill creation makes future ones better. If the type file doesn't exist, create it using the existing files as template format.
 
 ### Step 8: Prove Integration
 
@@ -351,9 +354,10 @@ The `GORIN_SKILLS_REPO` env var is **required** — never hardcode the URL in an
 
 ### Daily Workflow
 
-**After creating a new skill** (reaches `integrated` readiness):
+### After creating a new skill** (reaches `integrated` readiness):
 ```bash
 python3 scripts/skill-repo-sync.py add <skill-name>
+python3 scripts/skill-repo-sync.py tag <skill-name> self  # 标记为自创建
 python3 scripts/skill-repo-sync.py push "add <skill-name> skill"
 python3 scripts/skill-repo-sync.py link
 ```
@@ -361,6 +365,12 @@ python3 scripts/skill-repo-sync.py link
 **After editing an existing skill**:
 ```bash
 python3 scripts/skill-repo-sync.py push "update <skill-name>: <brief change>"
+```
+
+**Update third-party skills** (ClawHub):
+```bash
+python3 scripts/skill-repo-sync.py update --all    # 更新所有第三方
+python3 scripts/skill-repo-sync.py update docx pdf  # 更新指定技能
 ```
 
 **After pulling on another machine**:
@@ -372,7 +382,15 @@ python3 scripts/skill-repo-sync.py link
 **Check status**:
 ```bash
 python3 scripts/skill-repo-sync.py status    # repo + symlink + config status
-python3 scripts/skill-repo-sync.py list      # skills in repo
+python3 scripts/skill-repo-sync.py list      # 列出所有技能
+python3 scripts/skill-repo-sync.py list --origin  # 按来源分类
+```
+
+**Tag skill origin** (override auto-detection):
+```bash
+python3 scripts/skill-repo-sync.py tag <name> self          # 自创建
+python3 scripts/skill-repo-sync.py tag <name> third-party   # 第三方(如 baoyu-*)
+python3 scripts/skill-repo-sync.py tag <name> clawhub       # 从 ClawHub 安装
 ```
 
 ### When Creating Skills
@@ -387,8 +405,9 @@ In Step 5 (Generate the Skill), after validation passes:
 
 When a skill reaches `integrated` readiness and the user confirms acceptance, offer to:
 1. `add` the skill to the repo
-2. `push` with a descriptive commit message
-3. Verify the symlink is active
+2. `tag` the skill origin (`self` for user-created, `third-party` for installed)
+3. `push` with a descriptive commit message
+4. Verify the symlink is active
 
 Do NOT auto-push without user confirmation.
 
@@ -561,3 +580,4 @@ These are real failures from the previous enhanced-skill-creator implementation:
 - **Research example**: `research/content-curator-monitor-research.md`
 - **Usage tracking**: `references/skill-usage-tracking.md`
 - **Distribution guide**: `references/skill-distribution.md`
+- **Creation patterns** (per-type accumulated experience): `references/creation-patterns/`

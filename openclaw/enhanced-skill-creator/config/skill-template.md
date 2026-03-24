@@ -145,3 +145,25 @@ This skill follows the **{REPLACE: Tool Wrapper / Generator / Reviewer / Inversi
 ## Resources
 
 {REPLACE: Links to references/, scripts/, assets/, external documentation. Only include resources that actually exist.}
+
+## Origin Metadata
+
+When a skill is created by gorin (self), place a `.skill-meta.json` file in the skill root:
+
+```json
+{
+  "origin": "self",
+  "author": "gorin"
+}
+```
+
+For third-party or ClawHub-installed skills:
+
+```json
+{
+  "origin": "third-party",
+  "author": "external"
+}
+```
+
+This file is read by `skill-repo-sync.py` to classify skills. It travels with the skill in git and is the canonical source of origin truth.
