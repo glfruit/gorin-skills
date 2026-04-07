@@ -1,0 +1,16 @@
+{
+  "name": "md2pdf",
+  "version": "1.0.0",
+  "origin": "adapted from lovstudio/any2pdf (MIT License)",
+  "description": "Convert Markdown to professionally typeset PDF using reportlab",
+  "type": "tool-wrapper",
+  "readiness": "production-ready",
+  "governance": {
+    "lifecycle": "active",
+    "maturity_score": 85,
+    "last_reviewed": "2026-04-07",
+    "review_cadence": "as-needed"
+  },
+  "dependencies": ["reportlab"],
+  "source": "https://github.com/lovstudio/any2pdf"
+}
