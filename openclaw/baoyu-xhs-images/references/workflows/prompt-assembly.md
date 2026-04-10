@@ -77,6 +77,41 @@ Load from `presets/{style}.md` and extract key elements:
 {typography_style}
 ```
 
+### Screen-Print Style Override
+
+When `style: screen-print`, replace the standard Core Principles and Text Style sections with:
+
+```
+## Core Principles
+
+- Screen print / silkscreen poster art — flat color blocks, NO gradients
+- Bold silhouettes and symbolic shapes over detailed rendering
+- Negative space as active storytelling element
+- If content involves sensitive or copyrighted figures, create stylistically similar silhouettes
+- One iconic focal point per image — conceptual, not literal
+
+## Color Rules (CRITICAL)
+
+- **2-5 FLAT COLORS MAXIMUM** — fewer colors = stronger impact
+- Choose ONE duotone pair from preset as dominant palette
+- Halftone dot patterns for tonal variation (NOT gradients)
+- Slight color layer misregistration for print authenticity
+
+## Text Style (CRITICAL)
+
+- Bold condensed sans-serif or Art Deco influenced lettering
+- Typography INTEGRATED into composition as design element
+- High contrast with background, stencil-cut quality
+- **DO NOT use delicate, thin, or handwritten fonts**
+
+## Composition
+
+- Geometric framing: circles, arches, triangles
+- Figure-ground inversion where possible (negative space forms secondary image)
+- Stencil-cut edges between color blocks, no outlines
+- Paper grain texture beneath all colors
+```
+
 ## Layout Section Assembly
 
 Load from `elements/canvas.md` and extract relevant layout:
@@ -116,14 +151,24 @@ From outline entry:
 ```markdown
 ## Watermark
 
-Include a subtle watermark "{content}" positioned at {position}
-with approximately {opacity*100}% visibility. The watermark should
+Include a subtle watermark "{content}" positioned at {position}. The watermark should
 be legible but not distracting from the main content.
 ```
 
 ## Assembly Process
 
-### Step 1: Load Preset
+### Step 0: Resolve Style Preset (if `--preset` used)
+
+If user specified `--preset`, resolve to style + layout from `references/style-presets.md`:
+
+```python
+# e.g., --preset knowledge-card → style=notion, layout=dense
+style, layout = resolve_preset(preset_name)
+```
+
+Explicit `--style`/`--layout` flags override preset values.
+
+### Step 1: Load Style Definition
 
 ```python
 preset = load_preset(style_name)  # e.g., "notion"
@@ -165,13 +210,9 @@ If preferences include watermark:
 When generating multiple images in a series:
 
 1. **Image 1 (cover)**: Generate without `--ref` — this establishes the visual anchor
-2. **Images 2+**: Always pass image 1 as `--ref` to the image generation skill:
-   ```bash
-   npx -y bun ${SKILL_DIR}/scripts/main.ts \
-     --promptfiles prompts/02-content-xxx.md \
-     --ref path/to/01-cover-xxx.png \
-     --image 02-content-xxx.png --ar 3:4 --quality 2k
-   ```
+2. **Images 2+**: Always pass image 1 as `--ref` to the installed image generation skill.
+   Read that skill's `SKILL.md` and use its documented interface rather than calling its scripts directly.
+   For each later image, use the assembled prompt file as input, set the output image path, keep aspect ratio `3:4`, use quality `2k`, and pass image 1 as the reference.
    This ensures the AI maintains the same character design, illustration style, and color rendering across the series.
 
 ### Step 6: Combine
@@ -253,19 +294,19 @@ Create a Xiaohongshu (Little Red Book) style infographic following these guideli
 ## Content
 
 **Position**: Content (Page 3 of 6)
-**Core Message**: ChatGPT使用技巧
+**Core Message**: ChatGPT 使用技巧
 
 **Text Content**:
 - Title: 「ChatGPT」
-- Subtitle: 最强AI助手
+- Subtitle: 最强 AI 助手
 - Points:
   - 写文案：给出框架，秒出初稿
   - 改文章：润色、翻译、总结
-  - 编程：写代码、找bug
+  - 编程：写代码、找 bug
   - 学习：解释概念、出题练习
 
 **Visual Concept**:
-ChatGPT logo居中，四周放射状展示功能点
+ChatGPT logo 居中，四周放射状展示功能点
 深色科技背景，霓虹绿点缀
 
 ---

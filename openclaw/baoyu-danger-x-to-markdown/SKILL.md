@@ -1,6 +1,14 @@
 ---
 name: baoyu-danger-x-to-markdown
 description: Converts X (Twitter) tweets and articles to markdown with YAML front matter. Uses reverse-engineered API requiring user consent. Use when user mentions "X to markdown", "tweet to markdown", "save tweet", or provides x.com/twitter.com URLs for conversion.
+version: 1.56.1
+metadata:
+  openclaw:
+    homepage: https://github.com/JimLiu/baoyu-skills#baoyu-danger-x-to-markdown
+    requires:
+      anyBins:
+        - bun
+        - npx
 ---
 
 # X to Markdown
@@ -14,8 +22,9 @@ Converts X content to markdown:
 Scripts located in `scripts/` subdirectory.
 
 **Path Resolution**:
-1. `SKILL_DIR` = this SKILL.md's directory
-2. Script path = `${SKILL_DIR}/scripts/main.ts`
+1. `{baseDir}` = this SKILL.md's directory
+2. Script path = `{baseDir}/scripts/main.ts`
+3. Resolve `${BUN_X}` runtime: if `bun` installed → `bun`; if `npx` available → `npx -y bun`; else suggest installing bun
 
 ## Consent Requirement
 
@@ -69,22 +78,29 @@ Use `AskUserQuestion` with options: "Yes, I accept" | "No, I decline"
 
 ## Preferences (EXTEND.md)
 
-Use Bash to check EXTEND.md existence (priority order):
+Check EXTEND.md existence (priority order):
 
 ```bash
-# Check project-level first
-test -f .openclaw/skills-config/baoyu/baoyu-danger-x-to-markdown/EXTEND.md && echo "project"
+# macOS, Linux, WSL, Git Bash
+test -f .baoyu-skills/baoyu-danger-x-to-markdown/EXTEND.md && echo "project"
+test -f "${XDG_CONFIG_HOME:-$HOME/.config}/baoyu-skills/baoyu-danger-x-to-markdown/EXTEND.md" && echo "xdg"
+test -f "$HOME/.baoyu-skills/baoyu-danger-x-to-markdown/EXTEND.md" && echo "user"
+```
 
-# Then user-level (cross-platform: $HOME works on macOS/Linux/WSL)
-test -f "$HOME/.openclaw/skills-config/baoyu/baoyu-danger-x-to-markdown/EXTEND.md" && echo "user"
+```powershell
+# PowerShell (Windows)
+if (Test-Path .baoyu-skills/baoyu-danger-x-to-markdown/EXTEND.md) { "project" }
+$xdg = if ($env:XDG_CONFIG_HOME) { $env:XDG_CONFIG_HOME } else { "$HOME/.config" }
+if (Test-Path "$xdg/baoyu-skills/baoyu-danger-x-to-markdown/EXTEND.md") { "xdg" }
+if (Test-Path "$HOME/.baoyu-skills/baoyu-danger-x-to-markdown/EXTEND.md") { "user" }
 ```
 
 ┌────────────────────────────────────────────────────────────┬───────────────────┐
 │                            Path                            │     Location      │
 ├────────────────────────────────────────────────────────────┼───────────────────┤
-│ .openclaw/skills-config/baoyu/baoyu-danger-x-to-markdown/EXTEND.md         │ Project directory │
+│ .baoyu-skills/baoyu-danger-x-to-markdown/EXTEND.md         │ Project directory │
 ├────────────────────────────────────────────────────────────┼───────────────────┤
-│ $HOME/.openclaw/skills-config/baoyu/baoyu-danger-x-to-markdown/EXTEND.md   │ User home         │
+│ $HOME/.baoyu-skills/baoyu-danger-x-to-markdown/EXTEND.md   │ User home         │
 └────────────────────────────────────────────────────────────┴───────────────────┘
 
 ┌───────────┬───────────────────────────────────────────────────────────────────────────┐
@@ -113,8 +129,8 @@ Use `AskUserQuestion` with ALL questions in ONE call:
 - (User may choose "Other" to type a custom path)
 
 **Question 3** — header: "Save", question: "Where to save preferences?"
-- "User (Recommended)" — ~/.openclaw/skills-config/baoyu/ (all projects)
-- "Project" — .openclaw/skills-config/baoyu/ (this project only)
+- "User (Recommended)" — ~/.baoyu-skills/ (all projects)
+- "Project" — .baoyu-skills/ (this project only)
 
 After user answers, create EXTEND.md at the chosen location, confirm "Preferences saved to [path]", then continue.
 
@@ -135,10 +151,10 @@ Full reference: [references/config/first-time-setup.md](references/config/first-
 ## Usage
 
 ```bash
-npx -y bun ${SKILL_DIR}/scripts/main.ts <url>
-npx -y bun ${SKILL_DIR}/scripts/main.ts <url> -o output.md
-npx -y bun ${SKILL_DIR}/scripts/main.ts <url> --download-media
-npx -y bun ${SKILL_DIR}/scripts/main.ts <url> --json
+${BUN_X} {baseDir}/scripts/main.ts <url>
+${BUN_X} {baseDir}/scripts/main.ts <url> -o output.md
+${BUN_X} {baseDir}/scripts/main.ts <url> --download-media
+${BUN_X} {baseDir}/scripts/main.ts <url> --json
 ```
 
 ## Options

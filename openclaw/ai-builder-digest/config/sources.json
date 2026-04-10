@@ -1,0 +1,59 @@
+{
+  "version": 1,
+  "updated": "2026-03-26",
+  "categories": {
+    "en-twitter": {
+      "label": "English - X/Twitter Builders",
+      "fetch_strategy": "web_search + web_reader",
+      "sources": [
+        { "handle": "@karpathy", "name": "Andrej Karpathy", "focus": "AI education, model training", "url_pattern": "https://x.com/karpathy" },
+        { "handle": "@swyx", "name": "Shawn Wang", "focus": "AI engineering, Latent.Space", "url_pattern": "https://x.com/swyx" },
+        { "handle": "@sama", "name": "Sam Altman", "focus": "OpenAI", "url_pattern": "https://x.com/sama" },
+        { "handle": "@levie", "name": "Elad Gil", "focus": "AI applications, startups", "url_pattern": "https://x.com/levie" },
+        { "handle": "@amasad", "name": "Amjad Masad", "focus": "Replit, AI coding", "url_pattern": "https://x.com/amasad" },
+        { "handle": "@rauchg", "name": "Guillermo Rauch", "focus": "Vercel, AI engineering", "url_pattern": "https://x.com/rauchg" },
+        { "handle": "@ylecun", "name": "Yann LeCun", "focus": "Meta AI, research", "url_pattern": "https://x.com/ylecun" },
+        { "handle": "@AndrewYNg", "name": "Andrew Ng", "focus": "AI education, DeepLearning.AI", "url_pattern": "https://x.com/AndrewYNg" },
+        { "handle": "@JimFanNvidia", "name": "Jim Fan", "focus": "NVIDIA AI research", "url_pattern": "https://x.com/JimFanNvidia" },
+        { "handle": "bindureddy", "name": "Bindu Reddy", "focus": "Abacus AI", "url_pattern": "https://x.com/bindureddy" },
+        { "handle": "@GaryMarcus", "name": "Gary Marcus", "focus": "AI criticism, cognitive science", "url_pattern": "https://x.com/GaryMarcus" },
+        { "handle": "@polotek", "name": "Brandon R. Greer", "focus": "AI product, engineering", "url_pattern": "https://x.com/polotek" }
+      ]
+    },
+    "en-podcast": {
+      "label": "English - Podcasts & YouTube",
+      "fetch_strategy": "web_reader on show page",
+      "sources": [
+        { "name": "Latent Space", "url": "https://www.latent.space/", "focus": "AI engineering, infrastructure" },
+        { "name": "No Priors", "url": "https://www.nopriorspod.com/", "focus": "AI research, industry" },
+        { "name": "Unsupervised Learning", "url": "https://www.supermemory.ai/", "focus": "AI, startups, technology" }
+      ]
+    },
+    "en-blog": {
+      "label": "English - Blogs",
+      "fetch_strategy": "web_reader / RSS",
+      "sources": [
+        { "name": "Anthropic Engineering", "url": "https://www.anthropic.com/engineering", "focus": "ML engineering, safety" },
+        { "name": "OpenAI Blog", "url": "https://openai.com/blog", "focus": "product, research announcements" },
+        { "name": "Google DeepMind Blog", "url": "https://deepmind.google/blog/", "focus": "research, models" }
+      ]
+    },
+    "zh-wechat": {
+      "label": "中文 - 微信公众号",
+      "fetch_strategy": "web_search discovery + web_reader",
+      "sources": [
+        { "name": "机器之心", "search_query": "机器之心 最新 AI", "url_mirror": "https://m.36kr.com/user/214166", "focus": "AI research, industry news", "note": "主站付费墙，通过36kr转载页(m.36kr.com/user/214166)抓取文章列表，再用web_reader抓具体文章正文" },
+        { "name": "量子位", "search_query": "量子位 site:mp.weixin.qq.com", "focus": "AI industry, products" },
+        { "name": "AI科技评论", "search_query": "AI科技评论 site:mp.weixin.qq.com", "focus": "AI tech reviews, 36kr" },
+        { "name": "新智元", "search_query": "新智元 site:mp.weixin.qq.com", "focus": "AI news, opinions" }
+      ]
+    },
+    "zh-other": {
+      "label": "中文 - 其他来源",
+      "fetch_strategy": "blogwatcher / web_reader",
+      "sources": [
+        { "name": "少数派 AI 标签", "url": "https://sspai.com/tag/AI", "focus": "AI tools, productivity" }
+      ]
+    }
+  }
+}

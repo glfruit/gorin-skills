@@ -1,0 +1,14 @@
+{
+  "origin": "enhanced-skill-creator",
+  "version": "1.0.0",
+  "description": "Outline knowledge base management via REST API",
+  "owner": "daily-collector",
+  "created_at": "2026-04-03",
+  "governance": {
+    "lifecycle": "production",
+    "maturity_score": 80,
+    "last_reviewed": "2026-04-03",
+    "review_cadence": "quarterly",
+    "promotion_evidence": "Admin created, 7 collections, API key verified, helper script tested"
+  }
+}

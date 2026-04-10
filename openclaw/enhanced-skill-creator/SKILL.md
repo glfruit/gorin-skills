@@ -8,164 +8,92 @@ agent-usable: true
 
 # Enhanced Skill Creator
 
-> "The hard part of creating a skill isn't the format — it's knowing the best way to do the thing."
-
-A skill is a methodology document that teaches Claude how to perform a task expertly. This skill guides creation of new skills by researching real-world best practices, extracting patterns, and generating skills filled with genuine content — never placeholder templates.
+> "The hard part isn't the format — it's knowing the best way to do the thing."
 
 ## Core Principles
 
-- **Concise is mandatory**: Every section must justify its token cost with specific, reusable value
-- **Set the right degree of freedom**: High (judgment matters) / Medium (parameterized) / Low (fragile, encode in scripts)
-- **Progressive disclosure**: SKILL.md (trigger + workflow) → references/ (dense detail) → scripts/ (automation) → assets/ (templates)
-- **Ask for concrete use cases before designing**: Start from realistic use cases, not vague requests
+- **Concise is mandatory**: Every section justifies its token cost. Research (SkillReducer, arXiv:2603.29919, 55K skills) shows removing 39% body content improves quality by 2.8% — less-is-more.
+- **Right degree of freedom**: High (judgment) / Medium (parameterized) / Low (encode in scripts)
+- **Progressive disclosure**: SKILL.md → references/ → scripts/ → assets/. Only actionable core rules in context; examples/background on demand.
+- **Start from real use cases**: Ask for concrete scenarios before designing
 
-## When to Use
-
-- Creating a **new** skill from scratch
-- Rebuilding a skill that produces generic or low-quality output
-- The domain requires expert knowledge that Claude doesn't have by default
-
-## When NOT to Use
-
-- Editing an existing skill (just edit the SKILL.md directly)
-- The task is simple enough to be a bash script or alias
-- The domain is trivial and needs no methodology
-
----
-
-## 6-Step Workflow
+## 8-Step Workflow
 
 ### Step 1: Narrow the Task
+Ask: Domain, Scenario, Constraints, Audience. Classify via `references/skill-taxonomy.md` (12 types). Read `references/creation-patterns/{type}.md` for patterns.
 
-Ask: Domain, Scenario (specific), Constraints (tools/APIs/paths), Audience (user/agent/both).
+### Step 2: Find Golden Cases (CRITICAL)
+Search: local skills → vault → web → GitHub.
+**STOP. Must have 3+ real golden cases with verifiable sources.**
+Read `.archive/references-full/golden-examples.md` for methodology.
 
-Consult `references/skill-taxonomy.md` to classify into one of 12 skill types. Check `references/creation-patterns/{type}.md` for accumulated experience.
+### Step 3: Extract Patterns + Body Layering
+For each case: What makes it effective? What would a novice miss? Create before/after comparisons.
 
-**Output**: 2-3 sentence skill summary with type classification.
-
-### Step 2: Find Golden Cases (Most Critical)
-
-Search: local skills → vault knowledge → methodology database → web → GitHub.
-
-**CHECKPOINT: STOP. Must have 3+ golden cases before continuing.**
-
-**Output**: Research notes with real sources, URLs, and key quotes.
-
-### Step 3: Extract Patterns
-
-For each golden case: What makes it effective? What would a novice miss? What fails when done poorly?
-
-Create before/after comparisons.
-
-**Output**: Pattern list with evidence from specific cases.
+**Layering pass**: Classify each planned section as:
+- **Core (always loaded)**: actionable rules, decision trees, hard constraints
+- **Reference (on demand)**: examples, background theory, data tables, API specs
+- Core goes in SKILL.md; reference goes in `references/` or loaded via `read` tool at runtime.
 
 ### Step 4: Apply Theory (Optional)
-
-Only add theoretical frameworks when they explain **why** the practical patterns work. No generic filler.
+Only add theory when it explains **why** patterns work. No generic filler.
 
 ### Step 5: Generate the Skill
+1. `scripts/init-skill.sh <name> <dir>` or copy `config/skill-template.md`
+2. Fill every section with **real content** — no placeholders
+3. Python preferred; bash only as thin wrappers (<50L)
+4. Include `## Gotchas` section
+5. Assign readiness: scaffold / mvp / production-ready / integrated
 
-1. Start with skeleton: `scripts/init-skill.sh <name> <dir>` or copy `config/skill-template.md`
-2. Fill every section with real content — no placeholders
-3. Write scripts in Python (preferred) or bash (thin wrappers only)
-4. Cross-check against golden cases
-5. Assign internal readiness: `scaffold` / `mvp` / `production-ready` / `integrated`
-6. **Include mandatory `## Gotchas` section** — highest-signal content
-7. (Optional) On-demand hooks: session-scoped runtime safeguards
-8. (Optional) Data persistence: append-only log, JSON, or SQLite with stable paths
+### Step 6: Validate
+Run these in order (all must pass):
+1. `scripts/validate-skill.sh` — structural check
+2. `python3 scripts/description_optimizer.py <dir>` — **description quality check (no non-routing content)**
+3. `scripts/detect-overlap.sh` — trigger collision check
+4. `scripts/detect-blockers.sh` — dependency check
+5. `python3 scripts/context_sizer.py <dir>` — **Grade B+ required** (now includes per-invocation cost estimate)
+6. `python3 scripts/trigger_eval.py <dir>` — **F1 ≥ 0.8 required**
+7. `python3 scripts/governance_check.py <dir>` — **Score ≥ 70 required**
+8. Golden case test — output quality matches cases?
+9. Failure mode test — prevents known anti-patterns?
 
-**Content quality rules:**
-- No placeholder text, no fake data, no wildcard triggers
-- Triggers: specific enough to avoid false positives, broad enough to catch natural phrasing
-- Include explicit negative triggers
-- Keep SKILL.md lean; move dense rules to references/
+If validation fails → return to Step 2 or 3 (almost always insufficient research).
 
-**Validation**: `bash scripts/validate-skill.sh <new-skill-directory>`
-
-### Step 6: Validate Structure and Routing
-
-1. Golden case test — would this produce output as good as the cases?
-2. Failure mode test — does it prevent known anti-patterns?
-3. Discovery validation via `assets/discovery-validation-prompt.md`
-4. Quick validate: `scripts/quick-validate.sh`
-5. Strict validate: `scripts/validate-skill.sh`
-6. Collision check: `scripts/detect-overlap.sh`
-7. Blocker detection: `scripts/detect-blockers.sh`
-8. Structure suggestions: `scripts/suggest-structure.sh`
-9. Fix suggestions: `scripts/suggest-fixes.sh`
-10. Error handling: `scripts/generate-error-handling.sh`
-11. Peer comparison: check against `references/golden-examples.md`
-12. Acceptance contract (for artifact-generating skills)
-
-If validation fails, return to Step 2 or 3 — the issue is almost always insufficient research.
-
-### Step 7: Internal Acceptance (Mandatory)
-
-1. Define one real happy-path case in `## Internal Acceptance`
-2. Run it for real with concrete input
-3. Record command, input, expected/actual artifacts, result
-4. If fails, keep fixing. Do not report completion.
-5. **Update creation patterns** (`references/creation-patterns/{type}.md`) with lessons learned
+### Step 7: Internal Acceptance
+Run one real happy-path case with concrete input. If fails: keep fixing. Record: command, input, expected/actual, result.
+Update `references/creation-patterns/{type}.md` with lessons learned.
 
 ### Step 8: Prove Integration
+Run through upstream caller if applicable. Fix integration bugs before labeling `integrated`.
 
-1. Run one real happy path end-to-end
-2. If called by upstream workflow, run through that caller
-3. Fix integration bugs before labeling `integrated`
+## Internal Acceptance
+- **Happy-path**: 创建一个 Type 5 (Monitor) 技能 `test-health-check`
+- **Invocation**: 直接调用 Step 1-6，在 `/tmp/test-health-check/` 生成
+- **Expected**: SKILL.md（frontmatter + 必填段 + 无 placeholder）、Python 脚本、.skill-meta.json
+- **Success**: validate-skill.sh + context_sizer Grade B+ + trigger_eval F1 ≥ 0.8
 
-## Delivery Rule (Non-Negotiable)
+## Delivery Contract
+Do **not** report "skill creation complete" unless: quick-validate ✓, strict-validate ✓, internal acceptance ✓, integration proven. On failure: report exact failures + recommended next step.
 
-User-facing completion requires: quick validate ✓, strict validate ✓, internal acceptance ✓, one real integration path proven.
+## Gotchas
+1. **validate-skill checks structure, not quality** — golden case test (Step 6 #8-9) is the real quality gate
+2. **"Fill with real content" is the most common shortcut** — agents write generic filler; cross-check golden cases
+3. **Triggers must have negative cases** — broad triggers like "make" cause collisions; run detect-overlap.sh
+4. **research/ is ephemeral** — archive after creation; don't ship in the skill
+5. **Description ≠ documentation** — description is for routing, not for humans. Run description_optimizer.py.
+6. **Less-is-more is real** — SkillReducer research: 39% body reduction → 2.8% quality improvement. Don't pad skills.
 
-Do NOT tell the user a skill is "completed" unless readiness has reached `integrated`.
-
-## Skill Repo Management
-
-Self-created skills are version-controlled via `scripts/skill-repo-sync.py`. 详见 `references/skill-repo-management.md`
-
-## Quality Checklist & Error Handling
-
-详见 `references/quality-checklist.md`（完整检查清单、错误处理策略、反模式表）
-
-## Skill Taxonomy
-
-12 types: Tool Wrapper, API Integration, Pipeline, PKM Integration, Monitor, Interactive Reader, Content Generator, Library, Process Guide, Research, Meta-Skill, Reviewer. 详见 `references/skill-taxonomy-quick.md`
+## Error Handling
+- **< 3 golden cases**: Stop. Ask for references or broaden search. Never fabricate.
+- **Validation failure**: Return to Step 2/3. Almost always research, not structure.
+- **Blocked by dependencies**: Record explicitly. Don't guess or skip.
+- **Overclaiming readiness**: If implementation < documentation maturity, downgrade.
 
 ## Output Structure
-
 ```
 {skill-name}/
-├── SKILL.md              # Core methodology
-├── scripts/              # Automation (Python preferred, bash for thin wrappers)
-├── references/           # Supporting documentation
-├── research/             # Research notes (if valuable)
-└── config/               # Configuration files
+├── SKILL.md          # Core methodology
+├── scripts/          # Python preferred, bash thin wrappers
+├── references/       # Supporting docs
+└── config/           # Config files
 ```
-
-No `README.md`, `INSTALL.md`, or `CHANGELOG.md` at skill root.
-
-## Resources
-
-| Resource | Path |
-|----------|------|
-| Skill template | `config/skill-template.md` |
-| Master methodologies | `references/methodology-database.md` |
-| Skill type guide | `references/skill-taxonomy.md` |
-| Design patterns | `references/google-adk-patterns.md` |
-| Golden examples | `references/golden-examples.md` |
-| Failure patterns | `references/failure-patterns.md` |
-| Quality standards | `references/quality-standards.md` |
-| Readiness gates | `references/readiness-gates.md` |
-| Internal acceptance | `references/internal-acceptance.md` |
-| Routing safety | `references/routing-safety.md` |
-| Description engineering | `references/description-engineering.md` |
-| Parameter design | `references/parameter-design.md` |
-| Eval playbook | `references/eval-playbook.md` |
-| Output schema | `references/output-schema.md` |
-| MVP plan | `references/mvp-implementation-plan.md` |
-| Usage tracking | `references/skill-usage-tracking.md` |
-| Distribution | `references/skill-distribution.md` |
-| Creation patterns | `references/creation-patterns/` |
-| Discovery eval prompt | `assets/discovery-validation-prompt.md` |
-| Error handling template | `assets/error-handling-template.md` |
-| Acceptance contract | `assets/acceptance-contract-template.md` |

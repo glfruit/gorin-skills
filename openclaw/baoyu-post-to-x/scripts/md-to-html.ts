@@ -1,7 +1,6 @@
 import fs from 'node:fs';
 import { mkdir, writeFile } from 'node:fs/promises';
 import https from 'node:https';
-import http from 'node:http';
 import os from 'node:os';
 import path from 'node:path';
 import process from 'node:process';
@@ -106,18 +105,25 @@ function extractTitleFromMarkdown(markdown: string): string {
   return '';
 }
 
-function downloadFile(url: string, destPath: string): Promise<void> {
+function downloadFile(url: string, destPath: string, maxRedirects = 5): Promise<void> {
   return new Promise((resolve, reject) => {
-    const protocol = url.startsWith('https') ? https : http;
+    if (!url.startsWith('https://')) {
+      reject(new Error(`Refusing non-HTTPS download: ${url}`));
+      return;
+    }
+    if (maxRedirects <= 0) {
+      reject(new Error('Too many redirects'));
+      return;
+    }
     const file = fs.createWriteStream(destPath);
 
-    const request = protocol.get(url, { headers: { 'User-Agent': 'Mozilla/5.0' } }, (response) => {
+    const request = https.get(url, { headers: { 'User-Agent': 'Mozilla/5.0' } }, (response) => {
       if (response.statusCode === 301 || response.statusCode === 302) {
         const redirectUrl = response.headers.location;
         if (redirectUrl) {
           file.close();
           fs.unlinkSync(destPath);
-          downloadFile(redirectUrl, destPath).then(resolve).catch(reject);
+          downloadFile(redirectUrl, destPath, maxRedirects - 1).then(resolve).catch(reject);
           return;
         }
       }
@@ -155,7 +161,11 @@ function getImageExtension(urlOrPath: string): string {
 }
 
 async function resolveImagePath(imagePath: string, baseDir: string, tempDir: string): Promise<string> {
-  if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
+  if (imagePath.startsWith('http://')) {
+    console.error(`[md-to-html] Skipping non-HTTPS image: ${imagePath}`);
+    return '';
+  }
+  if (imagePath.startsWith('https://')) {
     const hash = createHash('md5').update(imagePath).digest('hex').slice(0, 8);
     const ext = getImageExtension(imagePath);
     const localPath = path.join(tempDir, `remote_${hash}.${ext}`);

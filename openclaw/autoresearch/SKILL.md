@@ -247,3 +247,16 @@ For skills that call external tools (scripts, CLI commands), the sub-agent will 
 - **Mutation side effects.** A mutation that fixes eval 1 might break eval 3. This is why you score ALL evals per experiment, not just the one you're targeting.
 - **Diminishing returns are real.** Going from 70% → 90% is usually fast. 90% → 95% takes much longer. 95% → 100% may be impossible without overfitting. Stop at 95%.
 - **Changelog is the most valuable artifact.** Future models (or smarter models) can pick up where this run left off. Don't skip it.
+
+## Internal Acceptance
+
+- 至少完成 5 轮优化迭代。
+- 最终 eval 得分比初始版本提升 ≥10%。
+- 改进保留到 SKILL.md 且通过 validate-skill.sh。
+
+## Delivery Contract
+
+- 输出改进前后的 eval 分数对比。
+- 保留的改进点以 diff 格式展示。
+- 最终 SKILL.md 通过全部验证检查。
+**注意：本技能是大型流水线的一部分。Do **not** report completion to the user unless all dependent tools/scripts/skills have been verified as integrated.**not** report completion to the user unless all dependent tools/scripts/skills integration tests have passed.**

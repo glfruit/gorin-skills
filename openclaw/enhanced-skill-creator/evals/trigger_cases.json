@@ -1,0 +1,126 @@
+{
+  "description": "Trigger evaluation cases for enhanced-skill-creator",
+  "generated": "2026-04-02",
+  "cases": [
+    {
+      "prompt": "帮我创建一个新的skill，用来管理每日待办事项",
+      "should_trigger": true,
+      "split": "train",
+      "note": "Chinese: create a new skill"
+    },
+    {
+      "prompt": "I want to build a skill that can summarize web articles",
+      "should_trigger": true,
+      "split": "train",
+      "note": "English: build a skill"
+    },
+    {
+      "prompt": "design a new skill for monitoring cron jobs",
+      "should_trigger": true,
+      "split": "train",
+      "note": "English: design a skill"
+    },
+    {
+      "prompt": "创建一个skill来自动备份文件",
+      "should_trigger": true,
+      "split": "train",
+      "note": "Chinese: create a skill"
+    },
+    {
+      "prompt": "make a skill for PDF extraction",
+      "should_trigger": true,
+      "split": "train",
+      "note": "English: make a skill"
+    },
+    {
+      "prompt": "I need to create a new agent skill that handles email sending",
+      "should_trigger": true,
+      "split": "train",
+      "note": "English: create a new agent skill"
+    },
+    {
+      "prompt": "帮我设计一个自动化部署的skill",
+      "should_trigger": true,
+      "split": "dev",
+      "note": "Chinese: design a skill"
+    },
+    {
+      "prompt": "build a skill for converting markdown to slides",
+      "should_trigger": true,
+      "split": "dev",
+      "note": "English: build a skill"
+    },
+    {
+      "prompt": "新建一个skill做代码审查",
+      "should_trigger": true,
+      "split": "dev",
+      "note": "Chinese: new skill"
+    },
+    {
+      "prompt": "I want to create an advanced skill for multi-agent coordination",
+      "should_trigger": true,
+      "split": "holdout",
+      "note": "English: create an advanced skill"
+    },
+    {
+      "prompt": "请帮我创建一个图片生成的技能",
+      "should_trigger": true,
+      "split": "holdout",
+      "note": "Chinese: create a skill (using 技能 as synonym)"
+    },
+    {
+      "prompt": "edit the SKILL.md for my email skill to fix the trigger",
+      "should_trigger": false,
+      "split": "train",
+      "note": "Editing existing skill, not creating"
+    },
+    {
+      "prompt": "fix the bug in the monitor skill's script",
+      "should_trigger": false,
+      "split": "train",
+      "note": "Fixing bug, not creating"
+    },
+    {
+      "prompt": "update the config for daily-digest skill",
+      "should_trigger": false,
+      "split": "train",
+      "note": "Updating config, not creating"
+    },
+    {
+      "prompt": "check the status of all skills",
+      "should_trigger": false,
+      "split": "train",
+      "note": "Checking status, not creating"
+    },
+    {
+      "prompt": "run the validation script on my skill",
+      "should_trigger": false,
+      "split": "train",
+      "note": "Running validation, not creating"
+    },
+    {
+      "prompt": "帮我修改一下obsidian skill的触发条件",
+      "should_trigger": false,
+      "split": "dev",
+      "note": "Chinese: modify existing skill"
+    },
+    {
+      "prompt": "what skills do we have installed?",
+      "should_trigger": false,
+      "split": "dev",
+      "note": "Listing skills, not creating"
+    },
+    {
+      "prompt": "delete the old test skill directory",
+      "should_trigger": false,
+      "split": "holdout",
+      "note": "Deleting, not creating"
+    },
+    {
+      "prompt": "show me how the web-reader skill works",
+      "should_trigger": false,
+      "split": "holdout",
+      "note": "Understanding existing skill, not creating"
+    }
+  ]
+}

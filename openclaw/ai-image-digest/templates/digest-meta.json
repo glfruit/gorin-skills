@@ -1,0 +1,17 @@
+{
+  "date": "{{DATE}}",
+  "date_compact": "{{DATE_COMPACT}}",
+  "html_path": "{{HTML_PATH}}",
+  "text_path": "{{TEXT_PATH}}",
+  "png_path": "{{PNG_PATH}}",
+  "items_count": {{ITEMS_COUNT}},
+  "x_count": {{X_COUNT}},
+  "podcast_count": {{PODCAST_COUNT}},
+  "blog_count": {{BLOG_COUNT}},
+  "zh_count": {{ZH_COUNT}},
+  "tweet_urls": {{TWEET_URLS_JSON}},
+  "podcast_ids": {{PODCAST_IDS_JSON}},
+  "blog_urls": {{BLOG_URLS_JSON}},
+  "zh_ids": {{ZH_IDS_JSON}},
+  "errors": {{ERRORS_JSON}}
+}

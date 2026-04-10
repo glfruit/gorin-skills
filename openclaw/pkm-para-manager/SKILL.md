@@ -1,87 +1,109 @@
 ---
 name: pkm-para-manager
-description: "PARA 方法实现。周报、项目状态、孤儿检测、vault 健康检查。"
-triggers: ["para", "/para", "PARA", "/pkm_para"]
-user-invocable: true
+description: "PKM 治理与防退化引擎。提供 pkr(周报)、pko(孤儿检测)、pkh(全库健康评分 v2)。"
+triggers: ["pkr", "pko", "pkh"]
+user-invocable: false
 command-dispatch: tool
 agent-usable: true
 requires:
   skills: [pkm-core]
+  used-by: [zk-router]
 ---
 
-# PKM PARA Manager — PARA 管理 v1.1
+# PKM PARA Manager — Governance v2.0
 
-管理 Projects-Areas-Resources-Archive 结构。
-
-**前置依赖**: `pkm-core`
+管理 PARA + Zettelkasten 融合库的健康度，避免 Obsidian 库随时间退化。
 
 ## 命令
 
 | 命令 | 说明 |
 |------|------|
-| `/pkm_para review` | 生成周报 |
-| `/pkm_para status` | 项目状态概览 |
-| `/pkm_para orphans` | 孤儿笔记检测 |
-| `/pkm_para health` | Vault 健康检查 |
-| `/pkm_para archive <project>` | 归档项目 |
+| `pkr` | 周报（frontmatter.created 统计） |
+| `pko` | 孤儿笔记检测（Permanent 为主） |
+| `pkh` / `pkh full` | 全库健康扫描 v2（4 维 12 指标 + 100 分制） |
 
-## 核心功能
+---
 
-### 周报
+## pkh（健康扫描 v2）
+
+执行脚本：
 
 ```bash
-PKM="${HOME}/.openclaw/pkm/pkm"
-VAULT="${HOME}/Workspace/PKM/octopus"
-
-# 本周创建/修改的笔记
-weekly_notes=$(find "$VAULT" -name "*.md" -mtime -7 -newer "$VAULT/.obsidian/app.json")
-
-# 生成本周回顾
-vars=$(jq -n --arg id "$(date +%Y%m%d%H%M)" --arg created "$(date +%Y-%m-%d)" \
-    '{id: $id, title: "Weekly Review", created: $created}')
-
-note=$($PKM template render "moc" "$vars")
-echo "$note" > "$VAULT/Zettels/4-Structure/$(date +%Y%m%d)-PARA-Weekly-Review-W$(date +%V).md"
+python3 ~/.gorin-skills/openclaw/pkm-para-manager/scripts/health-v2.py \
+  --vault ~/Workspace/PKM/octopus
 ```
 
-### 孤儿检测
+输出：
+- 报告：`Zettels/4-Structure/YYYYMMDD-PKM-Health-Report-WNN.md`
+- 机器指标：`Calendar/Logs/pkm-health-latest.json`
+
+### 评分模型（100 分）
+
+- Structure（25）：目录合规、命名合规
+- Metadata（25）：frontmatter 合规、必填字段、日期合法性
+- Graph（30）：孤儿率、出链覆盖、MOC 覆盖、断链率
+- Content（20）：标题重复率、近重复率、Fleeting 积压率
+
+等级：A≥90, B≥80, C≥70, D<70
+
+### 关键阈值（告警）
+
+- 孤儿率 > 15%（黄） / > 25%（红）
+- 断链率 > 3%（黄） / > 8%（红）
+- Fleeting 积压率 > 30%（黄）
+- Frontmatter 合规率 < 95%（黄）
+
+---
+
+## pkr（周报）
+
+必须按 `frontmatter.created` 统计，不使用 `find -mtime`（避免同步误报）。
+
+简化统计逻辑：
 
 ```bash
-$PKM orphan detect "$VAULT"
+VAULT="$HOME/Workspace/PKM/octopus"
+WEEK_START=$(date -v-Mon +%Y-%m-%d)
+TODAY=$(date +%Y-%m-%d)
+
+grep -rl "created: " "$VAULT/Zettels" "$VAULT/Efforts" "$VAULT/Calendar" \
+  --include="*.md" | xargs grep -l "created: $WEEK_START\|created: $TODAY"
 ```
 
-或手动：
+---
+
+## pko（孤儿检测）
+
 ```bash
-# 找出没有 incoming links 的 permanent 笔记
-find "$VAULT/Zettels/3-Permanent" -name "*.md" | while read f; do
-    basename=$(basename "$f" .md)
-    count=$(grep -rl "$basename" "$VAULT" --include="*.md" | grep -v "$f" | wc -l)
-    if [ "$count" -eq 0 ]; then
-        echo "ORPHAN: $f"
-    fi
+find "$HOME/Workspace/PKM/octopus/Zettels/3-Permanent" -name "*.md" | while read f; do
+  b=$(basename "$f" .md)
+  c=$(grep -R "\[\[$b\]\]" "$HOME/Workspace/PKM/octopus" --include="*.md" | grep -v "$f" | wc -l)
+  [ "$c" -eq 0 ] && echo "ORPHAN: $f"
 done
 ```
 
-### 项目状态
+---
 
-```bash
-for dir in "$VAULT/Efforts/1-Projects/Active"/*/; do
-    name=$(basename "$dir")
-    notes=$(find "$dir" -name "*.md" | wc -l | tr -d ' ')
-    echo "Active: $name ($notes notes)"
-done
-```
+## 与定时任务整合（推荐）
 
-## 参考文档
+优先复用、减少任务数：
 
-- `pkm-core/references/vault-structure.md` — 目录结构
-- `pkm-core` — frontmatter 规范
+1. **每日轻巡检**（1 个任务）
+   - 07:12 执行 `pkh`（不推送或仅异常推送）
+2. **周治理合并任务**（1 个任务）
+   - 周五 17:50 执行 `pkr + pko + pkh`（输出一页治理摘要）
+   - 与现有周报时段相邻，避免再拆多个任务
 
-## Changelog
+---
 
-### v1.1.0 (2026-03-20)
-- 添加 pkm-core 依赖
-- 简化重复规范说明
+## When NOT to Use
 
-### v1.0.0
-- 初始版本
+- 单条笔记保存（用 pkm-save-note / idea-creator）
+- 文献处理（用 zk-literature）
+- 非 Obsidian vault 管理
+
+## Delivery Contract
+
+- 返回 Markdown 摘要 + 报告路径
+- 若触发告警阈值，给出 Top 风险与修复优先级
+- 所有统计可在 `pkm-health-latest.json` 复核

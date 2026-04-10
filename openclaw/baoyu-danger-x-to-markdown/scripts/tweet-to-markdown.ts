@@ -36,6 +36,20 @@ function normalizeInputUrl(input: string): string {
   }
 }
 
+function formatScriptCommand(fallback: string): string {
+  const raw = process.argv[1];
+  const displayPath = raw
+    ? (() => {
+        const relative = path.relative(process.cwd(), raw);
+        return relative && !relative.startsWith("..") ? relative : raw;
+      })()
+    : fallback;
+  const quotedPath = displayPath.includes(" ")
+    ? `"${displayPath.replace(/"/g, '\\"')}"`
+    : displayPath;
+  return `npx -y bun ${quotedPath}`;
+}
+
 function parseTweetId(input: string): string | null {
   const trimmed = input.trim();
   if (!trimmed) return null;
@@ -179,7 +193,7 @@ async function main() {
   const { url } = parseArgs();
   if (!url) {
     console.error("Usage:");
-    console.error("  npx -y bun skills/baoyu-danger-x-to-markdown/scripts/tweet-to-markdown.ts <tweet url>");
+    console.error(`  ${formatScriptCommand("scripts/tweet-to-markdown.ts")} <tweet url>`);
     process.exit(1);
   }
 

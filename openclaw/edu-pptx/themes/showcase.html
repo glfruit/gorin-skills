@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>edu-pptx 教学主题系统</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; background: #fff; color: #333; padding: 40px; }
+h1 { text-align: center; font-size: 28px; margin-bottom: 8px; color: #1a1a1a; }
+.subtitle { text-align: center; color: #888; font-size: 14px; margin-bottom: 36px; }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 24px; max-width: 1200px; margin: 0 auto; }
+.card { border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); overflow: hidden; border: 1px solid #eee; }
+.card-header { padding: 20px 24px 16px; }
+.card-header h2 { font-size: 20px; margin-bottom: 4px; }
+.card-header .course { font-size: 13px; color: #888; }
+.colors { display: flex; height: 72px; }
+.color-block { flex: 1; display: flex; align-items: center; justify-content: center; font-family: "SF Mono", Consolas, monospace; font-size: 12px; font-weight: 600; }
+.card-footer { padding: 12px 24px 16px; background: #fafafa; border-top: 1px solid #f0f0f0; }
+.font-row { display: flex; justify-content: space-between; font-size: 13px; color: #666; margin-bottom: 2px; }
+.font-row span:first-child { color: #999; font-size: 12px; }
+</style>
+</head>
+<body>
+<h1>edu-pptx 教学主题系统</h1>
+<p class="subtitle">5 套教学特化配色方案，覆盖主流课程类型</p>
+<div class="grid">
+
+<div class="card">
+  <div class="card-header" style="background:#f0f7f0;">
+    <h2>Engineering 工科</h2>
+    <div class="course">数控 · 机械 · 焊接 · 汽车</div>
+  </div>
+  <div class="colors">
+    <div class="color-block" style="background:#2C5F2D;color:#fff;">2C5F2D</div>
+    <div class="color-block" style="background:#97BC62;color:#fff;">97BC62</div>
+    <div class="color-block" style="background:#F5F5F5;color:#333;">F5F5F5</div>
+    <div class="color-block" style="background:#1A3C2A;color:#fff;">1A3C2A</div>
+  </div>
+  <div class="card-footer">
+    <div class="font-row"><span>标题</span><span style="font-family:Georgia;">Georgia Bold 36-44pt</span></div>
+    <div class="font-row"><span>正文</span><span style="font-family:Calibri;">Calibri 14-16pt</span></div>
+    <div class="font-row"><span>代码</span><span style="font-family:Consolas;">Consolas 12-13pt</span></div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header" style="background:#e8f4fa;">
+    <h2>Computing 计算机</h2>
+    <div class="course">编程 · 网络 · 数据库 · 人工智能</div>
+  </div>
+  <div class="colors">
+    <div class="color-block" style="background:#065A82;color:#fff;">065A82</div>
+    <div class="color-block" style="background:#1C7293;color:#fff;">1C7293</div>
+    <div class="color-block" style="background:#E0F7FA;color:#333;">E0F7FA</div>
+    <div class="color-block" style="background:#21295C;color:#fff;">21295C</div>
+  </div>
+  <div class="card-footer">
+    <div class="font-row"><span>标题</span><span style="font-family:Calibri;">Calibri Bold 36-44pt</span></div>
+    <div class="font-row"><span>正文</span><span style="font-family:Calibri;">Calibri 14-16pt</span></div>
+    <div class="font-row"><span>代码</span><span style="font-family:Consolas;">Consolas 12-13pt</span></div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header" style="background:#fdf2ef;">
+    <h2>Humanities 人文</h2>
+    <div class="course">语文 · 历史 · 传统文化 · 艺术</div>
+  </div>
+  <div class="colors">
+    <div class="color-block" style="background:#B85042;color:#fff;">B85042</div>
+    <div class="color-block" style="background:#E7E8D1;color:#333;">E7E8D1</div>
+    <div class="color-block" style="background:#A7BEAE;color:#fff;">A7BEAE</div>
+    <div class="color-block" style="background:#4A3728;color:#fff;">4A3728</div>
+  </div>
+  <div class="card-footer">
+    <div class="font-row"><span>标题</span><span style="font-family:Palatino;">Palatino Bold 36-44pt</span></div>
+    <div class="font-row"><span>正文</span><span style="font-family:Garamond;">Garamond 14-16pt</span></div>
+    <div class="font-row"><span>引用</span><span style="font-family:Palatino;font-style:italic;">Palatino Italic 14-16pt</span></div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header" style="background:#f5f5f5;">
+    <h2>General 通识</h2>
+    <div class="course">职业素养 · 创新创业 · 心理健康</div>
+  </div>
+  <div class="colors">
+    <div class="color-block" style="background:#36454F;color:#fff;">36454F</div>
+    <div class="color-block" style="background:#708090;color:#fff;">708090</div>
+    <div class="color-block" style="background:#028090;color:#fff;">028090</div>
+    <div class="color-block" style="background:#212121;color:#fff;">212121</div>
+  </div>
+  <div class="card-footer">
+    <div class="font-row"><span>标题</span><span style="font-family:Calibri;">Calibri Bold 36-44pt</span></div>
+    <div class="font-row"><span>正文</span><span style="font-family:Calibri;">Calibri 14-16pt</span></div>
+    <div class="font-row"><span>引用</span><span style="font-family:Calibri;font-style:italic;">Calibri Italic 14-16pt</span></div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header" style="background:#e8eef4;">
+    <h2>Safety 安全教育</h2>
+    <div class="course">安全教育 · 消防 · 应急救护</div>
+  </div>
+  <div class="colors">
+    <div class="color-block" style="background:#1A2332;color:#fff;">1A2332</div>
+    <div class="color-block" style="background:#2D8B8B;color:#fff;">2D8B8B</div>
+    <div class="color-block" style="background:#F1FAEE;color:#333;">F1FAEE</div>
+    <div class="color-block" style="background:#E63946;color:#fff;">E63946</div>
+  </div>
+  <div class="card-footer">
+    <div class="font-row"><span>标题</span><span style="font-family:Calibri;">Calibri Bold 36-44pt</span></div>
+    <div class="font-row"><span>正文</span><span style="font-family:Calibri;">Calibri 14-16pt</span></div>
+    <div class="font-row"><span>警示</span><span style="font-family:Calibri;font-weight:bold;color:#E63946;">Calibri Bold 16-18pt</span></div>
+  </div>
+</div>
+
+</div>
+</body>
+</html>

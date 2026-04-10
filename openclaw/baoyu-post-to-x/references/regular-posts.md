@@ -9,20 +9,20 @@ If you prefer step-by-step control:
 ### Step 1: Copy Image to Clipboard
 
 ```bash
-npx -y bun ${SKILL_DIR}/scripts/copy-to-clipboard.ts image /path/to/image.png
+${BUN_X} {baseDir}/scripts/copy-to-clipboard.ts image /path/to/image.png
 ```
 
 ### Step 2: Paste from Clipboard
 
 ```bash
 # Simple paste to frontmost app
-npx -y bun ${SKILL_DIR}/scripts/paste-from-clipboard.ts
+${BUN_X} {baseDir}/scripts/paste-from-clipboard.ts
 
 # Paste to Chrome with retries
-npx -y bun ${SKILL_DIR}/scripts/paste-from-clipboard.ts --app "Google Chrome" --retries 5
+${BUN_X} {baseDir}/scripts/paste-from-clipboard.ts --app "Google Chrome" --retries 5
 
 # Quick paste with shorter delay
-npx -y bun ${SKILL_DIR}/scripts/paste-from-clipboard.ts --delay 200
+${BUN_X} {baseDir}/scripts/paste-from-clipboard.ts --delay 200
 ```
 
 ### Step 3: Use Playwright MCP (if Chrome session available)
@@ -59,7 +59,7 @@ mcp__playwright__browser_take_screenshot filename="preview.png"
 User: /post-to-x "Hello from Claude!" --image ./screenshot.png
 
 Claude:
-1. Runs: npx -y bun ${SKILL_DIR}/scripts/x-browser.ts "Hello from Claude!" --image ./screenshot.png
+1. Runs: ${BUN_X} {baseDir}/scripts/x-browser.ts "Hello from Claude!" --image ./screenshot.png
 2. Chrome opens with X compose page
 3. Text is typed into editor
 4. Image is copied to clipboard and pasted
@@ -72,7 +72,7 @@ Claude:
 - **Chrome not found**: Set `X_BROWSER_CHROME_PATH` environment variable
 - **Not logged in**: First run opens Chrome - log in manually, cookies are saved
 - **Image paste fails**:
-  - Verify clipboard script: `npx -y bun ${SKILL_DIR}/scripts/copy-to-clipboard.ts image <path>`
+  - Verify clipboard script: `${BUN_X} {baseDir}/scripts/copy-to-clipboard.ts image <path>`
   - On macOS, grant "Accessibility" permission to Terminal/iTerm in System Settings > Privacy & Security > Accessibility
   - Keep Chrome window visible and in front during paste operations
 - **osascript permission denied**: Grant Terminal accessibility permissions in System Preferences

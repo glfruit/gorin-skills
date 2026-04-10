@@ -1,15 +1,8 @@
 ---
 name: harness-audit
-description: >
-  Reviewer-type skill for auditing OpenClaw agent harness configuration health.
-  Scans SOUL.md, AGENTS.md, SKILL.md, and cron jobs across all agent workspaces
-  for bloat, stale references, rule duplication, and hard-coded payloads.
-  Outputs severity-classified findings (P0–P3) with trend tracking across audits.
-  Use when user says "audit harness", "检查配置健康", "harness review",
-  "配置审计", or when a periodic cron triggers monthly review.
-  Do NOT use for code review (use code-review skill), host security (use healthcheck),
-  or single-file editing.
+description: "Reviewer-type skill for auditing OpenClaw agent harness configuration health. Scans SOUL.md, AGENTS.md, SKILL.md, and cron jobs across all agent workspaces for bloat, stale references, rule duplication, and hard-coded payloads. Outputs severity-classified findings (P0-P3) with trend tracking across audits. Do NOT use for code review (use code-review skill) or host security (use healthcheck)."
 ---
+
 
 # Harness Audit
 
@@ -75,7 +68,7 @@ obsolete after model upgrades. Check rule descriptions for model-specific langua
 (e.g., "because gpt-4 can't...", "workaround for kimi timeout...").
 
 **Cross-agent duplication**: If 3+ agents have identical rule text, consider promoting
-it to the global `~/.openclaw/SOUL.md` or a shared references file.
+it to the shared `~/.openclaw/shared/global-rules.md` or a shared references file.
 
 ### 3) Report — Structured Findings
 
@@ -190,3 +183,16 @@ the script compares against the previous month's report and includes:
 |------|---------|
 | `references/thresholds.md` | Checklist per dimension with specific thresholds |
 | `scripts/harness_audit.py` | Core audit script (Python) |
+
+## Error Handling
+
+- Agent workspace 不存在时跳过并记录。
+- YAML/Markdown 解析失败时报告具体文件和行号。
+- Cron 配置读取失败时检查 cron 管理器状态。
+
+## Delivery Contract
+
+- 输出 JSON 格式的审计结果（含 severity P0-P3）。
+- 每个发现包含文件路径、问题描述、修复建议。
+- 趋势对比上次审计的变化（新增/已修复/恶化）。
+**注意：本技能是大型流水线的一部分。Do **not** report completion to the user unless all dependent tools/scripts/skills have been verified as integrated.**

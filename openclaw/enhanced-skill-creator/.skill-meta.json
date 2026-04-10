@@ -1,6 +1,37 @@
 {
   "origin": "self",
   "author": "gorin",
-  "name": "enhanced-skill-creator",
-  "description": "Create high-quality skills using case-based methodology from domain masters. Research real examples, extract patterns, and generate skills with real content. Use when the user wants to create or rebuild an AgentSkill. Don't use it for simple one-off script edits, trivial aliases, or direct minor SKILL.md tweaks."
+  "version": "4.0",
+  "description": "Create high-quality skills using case-based methodology. 8-step workflow with eval pipeline (train/dev/holdout), trigger evaluation, context budgeting, and governance. Self-validating: every created skill must pass ESC's own checks.",
+  "dependencies": {
+    "runtime": "bash",
+    "python_packages": [],
+    "external": [
+      "git"
+    ]
+  },
+  "env_vars": [
+    "GORIN_SKILLS_REPO",
+    "GORIN_SKILLS_DIR"
+  ],
+  "context_budget": {
+    "total": 10000,
+    "scripts/": 0,
+    "evals/": 0
+  },
+  "governance": {
+    "lifecycle": "published",
+    "maturity_score": 89,
+    "last_reviewed": "2026-04-02",
+    "review_cadence": "quarterly",
+    "promotion_evidence": [
+      "golden-cases-researched",
+      "internal-acceptance-passed",
+      "validate-skill-passes",
+      "run-acceptance-passes",
+      "context-sizer-functional",
+      "trigger-eval-functional",
+      "governance-check-functional"
+    ]
+  }
 }

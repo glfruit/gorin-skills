@@ -30,8 +30,22 @@ type ConsentRecord = {
 
 const DISCLAIMER_VERSION = "1.0";
 
+function formatScriptCommand(fallback: string): string {
+  const raw = process.argv[1];
+  const displayPath = raw
+    ? (() => {
+        const relative = path.relative(process.cwd(), raw);
+        return relative && !relative.startsWith("..") ? relative : raw;
+      })()
+    : fallback;
+  const quotedPath = displayPath.includes(" ")
+    ? `"${displayPath.replace(/"/g, '\\"')}"`
+    : displayPath;
+  return `npx -y bun ${quotedPath}`;
+}
+
 function printUsage(exitCode: number): never {
-  const cmd = "npx -y bun skills/baoyu-danger-x-to-markdown/scripts/main.ts";
+  const cmd = formatScriptCommand("scripts/main.ts");
   console.log(`X (Twitter) to Markdown
 
 Usage:

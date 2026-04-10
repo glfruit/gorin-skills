@@ -1,13 +1,15 @@
 ---
 name: idea-creator
-description: "创建和管理想法笔记，自动发现关系。使用 '想法 xxx' 或 '/pkm_idea' 触发。"
+description: "创建和管理想法笔记，自动发现关系。使用 '想法 xxx' 或 '/pkm_idea' 触发。依赖 pkm-core 进行智能分类和关系发现。Do NOT use for general notes or literature excerpts."
 triggers: ["想法", "idea", "闪念", "灵感", "/pkm_idea"]
 user-invocable: true
 command-dispatch: tool
 agent-usable: true
 requires:
   skills: [pkm-core]
+  used-by: [zk-router]
 ---
+
 
 # Idea Creator — 想法笔记 v1.1
 
@@ -98,6 +100,9 @@ PKM Core 自动发现并分类关系：
 
 ## Changelog
 
+### v1.2.0 (2026-03-27)
+- 确认单一职责：所有 idea/fleeting 归此 skill
+
 ### v1.1.0 (2026-03-20)
 - 添加 pkm-core 依赖
 - 简化重复的 frontmatter 说明
@@ -105,3 +110,36 @@ PKM Core 自动发现并分类关系：
 
 ### v1.0.0 (2026-02-22)
 - 初始版本
+
+## When NOT to Use
+
+- pkm-save-note 不再处理 idea 类型，所有 idea/fleeting 归此 skill。
+- 不要用于一般笔记保存（用 zk-router 或 pkm-save-note）。
+- 不要用于文献摘录或 web capture（用 zk-literature）。
+- 不要在没有想法内容时触发。
+
+## Error Handling
+
+- 想法为空或过短（<10 字符）时，提示用户补充内容。
+- pkm-core 不可用时，直接使用基础模板保存并告知用户关系发现被跳过。
+- Obsidian vault 不可达时，保存到临时文件并提示路径。
+
+## Internal Acceptance
+
+- 想法笔记保存到正确的 Fleeting 或 Permanent 目录。
+- frontmatter 包含所有必填字段（type, tags, created）。
+- 至少发现 1 条关系并写入 links。
+
+## Gotchas
+
+- 中文关键词需要 jieba 分词，不要手动切词。
+- 同名想法会去重合并，不会覆盖已有笔记。
+- 关系发现依赖 pkm-core，需确保 vault 路径正确。
+
+## Delivery Contract
+
+- 保存后输出笔记路径和发现的关系列表。
+- 回复包含 💡 emoji 作为视觉确认。
+- 路径使用 `obsidian://` URI 格式方便跳转。
+**注意：本技能是大型流水线的一部分。Do **not** report completion to the user unless all dependent tools/scripts/skills have been verified as integrated.**
+

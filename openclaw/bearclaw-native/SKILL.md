@@ -1,6 +1,6 @@
 ---
 name: bearclaw-native
-description: Rock-solid Bear Blog publishing using OpenClaw's native browser (no Chrome extension needed)
+description: "Rock-solid Bear Blog publishing using OpenClaw's native browser (no Chrome extension needed). Do NOT use for reading Bear notes or non-Bear-Blog platforms."
 version: 2.1.0
 author: gorin
 tagline: "Grip your content firmly with OpenClaw's native browser"
@@ -16,6 +16,7 @@ keywords:
   - markdown
   - publishing
 ---
+
 
 # 🐻🦞 BearClaw Native
 
@@ -94,3 +95,34 @@ Uses OpenClaw's browser tool: start browser → navigate to Bear Blog → snapsh
 
 **Version:** 2.1.0 | **License:** MIT
 **"Once BearClaw grips your content, it never lets go - now with zero extension dependencies!"** 🐻🦞
+
+## When NOT to Use
+
+- 不用于读取 Bear 笔记（用 Bear 原生搜索或 Apple Script）。
+- 不用于非 Bear Blog 平台的发布。
+- 不用于需要大量自定义样式的博客（Bear Blog 主题有限）。
+
+## Error Handling
+
+- Bear URL scheme 失败时，检查 Bear app 是否运行。
+- 博客发布 API 失败时，检查网络和认证 token。
+- 图片上传失败时，检查图片大小和格式限制。
+
+## Internal Acceptance
+
+- 文章成功发布到 Bear Blog 并可公开访问。
+- 本地 Bear 笔记同步到 XCallback URL 成功。
+- 发布后 1 分钟内可在公开 URL 访问。
+
+## Gotchas
+
+- Bear 的 x-callback-url 对特殊字符敏感，标题含 `#` 或 `|` 会被截断。
+- Bear Blog 不支持自定义域名（除非升级到付费计划）。
+- 浏览器自动化的登录态可能过期，需要重新认证。
+
+## Delivery Contract
+
+- 发布后输出公开 URL。
+- 本地 Bear 笔记的标题和标签展示。
+- 失败时输出错误详情和替代方案。
+**注意：本技能是大型流水线的一部分。Do **not** report completion to the user unless all dependent tools/scripts/skills have been verified as integrated.**not** report completion to the user unless all dependent tools/scripts/skills integration tests have passed.**

@@ -1,0 +1,14 @@
+{
+  "cases": [
+    {"prompt": "用superdoc编辑这个docx", "should_trigger": true, "note": "direct skill name"},
+    {"prompt": "帮我在Word文档里做修订", "should_trigger": true, "note": "tracked changes trigger"},
+    {"prompt": "审阅这个文档并加批注", "should_trigger": true, "note": "review+comment trigger"},
+    {"prompt": "edit docx replace text", "should_trigger": true, "note": "edit docx trigger"},
+    {"prompt": "在这个docx文件里查找替换", "should_trigger": true, "note": "docx mutation"},
+    {"prompt": "创建一个新的Word文档", "should_trigger": false, "note": "creation → docx skill"},
+    {"prompt": "把这个PDF转成Word", "should_trigger": false, "note": "PDF conversion"},
+    {"prompt": "编辑这个Excel表格", "should_trigger": false, "note": "spreadsheet"},
+    {"prompt": "review my code changes", "should_trigger": false, "note": "code review"},
+    {"prompt": "压缩这张图片", "should_trigger": false, "note": "image compression"}
+  ]
+}

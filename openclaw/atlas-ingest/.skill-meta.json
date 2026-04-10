@@ -1,0 +1,7 @@
+{
+  "name": "atlas-ingest",
+  "version": "1.0.0",
+  "description": "Atlas vault 增量扫描：Dropbox raw/ 文件分类入库 + Clippings 编译",
+  "created": "2026-04-04",
+  "scripts": ["scripts/ingest.py"]
+}

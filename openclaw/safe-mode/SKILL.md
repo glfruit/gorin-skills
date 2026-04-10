@@ -1,7 +1,8 @@
 ---
 name: safe-mode
-description: "Session-scoped safety modes for destructive or sensitive operations. Activate via /careful, /freeze, or /dry-run keywords."
+description: "Session-scoped safety modes for destructive or sensitive operations. Activate via /careful, /freeze, or /dry-run keywords. Do NOT use for routine operations or read-only tasks."
 ---
+
 
 # safe-mode - Session-Scoped Safety Modes
 
@@ -114,3 +115,27 @@ This will find files older than 30 days. Shall I list them first before deleting
 - src/parser.js → src/parser.ts
 
 Nothing was changed. Remove /dry-run to execute.
+
+## When NOT to Use
+
+- 不用于日常操作（安全模式限制功能，影响效率）。
+- 不用于只读操作（安全模式主要是保护写入）。
+- 用户明确知道风险并要求跳过安全检查时。
+
+## Error Handling
+
+- 安全模式激活失败时，检查关键词匹配逻辑。
+- 误触发时，用户可以手动退出安全模式。
+- 安全模式下执行了危险操作时，立即停止并报告。
+
+## Internal Acceptance
+
+- 安全模式正确激活/退出。
+- 激活期间所有写入操作被拦截或需确认。
+- 退出后所有功能恢复正常。
+
+## Delivery Contract
+
+- 安全模式状态变更时明确通知用户。
+- 拦截的操作记录并展示给用户确认。
+**注意：本技能是大型流水线的一部分。Do **not** report completion to the user unless all dependent tools/scripts/skills have been verified as integrated.**not** report completion to the user unless all dependent tools/scripts/skills integration tests have passed.**

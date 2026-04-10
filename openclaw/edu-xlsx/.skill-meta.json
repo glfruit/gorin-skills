@@ -1,0 +1,10 @@
+{
+  "name": "edu-xlsx",
+  "version": "0.1.0",
+  "readiness": "scaffold",
+  "type": "tool-wrapper",
+  "created": "2025-07-25",
+  "dependencies": ["openpyxl", "pandas"],
+  "runtime": "python3 + openpyxl",
+  "notes": "Code scripts pending dispatch to code-specialist. SKILL.md contains inline code snippets for agent execution."
+}

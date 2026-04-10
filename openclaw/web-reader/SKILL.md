@@ -1,15 +1,11 @@
 ---
 name: web-reader
-description: >
-  统一 Web 页面读取与网络交互。三层架构：L1 快速抓取（defuddle/Scrapling/web_fetch）→
-  L2 浏览器渲染（browser 工具 / PinchTab 持久化登录态）→ L3 内容清洗（defuddle markdown）。
-  自动根据域名路由，支持知乎、X、微信公众号等需登录的页面。
-  含工具选择决策、站点经验积累、子 Agent 分治、信息核实原则。
-  触发条件：用户要读取网页、抓取文章内容、保存网页为 markdown、搜索信息、验证事实。
+description: "Unified web page reading and interaction system. Three-layer architecture: L1 fast fetch (defuddle/Scrapling/web_fetch) to L2 browser rendering to L3 content cleaning. Supports sites requiring login (Zhihu, X, WeChat). Do NOT use for local file reading or API calls."
 triggers: ["读网页", "抓取", "web-reader", "/web-reader", "读取这个链接", "读取这篇文章", "查一下", "核实"]
 user-invocable: true
 command-dispatch: tool
 ---
+
 
 # Web Reader — 统一网页读取与网络交互
 
@@ -30,7 +26,7 @@ command-dispatch: tool
 | 搜索信息、发现来源 | `web_search` | 快，覆盖广 |
 | URL 已知，静态页面 | `web_fetch` | 直接拉取，轻量 |
 | 公开内容但反爬限制（微信等） | `web_fetch` → `browser` 工具 / web-reader L1 | Scrapling 作为 L1 备选 |
-| 需要登录态、JS 重度渲染 | `browser` 工具 (profile=user) 或 web-reader L2 | 真实浏览器环境 |
+| 需要登录态、JS 重度渲染 | `browser` 工具 (profile=user) 或 bb-browser adapter | 真实浏览器环境 |
 | 需要交互操作（点击、翻页、表单） | `browser` 工具 | snapshot + act 交互 |
 | 原始 HTML 源码（meta、JSON-LD） | `curl` | 精确控制 |
 
@@ -63,11 +59,11 @@ command-dispatch: tool
 Agent 调用 → web-reader.sh <url> [options]
                 │
                 ├─ L1: 快速抓取（公开页面，<3s）
-                │   defuddle parse → Scrapling → web_fetch
+                │   defuddle parse → Scrapling+html2text (scripts/fetch.py) → web_fetch
                 │
-                ├─ L2: 浏览器渲染（登录页面/JS 重页面，5-15s）
-                │   PinchTab（持久化 profile + cookie）
-                │   → defuddle 清洗 → markdown
+                ├─ L2: 浏览器渲染（登录页面/JS 重页面）
+                │   OpenClaw browser 工具（CDP 直连）
+                │   → markdown 内容提取
                 │
                 └─ L3: 内容清洗（统一输出）
                     defuddle 提取正文 → YAML front matter + markdown
@@ -121,11 +117,11 @@ YAML front matter + markdown 正文：
 
 ```markdown
 ---
-url: https://example.com/article
+url: https://docs.example.org/sample-page
 title: 文章标题
 author: 作者名
 published: 2026-03-17
-site: example.com
+site: docs.example.org
 word_count: 1234
 captured_at: 2026-03-17T22:00:00+08:00
 captured_via: defuddle|scrapling|pinchtab
@@ -147,7 +143,7 @@ captured_via: defuddle|scrapling|pinchtab
 **文件格式**：
 ```markdown
 ---
-domain: example.com
+domain: docs.example.org
 aliases: [示例, Example]
 updated: 2026-03-25
 ---
@@ -180,20 +176,144 @@ updated: 2026-03-25
 ## 依赖
 
 - **defuddle** (npm): `npm install -g defuddle` — 内容提取 + markdown 转换
-- **PinchTab**: `curl -fsSL https://pinchtab.com/install.sh | bash` — 浏览器自动化
 - **Scrapling + html2text** (Python): `pip install scrapling html2text` — L1 备选
-- **PinchTab profiles**: zhihu / x-twitter / wechat（首次需手动登录）
+- **bb-browser** (npm): `npm install -g bb-browser` — 站点级操作（搜索、查询结构化数据）
+- **opencli-rs** (binary): 单文件 CLI，55+ 站点 / 333+ 命令，含 Public 模式（不需要登录）
+- **OpenClaw browser 工具**: 内置 CDP 浏览器，用于需要登录态/JS 渲染的页面
 
-## 首次登录设置
+## 站点级操作（opencli-rs + bb-browser）
 
-对需要登录的网站，需手动登录一次来保存 cookie：
+对需要登录态或结构化数据查询的站点，使用站点级 CLI 工具。
+完整路由表见 `references/site-routing.md`。
+
+### 快速参考
 
 ```bash
-# 启动带 profile 的可视化浏览器实例
-pinchtab instance start --profile zhihu --mode headed
-# → 在弹出的 Chrome 中手动登录知乎 → 关闭实例
-pinchtab instance stop <instance-id>
+# === opencli-rs（优先） ===
+opencli-rs hackernews top --limit 10 --format json       # Public，不需要登录
+opencli-rs bilibili hot --limit 10 --format json          # B站热榜
+opencli-rs zhihu hot --limit 10 --format json              # 知乎热榜
+opencli-rs weibo hot --limit 10 --format json              # 微博热搜
+opencli-rs xiaohongshu feed --limit 10 --format json       # 小红书 Feed
+opencli-rs weread search "认知觉醒" --format json          # 微信读书
+opencli-rs bloomberg tech --format json                     # 彭博科技
+opencli-rs weixin download <url>                            # 微信文章下载为 Markdown
+opencli-rs douban search "沙丘" --format json              # 豆瓣搜索
+opencli-rs twitter search "AI agent" --format json         # X 搜索
+opencli-rs reddit hot --limit 10 --format json              # Reddit
+opencli-rs arxiv search "LLM" --format json                # 论文搜索
+
+# === bb-browser（独有站点或命令更多时使用） ===
+bb-browser site weibo/feed 10                                  # 微博 timeline
+bb-browser site youtube/channel <channel-id>                # YouTube 频道
+bb-browser site sogou/weixin "AI agent"                     # 搜狗微信搜索
+bb-browser site baidu/search "大语言模型"                    # 百度搜索
+bb-browser site csdn/search "Rust"                         # CSDN 搜索
+bb-browser site eastmoney/stock SH600519                    # 东方财富
+bb-browser site list                                         # 查看所有 adapter
 ```
+
+### 工具选择决策
+
+| 请求类型 | 首选 | 备选 |
+|---------|------|------|
+| 公开 API 站点（HN/devto/arxiv 等） | opencli-rs | — |
+| bilibili/zhihu/xiaohongshu/twitter/reddit | opencli-rs | bb-browser |
+| weibo（需 feed/me/post） | bb-browser | opencli-rs |
+| youtube（需 channel/comments） | bb-browser | opencli-rs |
+| 中文站独有（百度/CSDN/搜狗等） | bb-browser | — |
+| 海外站独有（weread/medium/bloomberg 等） | opencli-rs | — |
+
+**分工**：
+- **web-reader** — "给我这个 URL 的内容"（页面抓取 + 清洗）
+- **site_router** — "帮我搜索/操作这个网站"（自动路由到 opencli-rs 或 bb-browser）
+- **browser 工具** — 底层 CDP 能力（兜底）
+
+### 统一路由入口
+
+当不确定该用哪个工具时，直接用 `site_router.py`，它会自动选择：
+
+```bash
+# 自动路由（推荐）
+python3 ~/.gorin-skills/openclaw/web-reader/scripts/site_router.py <site> <command> [args...]
+
+# 检测工具可用性
+python3 ~/.gorin-skills/openclaw/web-reader/scripts/site_router.py probe
+
+# 列出所有支持站点
+python3 ~/.gorin-skills/openclaw/web-reader/scripts/site_router.py list
+```
+
+site_router 会自动处理：工具可用性检测、Public/Browser 模式判断、执行失败时的 fallback。
+
+## 批量采集管线
+
+需要一次抓多个来源时，使用 `collect_pipeline.py`：
+
+```bash
+PIPELINE=~/.gorin-skills/openclaw/web-reader/scripts/collect_pipeline.py
+
+# 使用预设方案
+python3 $PIPELINE --preset daily-tech          # HN + V2EX + DevTo + Lobsters
+python3 $PIPELINE --preset invest-cn            # 雪球 + 微博 + 小红书 + 36kr
+python3 $PIPELINE --preset ai-research          # arXiv + HN + HF Models
+python3 $PIPELINE --preset content-cn           # B站 + 知乎 + 微博 + 小红书 + 抖音
+
+# 输出为 Markdown（适合直接发群/存文件）
+python3 $PIPELINE --preset daily-tech --format md
+
+# 自定义来源
+python3 $PIPELINE hackernews/top bilibili/hot zhihu/hot
+
+# 输出到文件
+python3 $PIPELINE --preset invest-cn --format md -o /tmp/invest-report.md
+
+# 列出所有预设
+python3 $PIPELINE --list-presets
+```
+
+管线会自动：路由到正确的工具、合并结果、处理 fallback、统一输出格式。
+
+## 文章下载
+
+需要将文章保存为 Markdown 文件时：
+
+```bash
+# 微信公众号文章
+opencli-rs weixin download <url> --output ./articles
+
+# 知乎文章/回答
+opencli-rs zhihu download <url> --output ./articles
+
+# B站视频（需要 yt-dlp）
+opencli-rs bilibili download <bvid> --output ./videos
+```
+
+注意：下载功能需要 Chrome 已登录对应网站（opencli-rs Browser 模式）。
+
+## AI 适配器生成
+
+遇到两个工具都不支持的网站时，可以自动生成适配器：
+
+```bash
+# 基础生成（自动分析页面结构）
+opencli-rs generate "https://example.com" --goal hot
+
+# AI 辅助生成（需要 ~/.opencli-rs/config.json 配置 LLM key）
+opencli-rs generate "https://example.com" --goal search --ai
+```
+
+生成后直接可用：`opencli-rs example hot --format json`
+适配器保存在 `~/.opencli-rs/adapters/` 下。
+
+## 需要浏览器渲染的页面
+
+对于 JS 重度渲染或需要登录态的页面：
+1. 先尝试 L1 抓取（部分页面返回足够内容）
+2. L1 失败时，agent 应使用 OpenClaw 内置 `browser` 工具：
+   - `browser open` → `browser snapshot` 获取内容
+   - 或 `browser navigate` → `browser snapshot`
+3. 站点级操作（搜索、查询）按 `references/site-routing.md` 路由表选择 opencli-rs 或 bb-browser
 
 ## 防死循环规则
 
@@ -201,7 +321,34 @@ pinchtab instance stop <instance-id>
 
 ## Gotchas
 
-- **L1 对 JS 渲染页面无效**：defuddle/Scrapling 只能抓静态 HTML。知乎、X、微信公众号等 SPA 页面必须走 L2 浏览器渲染，否则只拿到空壳。
-- **L2 需要预先登录**：PinchTab 依赖持久化 cookie profile。如果目标网站未登录，L2 拿到的是登录页而非正文。首次使用需 `pinchtab instance start --mode headed` 手动登录。
-- **web_fetch 不是万能的**：对 JS-heavy 页面，`web_fetch` 工具只返回初始 HTML（没有动态内容）。这种情况需要用 browser 工具或 web-reader L2。
-- **微信公众号文章需要特殊处理**：Jina Reader 无法抓取微信公众号文章（`mp.weixin.qq.com`），虽然域名路由表列的是 L1，但部分文章（尤其是较新的）仍需 L2 才能获取完整内容。
+- **L1 对 JS 渲染页面无效**：defuddle/Scrapling 只能抓静态 HTML。知乎、X 等页面需要用 OpenClaw browser 工具或 bb-browser adapter。
+- **browser 工具依赖已登录的浏览器**：如果目标网站未在 Chrome 中登录，snapshot 拿到的是登录页。确保在 host 浏览器中已登录目标站点。
+- **web_fetch 不是万能的**：对 JS-heavy 页面，`web_fetch` 工具只返回初始 HTML（没有动态内容）。这种情况需要用 browser 工具。
+- **微信公众号文章需要特殊处理**：Jina Reader 无法抓取微信公众号文章（`mp.weixin.qq.com`），可尝试 Scrapling 或 browser 工具。
+- **bb-browser adapter 依赖浏览器登录态**：twitter/zhihu/weibo 等 adapter 需要用户已在 host Chrome 中登录对应网站。
+
+## When NOT to Use
+
+- 不用于本地文件读取（直接用 Read 工具）。
+- 不用于 API 调用或数据获取（用 Exec + curl）。
+- 不用于需要频繁交互的动态页面（如实时聊天）。
+
+## Error Handling
+
+- L1 快速抓取失败时自动降级到 L2 浏览器渲染。
+- L2 渲染超时（>30s）时返回已获取的部分内容并标注。
+- 反爬检测触发时，增加延迟并更换 user-agent。
+
+## Internal Acceptance
+
+- 返回的 Markdown 内容包含原文的主要结构和信息。
+- 代码块、表格、列表等格式正确保留。
+- 从触发到返回内容总耗时 <60 秒。
+
+## Delivery Contract
+
+- 输出干净的 Markdown 格式正文。
+- 保留原文标题作为 H1。
+- 代码块标注语言类型。
+- 图片 URL 保留（不下载）。
+**注意：本技能是大型流水线的一部分。Do **not** report completion to the user unless all dependent tools/scripts/skills have been verified as integrated.**not** report completion to the user unless all dependent tools/scripts/skills integration tests have passed.**

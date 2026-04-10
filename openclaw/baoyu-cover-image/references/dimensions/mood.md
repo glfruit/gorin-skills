@@ -112,6 +112,7 @@ Mood modifies the base palette characteristics:
 | Cool palettes (cool, mono, elegant) | Lighter lines, muted colors | Standard colors | Stronger contrast, sharper definition |
 | Dark palettes (dark, vivid) | Reduced contrast, softer glow | Standard colors | Maximum impact, vivid saturation |
 | Vintage palettes (retro) | More faded, sepia-heavy | Standard colors | Bolder retro contrasts |
+| Duotone palettes (duotone) | Softer contrast between pair | Standard two-color split | Maximum contrast, stark separation |
 
 ## Rendering Interaction
 
@@ -125,6 +126,7 @@ Mood adjusts rendering characteristics:
 | digital | Reduced shadows, lower contrast | Standard rendering | Stronger shadows, sharper edges |
 | pixel | Fewer colors, simpler shapes | Standard palette | More colors, denser pixel detail |
 | chalk | Lighter chalk, more board showing | Standard chalk | Heavy chalk, vivid colors, dense marks |
+| screen-print | Fewer colors (2), lighter halftone | Standard 3-4 colors, medium halftone | More colors (4-5), dense halftone, stronger misregistration |
 
 ## Auto Selection
 

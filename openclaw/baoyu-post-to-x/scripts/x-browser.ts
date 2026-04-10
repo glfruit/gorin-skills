@@ -1,4 +1,3 @@
-import { spawn } from 'node:child_process';
 import fs from 'node:fs';
 import { mkdir } from 'node:fs/promises';
 import process from 'node:process';
@@ -6,11 +5,14 @@ import {
   CHROME_CANDIDATES_FULL,
   CdpConnection,
   copyImageToClipboard,
-  findChromeExecutable,
+  findExistingChromeDebugPort,
   getDefaultProfileDir,
-  getFreePort,
+  gracefulKillChrome,
+  launchChrome,
+  openPageSession,
   pasteFromClipboard,
   sleep,
+  waitForXSessionPersistence,
   waitForChromeDebugPort,
 } from './x-utils.js';
 
@@ -28,43 +30,41 @@ interface XBrowserOptions {
 export async function postToX(options: XBrowserOptions): Promise<void> {
   const { text, images = [], submit = false, timeoutMs = 120_000, profileDir = getDefaultProfileDir() } = options;
 
-  const chromePath = options.chromePath ?? findChromeExecutable(CHROME_CANDIDATES_FULL);
-  if (!chromePath) throw new Error('Chrome not found. Set X_BROWSER_CHROME_PATH env var.');
-
   await mkdir(profileDir, { recursive: true });
 
-  const port = await getFreePort();
-  console.log(`[x-browser] Launching Chrome (profile: ${profileDir})`);
+  const existingPort = await findExistingChromeDebugPort(profileDir);
+  const reusing = existingPort !== null;
+  let port = existingPort ?? 0;
+  let chrome: Awaited<ReturnType<typeof launchChrome>>['chrome'] | null = null;
+  if (!reusing) {
+    const launched = await launchChrome(X_COMPOSE_URL, profileDir, CHROME_CANDIDATES_FULL, options.chromePath);
+    port = launched.port;
+    chrome = launched.chrome;
+  }
 
-  const chrome = spawn(chromePath, [
-    `--remote-debugging-port=${port}`,
-    `--user-data-dir=${profileDir}`,
-    '--no-first-run',
-    '--no-default-browser-check',
-    '--disable-blink-features=AutomationControlled',
-    '--start-maximized',
-    X_COMPOSE_URL,
-  ], { stdio: 'ignore' });
+  if (reusing) console.log(`[x-browser] Reusing existing Chrome on port ${port}`);
+  else console.log(`[x-browser] Launching Chrome (profile: ${profileDir})`);
 
   let cdp: CdpConnection | null = null;
+  let sessionId: string | null = null;
+  let loggedInDuringRun = false;
 
   try {
     const wsUrl = await waitForChromeDebugPort(port, 30_000, { includeLastError: true });
     cdp = await CdpConnection.connect(wsUrl, 30_000, { defaultTimeoutMs: 15_000 });
 
-    const targets = await cdp.send<{ targetInfos: Array<{ targetId: string; url: string; type: string }> }>('Target.getTargets');
-    let pageTarget = targets.targetInfos.find((t) => t.type === 'page' && t.url.includes('x.com'));
-
-    if (!pageTarget) {
-      const { targetId } = await cdp.send<{ targetId: string }>('Target.createTarget', { url: X_COMPOSE_URL });
-      pageTarget = { targetId, url: X_COMPOSE_URL, type: 'page' };
-    }
-
-    const { sessionId } = await cdp.send<{ sessionId: string }>('Target.attachToTarget', { targetId: pageTarget.targetId, flatten: true });
-
-    await cdp.send('Page.enable', {}, { sessionId });
-    await cdp.send('Runtime.enable', {}, { sessionId });
-    await cdp.send('Input.setIgnoreInputEvents', { ignore: false }, { sessionId });
+    const page = await openPageSession({
+      cdp,
+      reusing,
+      url: X_COMPOSE_URL,
+      matchTarget: (target) => target.type === 'page' && target.url.includes('x.com'),
+      enablePage: true,
+      enableRuntime: true,
+      enableNetwork: true,
+    });
+    const activeSessionId = page.sessionId;
+    sessionId = activeSessionId;
+    await cdp.send('Input.setIgnoreInputEvents', { ignore: false }, { sessionId: activeSessionId });
 
     console.log('[x-browser] Waiting for X editor...');
     await sleep(3000);
@@ -75,7 +75,7 @@ export async function postToX(options: XBrowserOptions): Promise<void> {
         const result = await cdp!.send<{ result: { value: boolean } }>('Runtime.evaluate', {
           expression: `!!document.querySelector('[data-testid="tweetTextarea_0"]')`,
           returnByValue: true,
-        }, { sessionId });
+        }, { sessionId: activeSessionId });
         if (result.result.value) return true;
         await sleep(1000);
       }
@@ -88,6 +88,7 @@ export async function postToX(options: XBrowserOptions): Promise<void> {
       console.log('[x-browser] Waiting for login...');
       const loggedIn = await waitForEditor();
       if (!loggedIn) throw new Error('Timed out waiting for X editor. Please log in first.');
+      loggedInDuringRun = true;
     }
 
     if (text) {
@@ -100,7 +101,7 @@ export async function postToX(options: XBrowserOptions): Promise<void> {
             document.execCommand('insertText', false, ${JSON.stringify(text)});
           }
         `,
-      }, { sessionId });
+      }, { sessionId: activeSessionId });
       await sleep(500);
     }
 
@@ -121,7 +122,7 @@ export async function postToX(options: XBrowserOptions): Promise<void> {
       const imgCountBefore = await cdp.send<{ result: { value: number } }>('Runtime.evaluate', {
         expression: `document.querySelectorAll('img[src^="blob:"]').length`,
         returnByValue: true,
-      }, { sessionId });
+      }, { sessionId: activeSessionId });
 
       // Wait for clipboard to be ready
       await sleep(500);
@@ -129,7 +130,7 @@ export async function postToX(options: XBrowserOptions): Promise<void> {
       // Focus the editor
       await cdp.send('Runtime.evaluate', {
         expression: `document.querySelector('[data-testid="tweetTextarea_0"]')?.focus()`,
-      }, { sessionId });
+      }, { sessionId: activeSessionId });
       await sleep(200);
 
       // Use paste script (handles platform differences, activates Chrome)
@@ -146,14 +147,14 @@ export async function postToX(options: XBrowserOptions): Promise<void> {
           code: 'KeyV',
           modifiers,
           windowsVirtualKeyCode: 86,
-        }, { sessionId });
+        }, { sessionId: activeSessionId });
         await cdp.send('Input.dispatchKeyEvent', {
           type: 'keyUp',
           key: 'v',
           code: 'KeyV',
           modifiers,
           windowsVirtualKeyCode: 86,
-        }, { sessionId });
+        }, { sessionId: activeSessionId });
       }
 
       console.log('[x-browser] Verifying image upload...');
@@ -164,7 +165,7 @@ export async function postToX(options: XBrowserOptions): Promise<void> {
         const r = await cdp!.send<{ result: { value: number } }>('Runtime.evaluate', {
           expression: `document.querySelectorAll('img[src^="blob:"]').length`,
           returnByValue: true,
-        }, { sessionId });
+        }, { sessionId: activeSessionId });
         if (r.result.value >= expectedImgCount) {
           imgUploadOk = true;
           break;
@@ -183,24 +184,33 @@ export async function postToX(options: XBrowserOptions): Promise<void> {
       console.log('[x-browser] Submitting post...');
       await cdp.send('Runtime.evaluate', {
         expression: `document.querySelector('[data-testid="tweetButton"]')?.click()`,
-      }, { sessionId });
+      }, { sessionId: activeSessionId });
       await sleep(2000);
       console.log('[x-browser] Post submitted!');
     } else {
-      console.log('[x-browser] Post composed (preview mode). Add --submit to post.');
-      console.log('[x-browser] Browser will stay open for 30 seconds for preview...');
-      await sleep(30_000);
+      console.log('[x-browser] Post composed. Please review and click the publish button in the browser.');
     }
   } finally {
-    if (cdp) {
-      try { await cdp.send('Browser.close', {}, { timeoutMs: 5_000 }); } catch {}
-      cdp.close();
+    let leaveChromeOpen = !submit;
+    if (chrome && submit && loggedInDuringRun && cdp && sessionId) {
+      console.log('[x-browser] Waiting for X session cookies to persist...');
+      const sessionReady = await waitForXSessionPersistence({ cdp, sessionId });
+      if (!sessionReady) {
+        console.warn('[x-browser] X session cookies not observed yet. Leaving Chrome open so login can finish persisting.');
+        leaveChromeOpen = true;
+      }
     }
 
-    setTimeout(() => {
-      if (!chrome.killed) try { chrome.kill('SIGKILL'); } catch {}
-    }, 2_000).unref?.();
-    try { chrome.kill('SIGTERM'); } catch {}
+    if (cdp) {
+      cdp.close();
+    }
+    if (chrome) {
+      if (leaveChromeOpen) {
+        chrome.unref();
+      } else {
+        await gracefulKillChrome(chrome, port);
+      }
+    }
   }
 }
 

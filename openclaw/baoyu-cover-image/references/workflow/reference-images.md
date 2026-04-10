@@ -16,23 +16,30 @@ Guide for processing user-provided reference images in cover generation.
 
 **If user provides file path**:
 1. Copy to `refs/ref-NN-{slug}.{ext}` (NN = 01, 02, ...)
-2. Create description: `refs/ref-NN-{slug}.md`
-3. Verify files exist before proceeding
+2. **Only** create description file `refs/ref-NN-{slug}.md` when model does NOT support `--ref` (see below)
+3. Verify image file exists before proceeding
 
-**Description File Format**:
+**When to create description file**:
+
+| Situation | Action |
+|-----------|--------|
+| Model supports `--ref` (Google, OpenAI, OpenRouter, Replicate, Seedream 4.0+) | Copy image only. **No description file needed.** Pass via `--ref` at generation. |
+| Model does NOT support `--ref` (Jimeng, Seedream 3.0) | Copy image + create description file. Embed description in prompt text. |
+
+**Description File Format** (only when needed):
 ```yaml
 ---
 ref_id: NN
 filename: ref-NN-{slug}.{ext}
 usage: direct | style | palette
 ---
-[User's description or auto-generated description]
+[Character or style description to embed in prompt]
 ```
 
 | Usage | When to Use |
 |-------|-------------|
-| `direct` | Reference matches desired output closely |
-| `style` | Extract visual style characteristics only |
+| `direct` | Model sees reference image directly; required if people must appear in output |
+| `style` | Extract visual style only (not for people who must appear) |
 | `palette` | Extract color scheme only |
 
 ## Verbal Extraction (No File)
@@ -58,6 +65,19 @@ References are high-priority inputs. Extract **specific, concrete, reproducible*
 | **Usage recommendation** | `direct` / `style` / `palette` | Based on analysis |
 
 **Output format**: List each element as bullet that can be copy-pasted into prompt as mandatory instruction.
+
+### Character Analysis ⚠️ If Reference Contains People
+
+Use `usage: direct` so model sees the reference image. Additionally describe per character: **appearance**, **pose**, **clothing** → with **transformation rules** (stylize to match rendering).
+
+| Extract | Good | Bad |
+|---------|------|-----|
+| Appearance | "Woman: long wavy blonde hair, friendly smile" | "A woman" |
+| Pose | "Standing, facing camera, confident posture" | "Standing" |
+| Clothing | "Dark T-shirt, business casual" | "Formal" |
+| Transform | "Flat-vector cartoon, keep hair color & clothing" | "Make cartoon" |
+
+Use `usage: direct`. Output each character as MUST/REQUIRED prompt instruction.
 
 ## Verification Output
 

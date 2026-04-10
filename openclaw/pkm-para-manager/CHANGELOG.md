@@ -1,5 +1,12 @@
 # Changelog
 
+## v2.0.0 (2026-03-28)
+- 新增全库健康扫描脚本 `scripts/health-v2.py`（4 维 12 指标 + 100 分）
+- 新增 `pkh` 健康命令（由 zk-router 路由）
+- 明确与定时任务整合：每日轻巡检 + 周治理合并任务
+- SKILL.md 重写为治理导向版本
+
+
 All notable changes to this skill will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),

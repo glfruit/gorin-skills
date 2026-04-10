@@ -1,13 +1,15 @@
-import { spawn } from 'node:child_process';
 import { mkdir } from 'node:fs/promises';
 import process from 'node:process';
 import {
   CHROME_CANDIDATES_FULL,
   CdpConnection,
-  findChromeExecutable,
+  findExistingChromeDebugPort,
   getDefaultProfileDir,
-  getFreePort,
+  gracefulKillChrome,
+  launchChrome,
+  openPageSession,
   sleep,
+  waitForXSessionPersistence,
   waitForChromeDebugPort,
 } from './x-utils.js';
 
@@ -31,43 +33,43 @@ interface QuoteOptions {
 export async function quotePost(options: QuoteOptions): Promise<void> {
   const { tweetUrl, comment, submit = false, timeoutMs = 120_000, profileDir = getDefaultProfileDir() } = options;
 
-  const chromePath = options.chromePath ?? findChromeExecutable(CHROME_CANDIDATES_FULL);
-  if (!chromePath) throw new Error('Chrome not found. Set X_BROWSER_CHROME_PATH env var.');
-
   await mkdir(profileDir, { recursive: true });
 
-  const port = await getFreePort();
-  console.log(`[x-quote] Launching Chrome (profile: ${profileDir})`);
+  const existingPort = await findExistingChromeDebugPort(profileDir);
+  const reusing = existingPort !== null;
+  let port = existingPort ?? 0;
   console.log(`[x-quote] Opening tweet: ${tweetUrl}`);
+  let chrome: Awaited<ReturnType<typeof launchChrome>>['chrome'] | null = null;
+  if (!reusing) {
+    const launched = await launchChrome(tweetUrl, profileDir, CHROME_CANDIDATES_FULL, options.chromePath);
+    port = launched.port;
+    chrome = launched.chrome;
+  }
 
-  const chrome = spawn(chromePath, [
-    `--remote-debugging-port=${port}`,
-    `--user-data-dir=${profileDir}`,
-    '--no-first-run',
-    '--no-default-browser-check',
-    '--disable-blink-features=AutomationControlled',
-    '--start-maximized',
-    tweetUrl,
-  ], { stdio: 'ignore' });
+  if (reusing) console.log(`[x-quote] Reusing existing Chrome on port ${port}`);
+  else console.log(`[x-quote] Launching Chrome (profile: ${profileDir})`);
 
   let cdp: CdpConnection | null = null;
+  let sessionId: string | null = null;
+  let targetId: string | null = null;
+  let loggedInDuringRun = false;
 
   try {
     const wsUrl = await waitForChromeDebugPort(port, 30_000, { includeLastError: true });
     cdp = await CdpConnection.connect(wsUrl, 30_000, { defaultTimeoutMs: 15_000 });
 
-    const targets = await cdp.send<{ targetInfos: Array<{ targetId: string; url: string; type: string }> }>('Target.getTargets');
-    let pageTarget = targets.targetInfos.find((t) => t.type === 'page' && t.url.includes('x.com'));
-
-    if (!pageTarget) {
-      const { targetId } = await cdp.send<{ targetId: string }>('Target.createTarget', { url: tweetUrl });
-      pageTarget = { targetId, url: tweetUrl, type: 'page' };
-    }
-
-    const { sessionId } = await cdp.send<{ sessionId: string }>('Target.attachToTarget', { targetId: pageTarget.targetId, flatten: true });
-
-    await cdp.send('Page.enable', {}, { sessionId });
-    await cdp.send('Runtime.enable', {}, { sessionId });
+    const page = await openPageSession({
+      cdp,
+      reusing,
+      url: tweetUrl,
+      matchTarget: (target) => target.type === 'page' && target.url.includes('x.com'),
+      enablePage: true,
+      enableRuntime: true,
+      enableNetwork: true,
+    });
+    const activeSessionId = page.sessionId;
+    sessionId = activeSessionId;
+    targetId = page.targetId;
 
     console.log('[x-quote] Waiting for tweet to load...');
     await sleep(3000);
@@ -79,7 +81,7 @@ export async function quotePost(options: QuoteOptions): Promise<void> {
         const result = await cdp!.send<{ result: { value: boolean } }>('Runtime.evaluate', {
           expression: `!!document.querySelector('[data-testid="retweet"]')`,
           returnByValue: true,
-        }, { sessionId });
+        }, { sessionId: activeSessionId });
         if (result.result.value) return true;
         await sleep(1000);
       }
@@ -92,13 +94,14 @@ export async function quotePost(options: QuoteOptions): Promise<void> {
       console.log('[x-quote] Waiting for login...');
       const loggedIn = await waitForRetweetButton();
       if (!loggedIn) throw new Error('Timed out waiting for tweet. Please log in first or check the tweet URL.');
+      loggedInDuringRun = true;
     }
 
     // Click the retweet button
     console.log('[x-quote] Clicking retweet button...');
     await cdp.send('Runtime.evaluate', {
       expression: `document.querySelector('[data-testid="retweet"]')?.click()`,
-    }, { sessionId });
+    }, { sessionId: activeSessionId });
     await sleep(1000);
 
     // Wait for and click the "Quote" option in the menu
@@ -109,7 +112,7 @@ export async function quotePost(options: QuoteOptions): Promise<void> {
         const result = await cdp!.send<{ result: { value: boolean } }>('Runtime.evaluate', {
           expression: `!!document.querySelector('[data-testid="Dropdown"] [role="menuitem"]:nth-child(2)')`,
           returnByValue: true,
-        }, { sessionId });
+        }, { sessionId: activeSessionId });
         if (result.result.value) return true;
         await sleep(200);
       }
@@ -124,7 +127,7 @@ export async function quotePost(options: QuoteOptions): Promise<void> {
     // Click the quote option (second menu item)
     await cdp.send('Runtime.evaluate', {
       expression: `document.querySelector('[data-testid="Dropdown"] [role="menuitem"]:nth-child(2)')?.click()`,
-    }, { sessionId });
+    }, { sessionId: activeSessionId });
     await sleep(2000);
 
     // Wait for the quote compose dialog
@@ -135,7 +138,7 @@ export async function quotePost(options: QuoteOptions): Promise<void> {
         const result = await cdp!.send<{ result: { value: boolean } }>('Runtime.evaluate', {
           expression: `!!document.querySelector('[data-testid="tweetTextarea_0"]')`,
           returnByValue: true,
-        }, { sessionId });
+        }, { sessionId: activeSessionId });
         if (result.result.value) return true;
         await sleep(200);
       }
@@ -153,12 +156,12 @@ export async function quotePost(options: QuoteOptions): Promise<void> {
       // Use CDP Input.insertText for more reliable text insertion
       await cdp.send('Runtime.evaluate', {
         expression: `document.querySelector('[data-testid="tweetTextarea_0"]')?.focus()`,
-      }, { sessionId });
+      }, { sessionId: activeSessionId });
       await sleep(200);
 
       await cdp.send('Input.insertText', {
         text: comment,
-      }, { sessionId });
+      }, { sessionId: activeSessionId });
       await sleep(500);
     }
 
@@ -166,7 +169,7 @@ export async function quotePost(options: QuoteOptions): Promise<void> {
       console.log('[x-quote] Submitting quote post...');
       await cdp.send('Runtime.evaluate', {
         expression: `document.querySelector('[data-testid="tweetButton"]')?.click()`,
-      }, { sessionId });
+      }, { sessionId: activeSessionId });
       await sleep(2000);
       console.log('[x-quote] Quote post submitted!');
     } else {
@@ -175,15 +178,29 @@ export async function quotePost(options: QuoteOptions): Promise<void> {
       await sleep(30_000);
     }
   } finally {
-    if (cdp) {
-      try { await cdp.send('Browser.close', {}, { timeoutMs: 5_000 }); } catch {}
-      cdp.close();
+    let leaveChromeOpen = false;
+    if (chrome && loggedInDuringRun && cdp && sessionId) {
+      console.log('[x-quote] Waiting for X session cookies to persist...');
+      const sessionReady = await waitForXSessionPersistence({ cdp, sessionId });
+      if (!sessionReady) {
+        console.warn('[x-quote] X session cookies not observed yet. Leaving Chrome open so login can finish persisting.');
+        leaveChromeOpen = true;
+      }
     }
 
-    setTimeout(() => {
-      if (!chrome.killed) try { chrome.kill('SIGKILL'); } catch {}
-    }, 2_000).unref?.();
-    try { chrome.kill('SIGTERM'); } catch {}
+    if (cdp) {
+      if (reusing && targetId) {
+        try { await cdp.send('Target.closeTarget', { targetId }, { timeoutMs: 5_000 }); } catch {}
+      }
+      cdp.close();
+    }
+    if (chrome) {
+      if (leaveChromeOpen) {
+        chrome.unref();
+      } else {
+        await gracefulKillChrome(chrome, port);
+      }
+    }
   }
 }
 

@@ -120,12 +120,12 @@ Bold, decorative typography for maximum impact.
 
 ## Rendering Compatibility
 
-| Font × Rendering | flat-vector | hand-drawn | painterly | digital | pixel | chalk |
-|------------------|:-----------:|:----------:|:---------:|:-------:|:-----:|:-----:|
-| clean | ✓✓ | ✗ | ✗ | ✓✓ | ✓ | ✗ |
-| handwritten | ✓ | ✓✓ | ✓✓ | ✓ | ✗ | ✓✓ |
-| serif | ✓ | ✗ | ✓ | ✓✓ | ✗ | ✗ |
-| display | ✓✓ | ✓ | ✓ | ✓✓ | ✓✓ | ✓ |
+| Font × Rendering | flat-vector | hand-drawn | painterly | digital | pixel | chalk | screen-print |
+|------------------|:-----------:|:----------:|:---------:|:-------:|:-----:|:-----:|:------------:|
+| clean | ✓✓ | ✗ | ✗ | ✓✓ | ✓ | ✗ | ✓ |
+| handwritten | ✓ | ✓✓ | ✓✓ | ✓ | ✗ | ✓✓ | ✗ |
+| serif | ✓ | ✗ | ✓ | ✓✓ | ✗ | ✗ | ✓ |
+| display | ✓✓ | ✓ | ✓ | ✓✓ | ✓✓ | ✓ | ✓✓ |
 
 ✓✓ = highly recommended | ✓ = compatible | ✗ = not recommended
 
@@ -148,6 +148,7 @@ Font style adapts to palette characteristics:
 | Cool (cool, mono, elegant) | Perfect match | Contrast | Classic pairing | Bold statement |
 | Dark (dark, vivid) | High contrast | Glow effects | Dramatic | Maximum impact |
 | Vintage (retro) | Modern contrast | Nostalgic fit | Period-appropriate | Retro headlines |
+| Duotone (duotone) | Sharp contrast | Not recommended | Dramatic pairing | Cinematic impact |
 
 ## Auto Selection
 

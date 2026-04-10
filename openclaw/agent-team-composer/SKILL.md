@@ -1,7 +1,8 @@
 ---
 name: agent-team-composer
-description: 从自然语言团队需求生成 OpenClaw 多智能体团队脚手架，包括 SOUL.md、AGENTS.md、协作规则和 YAML 配置。用于“组建团队”“创建协作团队”“生成团队配置”等请求。
+description: "从自然语言团队需求生成 OpenClaw 多智能体团队脚手架，包括 SOUL.md、AGENTS.md、协作规则和 YAML 配置。Do NOT use for single-agent creation or modifying existing team configs."
 ---
+
 
 # Agent Team Composer
 
@@ -65,3 +66,52 @@ Minimum validation before claiming completion:
 - generator runs successfully
 - at least one sample input produces all five output files
 - no unresolved `{{placeholder}}` remains in generated output
+
+## Production Patterns
+
+Generated teams MUST follow the patterns in `references/production-patterns.md`:
+- Pattern A: Self-propulsion protocol (auto_continue + 3 hard rules)
+- Pattern B: Model fallback policy table
+- Pattern C/D: Worker/TL standard workspace structure
+- Pattern E: Standing orders JSON schema
+- Pattern F: SOUL.md 瘦身 (<50 行 for new teams)
+- Pattern G/H: Workspace cleanup thresholds + ghost role prevention
+
+## When NOT to Use
+
+- 用户只想创建单个 agent（直接手动创建即可）。
+- 不用于修改已有团队的配置（用直接编辑）。
+- 不用于非 OpenClaw 的多 agent 框架。
+
+## Error Handling
+
+- 自然语言描述模糊时，生成后让用户确认再创建文件。
+- workspace 目录冲突时，提示用户选择新名称。
+- 模板渲染失败时，报告缺少的变量。
+
+## Internal Acceptance
+
+- 生成的 SOUL.md、AGENTS.md、YAML 配置文件结构完整。
+- 所有引用的协作规则和工具权限配置正确。
+- validate-skill.sh 对生成的技能文件通过。
+
+## Gotchas
+
+- Agent name 必须是 lowercase-hyphen 格式，包含中文或大写会报错。
+- 协作规则中的 agent 引用必须与 AGENTS.md 中定义的名字一致。
+- 创建后需要重启 gateway 才能加载新 agent。
+
+## Delivery Contract
+
+- 输出所有创建的文件路径列表。
+- 每个文件的作用简要说明。
+- 后续步骤（如重启 gateway）一并告知。
+**注意：本技能是大型流水线的一部分。Do **not** report completion to the user unless all dependent tools/scripts/skills have been verified as integrated.**not** report completion to the user unless all dependent tools/scripts/skills integration tests have passed.**
+
+## Workflow Steps
+
+1. Parse the user's natural language description to identify agents, roles, and collaboration rules.
+2. Generate SOUL.md for each agent with personality and behavior.
+3. Generate AGENTS.md with role assignments and interaction rules.
+4. Create workspace directory and YAML configuration.
+5. Validate the generated files pass structural checks.

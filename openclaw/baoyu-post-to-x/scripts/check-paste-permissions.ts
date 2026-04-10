@@ -182,7 +182,7 @@ async function checkBun(): Promise<void> {
   if (result.status === 0) {
     log('Bun runtime', true, `v${result.stdout?.toString().trim()}`);
   } else {
-    log('Bun runtime', false, 'Cannot run bun. Install: curl -fsSL https://bun.sh/install | bash');
+    log('Bun runtime', false, 'Cannot run bun. Install: brew install oven-sh/bun/bun (macOS) or npm install -g bun');
   }
 }
 

@@ -1,6 +1,0 @@
-{
-  "origin": "self",
-  "author": "gorin",
-  "name": "voice-to-zettel",
-  "description": "语音消息转写为 Zettel 笔记，自动关系发现。"
-}

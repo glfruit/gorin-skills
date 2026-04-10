@@ -184,6 +184,7 @@ Found X issues (P0: _, P1: _, P2: _, P3: _).
 | Removal | `references/removal-plan.md` | Dead code, feature flags |
 | Security | `references/security-checklist.md` | Injection, auth, race conditions |
 | Quality | `references/code-quality-checklist.md` | Errors, perf, boundaries |
+| Coding Guidelines | `~/.openclaw/shared/coding-guidelines.md` | Anti-Pattern: 假设隐藏、过度复杂、非手术刀改动、弱目标、命令式指令、概念错误、附和倾向、跳过人类审查 |
 
 ## Common Mistakes
 

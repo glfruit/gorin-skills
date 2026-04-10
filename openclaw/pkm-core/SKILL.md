@@ -1,9 +1,10 @@
 ---
 name: pkm-core
-description: "PKM 基础层 — vault 路径、frontmatter 规范、命名规则、Obsidian 语法。所有笔记类 skills 的公共依赖。不要直接触发，由 pkm-save-note、idea-creator、zk-para-zettel 等引用。"
+description: "PKM 基础层 — vault 路径、frontmatter 规范、命名规则、Obsidian 语法。所有笔记类 skills 的公共依赖。不要直接触发，由 pkm-save-note、idea-creator、zk-para-zettel 等引用。 Do NOT use directly — invoked by other PKM skills only."
 user-invocable: false
 agent-usable: true
 ---
+
 
 # PKM Core — 笔记系统基础层
 
@@ -11,21 +12,53 @@ agent-usable: true
 
 ## Vault 路径
 
-从 Obsidian 配置读取活跃 vault：
+所有 vault 配置（唯一权威来源）在 `vault-config.yaml` 的 `vaults` 字段。
+
 ```bash
-cat ~/Library/Application\ Support/obsidian/obsidian.json | python3 -c "
-import json,sys
-d=json.load(sys.stdin)
-for v in d.get('vaults',{}).values():
-    if v.get('open'): print(v['path'])
+# 获取指定 vault 路径
+python3 -c "
+import yaml
+with open(os.path.expanduser('~/.gorin-skills/openclaw/pkm-core/vault-config.yaml')) as f:
+    cfg = yaml.safe_load(f)
+print(os.path.expanduser(cfg['vaults']['atlas']['path']))
 "
 ```
 
-当前 vault：
-- **octopus**: `/Users/gorin/Workspace/PKM/octopus`（主 vault）
-- **gourmet**: `/Users/gorin/Workspace/PKM/gourmet`
+### Vault 列表
 
-### Vault 目录结构（octopus）
+| Vault | 路径 | 角色 | LLM 角色 |
+|-------|------|------|----------|
+| **atlas** | `~/pkm/atlas` | 知识图谱、研究资料 | 主导（写入+维护+链接） |
+| **octopus** | `~/Workspace/PKM/octopus` | 日常管理、项目管理 | 辅助（人为主，LLM 辅助） |
+| **loom** | `~/pkm/loom` | 内容创作工坊 | 辅助（人为主，LLM 辅助） |
+
+### Atlas 目录结构
+
+```
+atlas/
+├── 1-Literature/           ← 文献笔记
+│   ├── Papers/             ← 学术论文
+│   ├── Books/              ← 书籍
+│   ├── Articles/           ← 博客/网页
+│   ├── Repos/              ← 代码仓库
+│   ├── Podcasts/           ← 播客/视频
+│   └── Tweets/             ← X/Twitter thread
+├── 2-Concepts/             ← 概念节点（跨文献关联）
+├── 3-Permanent/            ← 原子笔记
+├── 4-Structure/            ← 结构笔记
+│   ├── MOC/                ← Map of Content
+│   ├── Index/              ← LLM 维护的索引
+│   └── Queries/            ← 查询产物回填
+├── 5-Areas/                ← 知识领域
+├── 6-Outputs/              ← 多格式产物
+│   ├── PDF/ Slides/ Charts/ Reports/
+├── 7-Templates/            ← 笔记模板
+├── 8-Assets/               ← 图片/附件
+├── 9-Clippings/            ← Web Clipper 剪藏
+└── .state/                 ← 处理状态
+```
+
+### Octopus 目录结构
 
 ```
 octopus/
@@ -53,6 +86,16 @@ octopus/
 │   └── Temp-Files/0.Inbox/
 └── .obsidian/               ← Obsidian 配置（不要手动改）
 ```
+
+## 类型映射（唯一权威来源）
+
+详见 `vault-config.yaml` 的 `vaults.<name>.type_mapping` 字段。各笔记 skill 不再各自维护 type → directory 映射，统一引用此文件。
+
+**注意**：不同 vault 的类型映射不同。atlas 用 `1-Literature`，octopus 用 `Zettels/2-Literature`。
+
+## 共享管道
+
+详见 `vault-config.yaml` 的 `pipeline` 部分。所有创建类 skill（pkm-save-note、zk-literature、idea-creator）必须使用共享管道的 validate_frontmatter 和 prevent_orphan。
 
 ## 笔记命名规则
 
@@ -179,3 +222,32 @@ tags: [tag1, tag2]
 | Highlight | `==text==` | 高亮 |
 | Comment | `%%hidden%%` | 隐藏注释 |
 | Tag | `#tag` / `#nested/tag` | 行内标签 |
+
+## When NOT to Use
+
+- 不直接由用户触发，由其他笔记类技能引用。
+- 不用于执行笔记操作（保存/搜索/分类由上层技能处理）。
+
+## Error Handling
+
+- vault 路径变量未设置时，使用默认路径并发出警告。
+- frontmatter 解析失败时，报告具体行号和字段。
+- 命名冲突时，在文件名后追加序号。
+
+## Internal Acceptance
+
+- 所有引用此技能的上层技能能正确读取配置。
+- vault 路径、命名规则、frontmatter 规范与实际文件一致。
+- validate-skill.sh 通过。
+
+## Gotchas
+
+- Obsidian vault 路径可能因环境不同而变化，始终使用环境变量。
+- frontmatter 的 `tags` 必须是列表格式，不能用逗号分隔字符串。
+- 笔记命名规则：`YYYY-MM-DD-title-kebab`，日期是必填前缀。
+
+## Delivery Contract
+
+- 配置变更需同步更新所有引用此技能的 SKILL.md。
+- vault 路径变更需在 TOOLS.md 中同步更新。
+**注意：本技能是大型流水线的一部分。Do **not** report completion to the user unless all dependent tools/scripts/skills have been verified as integrated.**not** report completion to the user unless all dependent tools/scripts/skills integration tests have passed.**

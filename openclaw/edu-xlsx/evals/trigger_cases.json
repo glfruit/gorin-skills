@@ -1,0 +1,13 @@
+{
+  "description": "Trigger evaluation for edu-xlsx skill",
+  "cases": [
+    {"prompt": "帮我验证一下教材大纲", "should_trigger": true, "reason": "教材大纲 is a trigger"},
+    {"prompt": "读取这个 Excel 大纲文件", "should_trigger": true, "reason": "Excel 大纲 matches domain"},
+    {"prompt": "从课程大纲提取 section-requirements", "should_trigger": true, "reason": "课程大纲 + 提取 matches"},
+    {"prompt": "验证大纲完整性", "should_trigger": true, "reason": "验证大纲 is trigger"},
+    {"prompt": "识别这个 Excel 是教材还是课程大纲", "should_trigger": true, "reason": "识别 + 大纲 + Excel"},
+    {"prompt": "帮我做一个财务报表", "should_trigger": false, "reason": "财务报表 → xlsx skill"},
+    {"prompt": "编辑这个 Word 文档", "should_trigger": false, "reason": "Word doc → docx/superdoc skill"},
+    {"prompt": "制作教学课件 PPT", "should_trigger": false, "reason": "PPT → edu-pptx skill"}
+  ]
+}

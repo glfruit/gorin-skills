@@ -168,6 +168,47 @@ def file_similarity(path_a, path_b):
     return len(intersection) / len(union)
 
 
+def is_project_workspace(ws, skip_dirs):
+    """判断 workspace 是否应按项目仓库阈值评估。
+
+    判定信号：
+    1) workspace 根或一级子目录存在 .git
+    2) workspace 浅层（<=3）出现常见工程 manifest（package.json 等）
+    """
+    if (ws / ".git").is_dir():
+        return True
+
+    try:
+        for p in ws.iterdir():
+            if p.is_dir() and (p / ".git").is_dir():
+                return True
+    except Exception:
+        pass
+
+    manifests = {
+        "package.json",
+        "pyproject.toml",
+        "requirements.txt",
+        "Pipfile",
+        "go.mod",
+        "Cargo.toml",
+        "pom.xml",
+        "build.gradle",
+    }
+
+    for root, dirs, files in os.walk(ws, topdown=True):
+        rel = Path(root).relative_to(ws)
+        depth = len(rel.parts)
+        dirs[:] = [d for d in dirs if d not in skip_dirs]
+        if depth > 3:
+            dirs[:] = []
+            continue
+        if any(f in manifests for f in files):
+            return True
+
+    return False
+
+
 def audit_soul():
     """审计所有 SOUL.md。"""
     findings = []
@@ -272,6 +313,235 @@ def audit_agents():
                     "suggestion": "删除引用或恢复对应文件",
                 }
             )
+
+    return findings
+
+
+def audit_team_ops():
+    """审计团队运营层面：模型策略、空壳角色、standing-order、workspace 健康度。"""
+    findings = []
+
+    # 1. Load openclaw.json agents.list for cross-referencing
+    config_path = OPENCLAW_DIR / "openclaw.json"
+    registered_agents = {}
+    actual_models = {}
+    if config_path.exists():
+        try:
+            with open(config_path, encoding="utf-8") as f:
+                config = json.load(f)
+            for a in config.get("agents", {}).get("list", []):
+                aid = a["id"]
+                registered_agents[aid] = a
+                m = a.get("model", {})
+                if isinstance(m, dict):
+                    actual_models[aid] = m.get("primary", "default")
+                else:
+                    actual_models[aid] = str(m)
+        except Exception:
+            pass
+
+    # 2. Ghost agents: registered but no workspace
+    known_no_workspace = {"main", "claude", "codex"}
+    for aid in registered_agents:
+        if aid in known_no_workspace:
+            continue
+        ws = WORKSPACE_DIR / f"workspace-{aid}"
+        if not ws.exists():
+            # Skip known shell-only agents (no workspace expected)
+            if aid.startswith("omlx-"):
+                continue
+            findings.append(
+                {
+                    "agent": aid,
+                    "file": "agents.list",
+                    "severity": "P1",
+                    "issue": "已注册但无 workspace（空壳角色）",
+                    "suggestion": "移除或创建 workspace",
+                }
+            )
+
+    # 3. Check workspace file count
+    SKIP_DIRS = frozenset({
+        ".git", "skills", "memory", ".archive", ".openclaw", ".pi",
+        "node_modules", "__pycache__", ".next", "dist", "build",
+        ".venv", "venv", ".cache", "out", "coverage", ".turbo",
+        ".claude", ".codex",
+    })
+    # Project workspaces (contain .git subdirectory) have higher thresholds
+    PROJECT_WS_THRESHOLD = 500   # P2 for project workspaces
+    AGENT_WS_THRESHOLD_WARN = 30   # P2 for generic agent workspaces
+    AGENT_WS_THRESHOLD_CRIT = 100  # P1 for generic agent workspaces
+    TL_WS_THRESHOLD_WARN = 50      # P2 for TL workspaces (higher throughput)
+    TL_WS_THRESHOLD_CRIT = 120     # P1 for TL workspaces (higher throughput)
+
+    for ws in get_workspaces():
+        agent = ws.name.replace("workspace-", "")
+        is_project_ws = is_project_workspace(ws, SKIP_DIRS)
+
+        file_count = 0
+        now_ts = datetime.now().timestamp()
+        volatile_dirs = {"logs", "reports", "tmp", "temp"}
+        # TL workspaces often keep rolling runtime datasets under data/
+        if agent.endswith("-tl"):
+            volatile_dirs.add("data")
+        for root, dirs, files in os.walk(ws, topdown=True):
+            # topdown: modifying dirs[:] in-place prunes subdirectories
+            dirs[:] = [d for d in dirs if d not in SKIP_DIRS]
+
+            rel = Path(root).relative_to(ws)
+            top_dir = rel.parts[0] if rel.parts else ""
+            in_volatile_dir = top_dir in volatile_dirs
+
+            if not in_volatile_dir:
+                file_count += len(files)
+                continue
+
+            # 对 logs/reports/tmp/temp 做时间感知：
+            # 仅将 >14 天未清理的文件计入膨胀分（避免把活跃运行噪音误判为结构膨胀）
+            for fn in files:
+                fp = Path(root) / fn
+                try:
+                    if now_ts - fp.stat().st_mtime > 14 * 86400:
+                        file_count += 1
+                except Exception:
+                    # 无法读取 mtime 时，保守计入
+                    file_count += 1
+
+        if is_project_ws:
+            if file_count > PROJECT_WS_THRESHOLD:
+                findings.append({
+                    "agent": agent,
+                    "file": "workspace",
+                    "severity": "P2",
+                    "issue": f"项目 workspace 有 {file_count} 个文件",
+                    "suggestion": "检查是否需要 gitignore 或归档",
+                })
+        else:
+            warn_th = TL_WS_THRESHOLD_WARN if agent.endswith("-tl") else AGENT_WS_THRESHOLD_WARN
+            crit_th = TL_WS_THRESHOLD_CRIT if agent.endswith("-tl") else AGENT_WS_THRESHOLD_CRIT
+
+            if file_count > crit_th:
+                findings.append({
+                    "agent": agent,
+                    "file": "workspace",
+                    "severity": "P1",
+                    "issue": f"workspace 有 {file_count} 个文件，严重膨胀",
+                    "suggestion": "清理历史文件，归档到 .archive/",
+                })
+            elif file_count > warn_th:
+                findings.append({
+                    "agent": agent,
+                    "file": "workspace",
+                    "severity": "P2",
+                    "issue": f"workspace 有 {file_count} 个文件",
+                    "suggestion": "检查是否有可归档的历史文件",
+                })
+
+        # 4. Standing-order health (for TL workspaces only)
+        if agent.endswith("-tl"):
+            so_path = ws / "standing-orders.json"
+            if so_path.exists():
+                try:
+                    so = json.loads(so_path.read_text(encoding="utf-8"))
+                    task = so.get("task", {})
+                    # Check auto_continue
+                    if task.get("auto_continue") != True:
+                        findings.append(
+                            {
+                                "agent": agent,
+                                "file": "standing-orders.json",
+                                "severity": "P0",
+                                "issue": f"auto_continue={task.get('auto_continue')}，自推进协议未生效",
+                                "suggestion": "设置 auto_continue:true",
+                            }
+                        )
+                    # Check next_actions: pending 或 in_progress 都视为“仍在推进”
+                    actions = task.get("next_actions", [])
+                    actionable = [
+                        a for a in actions
+                        if a.get("status") in {"pending", "in_progress"}
+                    ]
+                    if not actionable and so.get("status") == "active":
+                        findings.append(
+                            {
+                                "agent": agent,
+                                "file": "standing-orders.json",
+                                "severity": "P2",
+                                "issue": "status=active 但无 pending/in_progress action",
+                                "suggestion": "完成或更新 standing-order",
+                            }
+                        )
+                except json.JSONDecodeError:
+                    findings.append(
+                        {
+                            "agent": agent,
+                            "file": "standing-orders.json",
+                            "severity": "P0",
+                            "issue": "JSON 解析失败",
+                            "suggestion": "修复 JSON 语法",
+                        }
+                    )
+
+            # 5. HEARTBEAT.md execution-driven check
+            hb_path = ws / "HEARTBEAT.md"
+            if hb_path.exists():
+                hb_content = hb_path.read_text(encoding="utf-8", errors="ignore")
+                if "执行" not in hb_content and "execute" not in hb_content.lower():
+                    findings.append(
+                        {
+                            "agent": agent,
+                            "file": "HEARTBEAT.md",
+                            "severity": "P1",
+                            "issue": "HEARTBEAT.md 缺少执行指令（仅读取不执行）",
+                            "suggestion": "改为「读取并执行第一个 pending action」",
+                        }
+                    )
+
+            # 6. SOUL.md hard rules for self-propulsion
+            soul_path = ws / "SOUL.md"
+            if soul_path.exists():
+                soul_content = soul_path.read_text(encoding="utf-8", errors="ignore")
+                missing_rules = []
+                required_phrases = [
+                    "汇报不是停点",
+                    "零执行",
+                ]
+                for phrase in required_phrases:
+                    if phrase not in soul_content:
+                        missing_rules.append(phrase)
+                # Heartbeat check (case-insensitive)
+                if "heartbeat" not in soul_content.lower():
+                    missing_rules.append("heartbeat(大小写)")
+                if missing_rules:
+                    findings.append(
+                        {
+                            "agent": agent,
+                            "file": "SOUL.md",
+                            "severity": "P1",
+                            "issue": f"缺少自推进硬规则: {', '.join(missing_rules)}",
+                            "suggestion": "补充 3 条自推进硬规则",
+                        }
+                    )
+
+        # 7. Model policy alignment (TL workspaces)
+        if agent.endswith("-tl"):
+            agents_md = ws / "AGENTS.md"
+            if agents_md.exists():
+                agents_content = agents_md.read_text(encoding="utf-8", errors="ignore")
+                # Check for obsolete model names
+                obsolete = ["gpt-5.3-codex-spark", "gpt-5.3-codex"]
+                for model_name in obsolete:
+                    # Avoid false positives on "gpt-5.3-codex-spark" being part of a longer valid name
+                    if model_name in agents_content:
+                        findings.append(
+                            {
+                                "agent": agent,
+                                "file": "AGENTS.md",
+                                "severity": "P2",
+                                "issue": f"引用过时模型名: {model_name}",
+                                "suggestion": "更新为当前实际配置的模型",
+                            }
+                        )
 
     return findings
 
@@ -447,6 +717,9 @@ def main():
         "--skills", action="store_true", help="仅审计 Skills"
     )
     parser.add_argument(
+        "--team", action="store_true", help="仅审计团队运营（模型策略/空壳/standing-order）"
+    )
+    parser.add_argument(
         "--report",
         nargs="?",
         const=str(AUDITS_DIR),
@@ -459,7 +732,7 @@ def main():
     args = parser.parse_args()
 
     # 默认执行所有
-    run_all = not (args.soul or args.agents or args.skills)
+    run_all = not (args.soul or args.agents or args.skills or args.team)
 
     findings = []
     if run_all or args.soul:
@@ -468,6 +741,8 @@ def main():
         findings.extend(audit_agents())
     if run_all or args.skills:
         findings.extend(audit_skills())
+    if run_all or args.team:
+        findings.extend(audit_team_ops())
 
     if args.json:
         print(json.dumps(findings, ensure_ascii=False, indent=2))

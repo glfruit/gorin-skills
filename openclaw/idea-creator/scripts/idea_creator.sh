@@ -5,7 +5,7 @@
 set -e
 
 # Configuration
-VAULT_PATH="${OBSIDIAN_VAULT_PATH:-${VAULT_PATH:-/Users/gorin/Workspace/PKM/octopus}}"
+VAULT_PATH="${OBSIDIAN_VAULT_PATH:-${VAULT_PATH:-$HOME/Workspace/PKM/octopus}}"
 FLEETING_DIR="$VAULT_PATH/Zettels/1-Fleeting"
 PERMANENT_DIR="$VAULT_PATH/Zettels/3-Permanent"
 AREAS_DIR="$VAULT_PATH/Efforts/2-Areas"

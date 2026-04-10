@@ -55,7 +55,7 @@ Reference Style Extracted (no file):
 
 | Input | Output Directory | Next |
 |-------|------------------|------|
-| File path | Ask user (1.2) | → 1.2 |
+| File path | EXTEND.md `default_output_dir` (default: `imgs-subdir`). If not configured, confirm in 1.2. | → 1.2 |
 | Pasted content | `illustrations/{topic-slug}/` | → 1.4 |
 
 **Backup rule for pasted content**: If `source.md` exists in target directory, rename to `source-backup-YYYYMMDD-HHMMSS.md` before saving.
@@ -68,7 +68,7 @@ Check preferences and existing state, then ask ALL needed questions in ONE AskUs
 
 | Question | When to Ask | Options |
 |----------|-------------|---------|
-| Output directory | No `default_output_dir` in EXTEND.md | `{article-dir}/`, `{article-dir}/imgs/` (Recommended), `{article-dir}/illustrations/`, `illustrations/{topic-slug}/` |
+| Output directory | No `default_output_dir` in EXTEND.md | `{article-dir}/imgs/` (Recommended), `{article-dir}/`, `{article-dir}/illustrations/`, `illustrations/{topic-slug}/` |
 | Existing images | Target dir has `.png/.jpg/.webp` files | `supplement`, `overwrite`, `regenerate` |
 | Article update | Always (file path input) | `update`, `copy` |
 
@@ -86,8 +86,18 @@ Check preferences and existing state, then ask ALL needed questions in ONE AskUs
 **CRITICAL**: If EXTEND.md not found, MUST complete first-time setup before ANY other questions or steps. Do NOT proceed to reference images, do NOT ask about content, do NOT ask about type/style — ONLY complete the preferences setup first.
 
 ```bash
-test -f .openclaw/skills-config/baoyu/baoyu-article-illustrator/EXTEND.md && echo "project"
-test -f "$HOME/.openclaw/skills-config/baoyu/baoyu-article-illustrator/EXTEND.md" && echo "user"
+# macOS, Linux, WSL, Git Bash
+test -f .baoyu-skills/baoyu-article-illustrator/EXTEND.md && echo "project"
+test -f "${XDG_CONFIG_HOME:-$HOME/.config}/baoyu-skills/baoyu-article-illustrator/EXTEND.md" && echo "xdg"
+test -f "$HOME/.baoyu-skills/baoyu-article-illustrator/EXTEND.md" && echo "user"
+```
+
+```powershell
+# PowerShell (Windows)
+if (Test-Path .baoyu-skills/baoyu-article-illustrator/EXTEND.md) { "project" }
+$xdg = if ($env:XDG_CONFIG_HOME) { $env:XDG_CONFIG_HOME } else { "$HOME/.config" }
+if (Test-Path "$xdg/baoyu-skills/baoyu-article-illustrator/EXTEND.md") { "xdg" }
+if (Test-Path "$HOME/.baoyu-skills/baoyu-article-illustrator/EXTEND.md") { "user" }
 ```
 
 | Result | Action |
@@ -158,9 +168,16 @@ For each reference image:
 
 **Do NOT skip.** Use ONE AskUserQuestion call with max 4 questions. **Q1, Q2, Q3 are ALL REQUIRED.**
 
-### Q1: Illustration Type ⚠️ REQUIRED
-- [Recommended based on analysis] (Recommended)
-- infographic / scene / flowchart / comparison / framework / timeline / mixed
+### Q1: Preset or Type ⚠️ REQUIRED
+
+Based on Step 2 content analysis, recommend a preset first (sets both type & style). Look up [style-presets.md](style-presets.md) "Content Type → Preset Recommendations" table.
+
+- [Recommended preset] — [brief: type + style + why] (Recommended)
+- [Alternative preset] — [brief]
+- Or choose type manually: infographic / scene / flowchart / comparison / framework / timeline / mixed
+
+**If user picks a preset → skip Q3** (type & style both resolved).
+**If user picks a type → Q3 is REQUIRED.**
 
 ### Q2: Density ⚠️ REQUIRED - DO NOT SKIP
 - minimal (1-2) - Core concepts only
@@ -168,7 +185,7 @@ For each reference image:
 - per-section - At least 1 per section/chapter (Recommended)
 - rich (6+) - Comprehensive coverage
 
-### Q3: Style ⚠️ REQUIRED (ALWAYS ask, even with preferred_style in EXTEND.md)
+### Q3: Style ⚠️ REQUIRED (skip if preset chosen in Q1)
 
 If EXTEND.md has `preferred_style`:
 - [Custom style name + brief description] (Recommended)
@@ -184,18 +201,32 @@ If no `preferred_style` (present Core Styles first):
 
 **Core Styles** (simplified selection):
 
-| Core Style | Best For |
-|------------|----------|
-| `minimal-flat` | General, knowledge sharing, SaaS |
-| `sci-fi` | AI, frontier tech, system design |
-| `hand-drawn` | Relaxed, reflective, casual |
-| `editorial` | Processes, data, journalism |
-| `scene` | Narratives, emotional, lifestyle |
+| Core Style | Maps To | Best For |
+|------------|---------|----------|
+| `minimal-flat` | notion | General, knowledge sharing, SaaS |
+| `sci-fi` | blueprint | AI, frontier tech, system design |
+| `hand-drawn` | sketch/warm | Relaxed, reflective, casual |
+| `editorial` | editorial | Processes, data, journalism |
+| `scene` | warm/watercolor | Narratives, emotional, lifestyle |
+| `poster` | screen-print | Opinion, editorial, cultural, cinematic |
 
 Style selection based on Type × Style compatibility matrix (styles.md).
-Full specs: `styles/<style>.md`
+**In Step 5.1**, read `styles/<style>.md` for visual elements and rendering rules.
 
-### Q4: Image Text Language ⚠️ REQUIRED when article language ≠ EXTEND.md `language`
+### Q4: Palette (optional)
+
+If preset did not specify a palette, and the user may benefit from a palette override, offer available palettes:
+
+- Default (use style's built-in colors) (Recommended)
+- `macaron` — soft pastel blocks on warm cream
+- `warm` — warm earth tones, no cool colors
+- `neon` — vibrant neon on dark backgrounds
+
+**Skip if**: preset already resolved palette, or `preferred_palette` set in EXTEND.md.
+
+See Palette Gallery in [styles.md](styles.md#palette-gallery) and full specs in `palettes/<palette>.md`.
+
+### Q5: Image Text Language ⚠️ REQUIRED when article language ≠ EXTEND.md `language`
 
 Detect article language from content. If different from EXTEND.md `language` setting, MUST ask:
 - Article language (match article content) (Recommended)
@@ -219,7 +250,7 @@ Reference Images:
 
 ## Step 4: Generate Outline
 
-Save as `outline.md`:
+Save as `{output-dir}/outline.md` (all paths below are relative to the output directory determined in Step 1.1/1.2):
 
 ```yaml
 ---
@@ -267,7 +298,7 @@ references:                    # Only if references provided
 
 For each illustration in the outline:
 
-1. **Create prompt file**: `prompts/NN-{type}-{slug}.md`
+1. **Create prompt file**: `{output-dir}/prompts/NN-{type}-{slug}.md`
 2. **Include YAML frontmatter**:
    ```yaml
    ---
@@ -276,16 +307,18 @@ For each illustration in the outline:
    style: custom-flat-vector
    ---
    ```
-3. **Follow type-specific template** from [prompt-construction.md](prompt-construction.md)
-4. **Prompt quality requirements** (all REQUIRED):
+3. **Load style specs**: Read `styles/<style>.md` for visual elements, style rules, and rendering instructions
+4. **Load palette specs** (if palette specified): Read `palettes/<palette>.md` for colors and background. Palette colors **replace** the style's default Color Palette. If no palette specified, use the style's built-in colors.
+5. **Follow type-specific template** from [prompt-construction.md](prompt-construction.md), using rendering from style + colors from palette (or style default)
+6. **Prompt quality requirements** (all REQUIRED):
    - `Layout`: Describe overall composition (grid / radial / hierarchical / left-right / top-down)
    - `ZONES`: Describe each visual area with specific content, not vague descriptions
    - `LABELS`: Use **actual numbers, terms, metrics, quotes from the article** — NOT generic placeholders
-   - `COLORS`: Specify hex codes with semantic meaning (e.g., `Coral (#E07A5F) for emphasis`)
-   - `STYLE`: Describe line treatment, texture, mood, character rendering
+   - `COLORS`: Specify hex codes from palette (or style default) with semantic meaning
+   - `STYLE`: Describe line treatment, texture, mood, character rendering per style rules
    - `ASPECT`: Specify ratio (e.g., `16:9`)
-5. **Apply defaults**: composition requirements, character rendering, text guidelines, watermark
-6. **Backup rule**: If prompt file exists, rename to `prompts/NN-{type}-{slug}-backup-YYYYMMDD-HHMMSS.md`
+7. **Apply defaults**: composition requirements, character rendering, text guidelines, watermark
+8. **Backup rule**: If prompt file exists, rename to `prompts/NN-{type}-{slug}-backup-YYYYMMDD-HHMMSS.md`
 
 **Verification** ⛔: Before proceeding to 5.2, confirm ALL prompt files exist:
 ```
@@ -296,6 +329,10 @@ Prompt Files:
 ```
 
 **DO NOT** pass ad-hoc inline text to `--prompt` without first saving prompt files. The generation command should either use `--promptfiles prompts/NN-{type}-{slug}.md` or read the saved file content for `--prompt`.
+
+**Execution choice**:
+- If multiple illustrations already have saved prompt files and the task is now plain generation, prefer `baoyu-imagine` batch mode (`build-batch.ts` -> `main.ts --batchfile`)
+- Use subagents only when each illustration still needs separate prompt rewriting, style exploration, or other per-image reasoning before generation
 
 **CRITICAL - References in Frontmatter**:
 - Only add `references` field if files ACTUALLY EXIST in `references/` directory
@@ -330,7 +367,7 @@ Check available skills. If multiple, ask user.
 
 | Skill Supports `--ref` | Action |
 |------------------------|--------|
-| Yes (e.g., baoyu-image-gen with Google) | Pass reference images via `--ref` |
+| Yes (e.g., baoyu-imagine with Google) | Pass reference images via `--ref` |
 | No | Convert to text description, append to prompt |
 
 **Verification**: Before generating, confirm reference processing:
@@ -359,10 +396,14 @@ Add: `Include a subtle watermark "[content]" at [position].`
 
 ### 6.1 Update Article
 
-Insert after corresponding paragraph:
-```markdown
-![description](illustrations/{slug}/NN-{type}-{slug}.png)
-```
+Insert after corresponding paragraph, using path relative to article file:
+
+| `default_output_dir` | Insert Path |
+|----------------------|-------------|
+| `imgs-subdir` | `![description](imgs/NN-{type}-{slug}.png)` |
+| `same-dir` | `![description](NN-{type}-{slug}.png)` |
+| `illustrations-subdir` | `![description](illustrations/NN-{type}-{slug}.png)` |
+| `independent` | `![description](illustrations/{topic-slug}/NN-{type}-{slug}.png)` (relative to cwd) |
 
 Alt text: concise description in article's language.
 

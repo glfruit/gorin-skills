@@ -844,7 +844,57 @@ modified: {{modified}}
 
   let templateStr = templates[template] || templates.standard;
 
-  // Simple template substitution
+  // Handle duplicated nested sections like {{#links}}...{{#links}}item{{/links}}...{{/links}}
+  // so headings render once and array items render inside.
+  templateStr = templateStr.replace(
+    /\{\{#(\w+)\}\}([\s\S]*?)\{\{#\1\}\}([\s\S]*?)\{\{\/\1\}\}([\s\S]*?)\{\{\/\1\}\}/g,
+    (match, key, prefix, itemTemplate, suffix) => {
+      const value = vars[key];
+      if (!value || (Array.isArray(value) && value.length === 0)) {
+        return '';
+      }
+      const renderItem = (item: any) => {
+        if (typeof item === 'object') {
+          let itemContent = itemTemplate;
+          for (const [k, v] of Object.entries(item)) {
+            itemContent = itemContent.replace(new RegExp(`\\{\\{${k}\\}\\}`, 'g'), String(v));
+          }
+          return itemContent;
+        }
+        return itemTemplate.replace(/\{\{\.\}\}/g, String(item));
+      };
+      if (Array.isArray(value)) {
+        return prefix + value.map(renderItem).join('') + suffix;
+      }
+      return prefix + itemTemplate + suffix;
+    }
+  );
+
+  // Handle sections first so nested placeholders are resolved correctly.
+  let previous = '';
+  while (templateStr !== previous) {
+    previous = templateStr;
+    templateStr = templateStr.replace(/\{\{#(\w+)\}\}([\s\S]*?)\{\{\/\1\}\}/g, (match, key, content) => {
+      const value = vars[key];
+      if (!value || (Array.isArray(value) && value.length === 0)) {
+        return '';
+      }
+      if (Array.isArray(value)) {
+        return value.map(item => {
+          if (typeof item === 'object') {
+            let itemContent = content;
+            for (const [k, v] of Object.entries(item)) {
+              itemContent = itemContent.replace(new RegExp(`\\{\\{${k}\\}\\}`, 'g'), String(v));
+            }
+            return itemContent;
+          }
+          return content.replace(/\{\{\.\}\}/g, String(item));
+        }).join('');
+      }
+      return content;
+    });
+  }
+
   templateStr = templateStr.replace(/\{\{\{(\w+)\}\}\}/g, (match, key) => {
     const value = vars[key];
     if (Array.isArray(value)) {
@@ -856,27 +906,6 @@ modified: {{modified}}
   templateStr = templateStr.replace(/\{\{(\w+)\}\}/g, (match, key) => {
     const value = vars[key];
     return value !== undefined ? String(value) : '';
-  });
-
-  // Handle conditionals {{#key}}...{{/key}}
-  templateStr = templateStr.replace(/\{\{#(\w+)\}\}([\s\S]*?)\{\{\/\1\}\}/g, (match, key, content) => {
-    const value = vars[key];
-    if (!value || (Array.isArray(value) && value.length === 0)) {
-      return '';
-    }
-    if (Array.isArray(value)) {
-      return value.map(item => {
-        if (typeof item === 'object') {
-          let itemContent = content;
-          for (const [k, v] of Object.entries(item)) {
-            itemContent = itemContent.replace(new RegExp(`\\{\\{${k}\\}\\}`, 'g'), String(v));
-          }
-          return itemContent;
-        }
-        return content.replace(/\{\{\.\}\}/g, String(item));
-      }).join('');
-    }
-    return content;
   });
 
   return templateStr;

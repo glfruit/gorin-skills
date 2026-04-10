@@ -1,0 +1,7 @@
+{
+  "origin": "self",
+  "author": "gorin",
+  "lifecycle_status": "deprecated",
+  "replaced_by": "ai-image-digest",
+  "notes": "Text digest retired; do not include in monitoring/integration promotion queue."
+}

@@ -6,7 +6,7 @@ metadata:
     "tags": ["obsidian", "ontology", "knowledge-graph", "pkm", "automation"],
     "openclaw":
       {
-        "requires": { "skills": ["pkm-core"] }
+        "requires": { "skills": ["pkm-core", "obsidian-bases", "obsidian-cli"] }
       }
   }
 ---

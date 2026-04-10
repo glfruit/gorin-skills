@@ -1,6 +1,43 @@
 # Vault 目录结构参考
 
-## octopus（主 vault）
+## atlas（知识图谱）
+
+```
+atlas/
+├── 1-Literature/           ← 文献笔记（Agent 自动分类归档）
+│   ├── Papers/             ← 学术论文
+│   ├── Books/              ← 书籍
+│   ├── Articles/           ← 博客/网页/公众号文章
+│   ├── Repos/              ← 代码仓库笔记
+│   ├── Podcasts/           ← 播客/视频笔记
+│   └── Tweets/             ← X/Twitter thread 存档
+├── 2-Concepts/             ← 概念节点（跨文献的知识图谱核心）
+├── 3-Permanent/            ← 原子笔记（从文献中提取的独立观点）
+├── 4-Structure/
+│   ├── MOC/                ← Map of Content（主题索引）
+│   ├── Index/              ← LLM 维护的索引文件
+│   │   ├── papers-index.md
+│   │   ├── concepts-index.md
+│   │   └── areas-index.md
+│   └── Queries/            ← 查询产物回填
+├── 5-Areas/                ← 知识领域分类
+│   ├── AI-ML/
+│   ├── Education/
+│   ├── Engineering/
+│   ├── Research-Method/
+│   ├── Policy/
+│   ├── Management/
+│   └── ...
+├── 6-Outputs/              ← 多格式输出产物
+│   ├── PDF/ Slides/ Charts/ Reports/
+├── 7-Templates/            ← 笔记模板
+├── 8-Assets/               ← 图片/附件资源
+├── 9-Clippings/            ← Obsidian Web Clipper 剪藏
+└── .state/                 ← 处理状态（不纳入版本管理）
+    └── dropbox.db          ← SQLite 增量扫描状态
+```
+
+## octopus（日常管理）
 
 ```
 octopus/

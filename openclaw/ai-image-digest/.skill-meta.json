@@ -1,0 +1,16 @@
+{
+  "name": "ai-image-digest",
+  "version": "1.0.0",
+  "created": "2026-03-26",
+  "readiness": "mvp",
+  "lifecycle_status": "monitoring",
+  "type": "Pipeline/Orchestrator + Monitor/Cron",
+  "dependencies": ["web-reader", "baoyu-infographic", "zk-router"],
+  "workspace": "~/.openclaw/workspace-daily-collector/ai-image-digest",
+  "cron_schedule": "15 8 * * * Asia/Shanghai",
+  "auto_promote": {
+    "target": "integrated",
+    "condition": "3 successful runs spanning >= 3 different dates in state runs[]",
+    "checked_by": "cron payload step 9"
+  }
+}

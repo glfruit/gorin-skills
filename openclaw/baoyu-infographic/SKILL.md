@@ -1,6 +1,10 @@
 ---
 name: baoyu-infographic
-description: Generates professional infographics with 21 layout types and 20 visual styles. Analyzes content, recommends layout×style combinations, and generates publication-ready infographics. Use when user asks to create "infographic", "信息图", "visual summary", "可视化", or "高密度信息大图".
+description: Generates professional infographics with 21 layout types and 21 visual styles. Analyzes content, recommends layout×style combinations, and generates publication-ready infographics. Use when user asks to create "infographic", "信息图", "visual summary", "可视化", or "高密度信息大图".
+version: 1.56.1
+metadata:
+  openclaw:
+    homepage: https://github.com/JimLiu/baoyu-skills#baoyu-infographic
 ---
 
 # Infographic Generator
@@ -13,6 +17,7 @@ Two dimensions: **layout** (information structure) × **style** (visual aestheti
 /baoyu-infographic path/to/content.md
 /baoyu-infographic path/to/content.md --layout hierarchical-layers --style technical-schematic
 /baoyu-infographic path/to/content.md --aspect portrait --lang zh
+/baoyu-infographic path/to/content.md --aspect 3:4
 /baoyu-infographic  # then paste content
 ```
 
@@ -21,8 +26,8 @@ Two dimensions: **layout** (information structure) × **style** (visual aestheti
 | Option | Values |
 |--------|--------|
 | `--layout` | 21 options (see Layout Gallery), default: bento-grid |
-| `--style` | 20 options (see Style Gallery), default: craft-handmade |
-| `--aspect` | landscape (16:9), portrait (9:16), square (1:1) |
+| `--style` | 21 options (see Style Gallery), default: craft-handmade |
+| `--aspect` | Named: landscape (16:9), portrait (9:16), square (1:1). Custom: any W:H ratio (e.g., 3:4, 4:3, 2.35:1) |
 | `--lang` | en, zh, ja, etc. |
 
 ## Layout Gallery
@@ -77,6 +82,7 @@ Full definitions: `references/layouts/<layout>.md`
 | `pop-laboratory` | Blueprint grid, coordinate markers, lab precision |
 | `morandi-journal` | Hand-drawn doodle, warm Morandi tones |
 | `retro-pop-grid` | 1970s retro pop art, Swiss grid, thick outlines |
+| `hand-drawn-edu` | Macaron pastels, hand-drawn wobble, stick figures |
 
 Full definitions: `references/styles/<style>.md`
 
@@ -99,6 +105,8 @@ Full definitions: `references/styles/<style>.md`
 | Product Guide | `dense-modules` + `morandi-journal` |
 | Technical Guide | `dense-modules` + `pop-laboratory` |
 | Trendy Guide | `dense-modules` + `retro-pop-grid` |
+| Educational Diagram | `hub-spoke` + `hand-drawn-edu` |
+| Process Tutorial | `linear-progression` + `hand-drawn-edu` |
 
 Default: `bento-grid` + `craft-handmade`
 
@@ -128,7 +136,7 @@ Slug: 2-4 words kebab-case from topic. Conflict: append `-YYYYMMDD-HHMMSS`.
 
 ## Core Principles
 
-- Preserve all source data **verbatim**—no summarization or rephrasing
+- Preserve source data faithfully—no summarization or rephrasing (but **strip any credentials, API keys, tokens, or secrets** before including in outputs)
 - Define learning objectives before structuring content
 - Structure for visual communication (headlines, labels, visual elements)
 
@@ -138,22 +146,29 @@ Slug: 2-4 words kebab-case from topic. Conflict: append `-YYYYMMDD-HHMMSS`.
 
 **1.1 Load Preferences (EXTEND.md)**
 
-Use Bash to check EXTEND.md existence (priority order):
+Check EXTEND.md existence (priority order):
 
 ```bash
-# Check project-level first
-test -f .openclaw/skills-config/baoyu/baoyu-infographic/EXTEND.md && echo "project"
+# macOS, Linux, WSL, Git Bash
+test -f .baoyu-skills/baoyu-infographic/EXTEND.md && echo "project"
+test -f "${XDG_CONFIG_HOME:-$HOME/.config}/baoyu-skills/baoyu-infographic/EXTEND.md" && echo "xdg"
+test -f "$HOME/.baoyu-skills/baoyu-infographic/EXTEND.md" && echo "user"
+```
 
-# Then user-level (cross-platform: $HOME works on macOS/Linux/WSL)
-test -f "$HOME/.openclaw/skills-config/baoyu/baoyu-infographic/EXTEND.md" && echo "user"
+```powershell
+# PowerShell (Windows)
+if (Test-Path .baoyu-skills/baoyu-infographic/EXTEND.md) { "project" }
+$xdg = if ($env:XDG_CONFIG_HOME) { $env:XDG_CONFIG_HOME } else { "$HOME/.config" }
+if (Test-Path "$xdg/baoyu-skills/baoyu-infographic/EXTEND.md") { "xdg" }
+if (Test-Path "$HOME/.baoyu-skills/baoyu-infographic/EXTEND.md") { "user" }
 ```
 
 ┌────────────────────────────────────────────────────┬───────────────────┐
 │                        Path                        │     Location      │
 ├────────────────────────────────────────────────────┼───────────────────┤
-│ .openclaw/skills-config/baoyu/baoyu-infographic/EXTEND.md          │ Project directory │
+│ .baoyu-skills/baoyu-infographic/EXTEND.md          │ Project directory │
 ├────────────────────────────────────────────────────┼───────────────────┤
-│ $HOME/.openclaw/skills-config/baoyu/baoyu-infographic/EXTEND.md    │ User home         │
+│ $HOME/.baoyu-skills/baoyu-infographic/EXTEND.md    │ User home         │
 └────────────────────────────────────────────────────┴───────────────────┘
 
 ┌───────────┬───────────────────────────────────────────────────────────────────────────┐
@@ -188,7 +203,7 @@ Transform content into infographic structure:
 3. Data points (all statistics/quotes copied exactly)
 4. Design instructions from user
 
-**Rules**: Markdown only. No new information. All data verbatim.
+**Rules**: Markdown only. No new information. Preserve data faithfully. Strip any credentials or secrets from output.
 
 See `references/structured-content-template.md` for detailed format.
 
@@ -209,7 +224,7 @@ Use **single AskUserQuestion call** with multiple questions to confirm all optio
 | Question | When | Options |
 |----------|------|---------|
 | **Combination** | Always | 3+ layout×style combos with rationale |
-| **Aspect** | Always | landscape (16:9), portrait (9:16), square (1:1) |
+| **Aspect** | Always | Named presets (landscape/portrait/square) or custom W:H ratio (e.g., 3:4, 4:3, 2.35:1) |
 | **Language** | Only if source ≠ user language | Language for text content |
 
 **Important**: Do NOT split into separate AskUserQuestion calls. Combine all applicable questions into one call.
@@ -224,6 +239,10 @@ Combine:
 3. Base template from `references/base-prompt.md`
 4. Structured content from Step 2
 5. All text in confirmed language
+
+**Aspect ratio resolution** for `{{ASPECT_RATIO}}`:
+- Named presets → ratio string: landscape→`16:9`, portrait→`9:16`, square→`1:1`
+- Custom W:H ratios → use as-is (e.g., `3:4`, `4:3`, `2.35:1`)
 
 ### Step 6: Generate Image
 
@@ -243,7 +262,7 @@ Report: topic, layout, style, aspect, language, output path, files created.
 - `references/structured-content-template.md` - Content format
 - `references/base-prompt.md` - Prompt template
 - `references/layouts/<layout>.md` - 21 layout definitions
-- `references/styles/<style>.md` - 20 style definitions
+- `references/styles/<style>.md` - 21 style definitions
 
 ## Extension Support
 

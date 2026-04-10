@@ -1,6 +1,14 @@
 ---
 name: baoyu-danger-gemini-web
 description: Generates images and text via reverse-engineered Gemini Web API. Supports text generation, image generation from prompts, reference images for vision input, and multi-turn conversations. Use when other skills need image generation backend, or when user requests "generate image with Gemini", "Gemini text generation", or needs vision-capable AI generation.
+version: 1.56.1
+metadata:
+  openclaw:
+    homepage: https://github.com/JimLiu/baoyu-skills#baoyu-danger-gemini-web
+    requires:
+      anyBins:
+        - bun
+        - npx
 ---
 
 # Gemini Web Client
@@ -12,9 +20,10 @@ Text/image generation via Gemini Web API. Supports reference images and multi-tu
 **Important**: All scripts are located in the `scripts/` subdirectory of this skill.
 
 **Agent Execution Instructions**:
-1. Determine this SKILL.md file's directory path as `SKILL_DIR`
-2. Script path = `${SKILL_DIR}/scripts/<script-name>.ts`
-3. Replace all `${SKILL_DIR}` in this document with the actual path
+1. Determine this SKILL.md file's directory path as `{baseDir}`
+2. Script path = `{baseDir}/scripts/<script-name>.ts`
+3. Resolve `${BUN_X}` runtime: if `bun` installed → `bun`; if `npx` available → `npx -y bun`; else suggest installing bun
+4. Replace all `{baseDir}` and `${BUN_X}` in this document with actual values
 
 **Script Reference**:
 | Script | Purpose |
@@ -43,22 +52,29 @@ Before first use, verify user consent for reverse-engineered API usage.
 
 ## Preferences (EXTEND.md)
 
-Use Bash to check EXTEND.md existence (priority order):
+Check EXTEND.md existence (priority order):
 
 ```bash
-# Check project-level first
-test -f .openclaw/skills-config/baoyu/baoyu-danger-gemini-web/EXTEND.md && echo "project"
+# macOS, Linux, WSL, Git Bash
+test -f .baoyu-skills/baoyu-danger-gemini-web/EXTEND.md && echo "project"
+test -f "${XDG_CONFIG_HOME:-$HOME/.config}/baoyu-skills/baoyu-danger-gemini-web/EXTEND.md" && echo "xdg"
+test -f "$HOME/.baoyu-skills/baoyu-danger-gemini-web/EXTEND.md" && echo "user"
+```
 
-# Then user-level (cross-platform: $HOME works on macOS/Linux/WSL)
-test -f "$HOME/.openclaw/skills-config/baoyu/baoyu-danger-gemini-web/EXTEND.md" && echo "user"
+```powershell
+# PowerShell (Windows)
+if (Test-Path .baoyu-skills/baoyu-danger-gemini-web/EXTEND.md) { "project" }
+$xdg = if ($env:XDG_CONFIG_HOME) { $env:XDG_CONFIG_HOME } else { "$HOME/.config" }
+if (Test-Path "$xdg/baoyu-skills/baoyu-danger-gemini-web/EXTEND.md") { "xdg" }
+if (Test-Path "$HOME/.baoyu-skills/baoyu-danger-gemini-web/EXTEND.md") { "user" }
 ```
 
 ┌──────────────────────────────────────────────────────────┬───────────────────┐
 │                           Path                           │     Location      │
 ├──────────────────────────────────────────────────────────┼───────────────────┤
-│ .openclaw/skills-config/baoyu/baoyu-danger-gemini-web/EXTEND.md          │ Project directory │
+│ .baoyu-skills/baoyu-danger-gemini-web/EXTEND.md          │ Project directory │
 ├──────────────────────────────────────────────────────────┼───────────────────┤
-│ $HOME/.openclaw/skills-config/baoyu/baoyu-danger-gemini-web/EXTEND.md    │ User home         │
+│ $HOME/.baoyu-skills/baoyu-danger-gemini-web/EXTEND.md    │ User home         │
 └──────────────────────────────────────────────────────────┴───────────────────┘
 
 ┌───────────┬───────────────────────────────────────────────────────────────────────────┐
@@ -75,23 +91,23 @@ test -f "$HOME/.openclaw/skills-config/baoyu/baoyu-danger-gemini-web/EXTEND.md" 
 
 ```bash
 # Text generation
-npx -y bun ${SKILL_DIR}/scripts/main.ts "Your prompt"
-npx -y bun ${SKILL_DIR}/scripts/main.ts --prompt "Your prompt" --model gemini-3-flash
+${BUN_X} {baseDir}/scripts/main.ts "Your prompt"
+${BUN_X} {baseDir}/scripts/main.ts --prompt "Your prompt" --model gemini-3-flash
 
 # Image generation
-npx -y bun ${SKILL_DIR}/scripts/main.ts --prompt "A cute cat" --image cat.png
-npx -y bun ${SKILL_DIR}/scripts/main.ts --promptfiles system.md content.md --image out.png
+${BUN_X} {baseDir}/scripts/main.ts --prompt "A cute cat" --image cat.png
+${BUN_X} {baseDir}/scripts/main.ts --promptfiles system.md content.md --image out.png
 
 # Vision input (reference images)
-npx -y bun ${SKILL_DIR}/scripts/main.ts --prompt "Describe this" --reference image.png
-npx -y bun ${SKILL_DIR}/scripts/main.ts --prompt "Create variation" --reference a.png --image out.png
+${BUN_X} {baseDir}/scripts/main.ts --prompt "Describe this" --reference image.png
+${BUN_X} {baseDir}/scripts/main.ts --prompt "Create variation" --reference a.png --image out.png
 
 # Multi-turn conversation
-npx -y bun ${SKILL_DIR}/scripts/main.ts "Remember: 42" --sessionId session-abc
-npx -y bun ${SKILL_DIR}/scripts/main.ts "What number?" --sessionId session-abc
+${BUN_X} {baseDir}/scripts/main.ts "Remember: 42" --sessionId session-abc
+${BUN_X} {baseDir}/scripts/main.ts "What number?" --sessionId session-abc
 
 # JSON output
-npx -y bun ${SKILL_DIR}/scripts/main.ts "Hello" --json
+${BUN_X} {baseDir}/scripts/main.ts "Hello" --json
 ```
 
 ## Options
@@ -122,6 +138,10 @@ npx -y bun ${SKILL_DIR}/scripts/main.ts "Hello" --json
 ## Authentication
 
 First run opens browser for Google auth. Cookies cached automatically.
+
+When no explicit profile dir is set, cookie refresh may reuse an already-running local Chrome/Chromium debugging session tied to a standard user-data dir.
+Set `--profile-dir` or `GEMINI_WEB_CHROME_PROFILE_DIR` to force a dedicated profile and skip existing-session reuse.
+This is a best-effort CDP session reuse path, not the Chrome DevTools MCP prompt-based `--autoConnect` flow described in Chrome's official docs.
 
 Supported browsers (auto-detected): Chrome, Chrome Canary/Beta, Chromium, Edge.
 

@@ -129,3 +129,28 @@ visual-knowledge-explainer/
 ---
 
 **Remember**: This skill is about **teaching**, not decoration.
+
+## Error Handling
+
+- 输入内容过长时，分段处理并提示用户。
+- HTML 渲染失败时，检查模板和 CSS 是否完整。
+- 浏览器预览失败时，输出文件路径让用户手动打开。
+
+## Internal Acceptance
+
+- 生成的 HTML 页面在浏览器中正确渲染。
+- 内容结构清晰，层级关系正确。
+- 样式美观且无布局错乱。
+
+## Gotchas
+
+- 某些中文特殊字符在 HTML 标题中可能显示异常，需要 HTML entity 转义。
+- 复杂的数学公式可能需要 MathJax/KaTeX 支持。
+- 图片链接必须是公开可访问的 URL，本地路径无法在 HTML 中使用。
+
+## Delivery Contract
+
+- 输出生成的 HTML 文件路径。
+- 如有图片，一并输出图片路径列表。
+- 预览 URL（如支持）或打开方式说明。
+**注意：本技能是大型流水线的一部分。Do **not** report completion to the user unless all dependent tools/scripts/skills integration tests have passed.**

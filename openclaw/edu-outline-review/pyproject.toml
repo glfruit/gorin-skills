@@ -1,0 +1,17 @@
+[project]
+name = "edu-outline-review"
+version = "0.1.0"
+description = "Outline compliance review for manuscript markdown against Excel outlines"
+readme = "SKILL.md"
+requires-python = ">=3.10"
+dependencies = [
+  "openpyxl>=3.1.0",
+  "pandas>=2.0.0",
+]
+
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = []

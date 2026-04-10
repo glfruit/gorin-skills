@@ -26,6 +26,8 @@ When a dimension is omitted, select based on content signals.
 | Fantasy, children, gentle, creative, whimsical | `pastel` |
 | Zen, focus, essential, pure, simple | `mono` |
 | History, vintage, retro, classic, exploration | `retro` |
+| Movie poster, album cover, concert, cinematic, dramatic, two-color | `duotone` |
+| Education, tutorial, knowledge, onboarding, concept explainer | `macaron` |
 
 ## Auto Rendering Selection
 
@@ -37,6 +39,7 @@ When a dimension is omitted, select based on content signals.
 | Data, dashboard, SaaS, corporate, polished | `digital` |
 | Gaming, retro, 8-bit, nostalgic | `pixel` |
 | Education, tutorial, classroom, teaching | `chalk` |
+| Poster, movie, album, concert, silhouette, mondo, limited-edition | `screen-print` |
 
 ## Auto Text Selection
 

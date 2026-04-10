@@ -1,87 +1,131 @@
 ---
 name: zk-router
-description: "ZK 统一笔记路由系统。单关键词'zk'触发，智能判断内容类型，自动路由到合适的笔记技能。"
-triggers: ["zk", "保存到笔记", "save to notes", "note this"]
+description: "PKM 统一入口。zk <内容> 智能路由。pks/pkr/pko/pkp/pkh 快捷命令。"
+triggers: ["zk", "pks", "pkr", "pko", "pkp", "pkh"]
 user-invocable: true
 command-dispatch: tool
 agent-usable: true
 requires:
-  skills: [pkm-core, pkm-save-note, zk-para-zettel, idea-creator]
+  skills: [pkm-core, pkm-save-note, zk-literature, idea-creator, pkm-para-manager, obsidian-md]
 ---
 
-# ZK Router — 统一笔记路由系统 v1.0
+# ZK Router — PKM 统一入口 v2.1
 
-**核心理念**：只记一个词 `zk`，系统自动判断内容类型并保存到正确位置。
+**唯一入口**：所有笔记操作都通过此路由。
 
----
+## 多 Vault 支持（v2.1）
 
-## 触发方式
+支持 `--vault` 参数路由到不同 vault：
 
-### 用户触发
-- `zk <内容>` — 主触发词
-- `保存到笔记` / `save to notes` — Agent兼容
+```bash
+python3 zk.py "some content" --vault atlas
+python3 zk.py "some content" --vault octopus
+python3 zk.py "some content" --vault loom
+```
 
-### Agent触发
-- Agent说"保存到笔记"自动调用
+| Vault | 路径 | 角色 | 类型映射来源 |
+|-------|------|------|------------|
+| `atlas` | `~/pkm/atlas/` | 知识图谱 | vault-config.yaml → atlas.type_mapping |
+| `octopus` | `~/Workspace/PKM/octopus/` | 日常管理 | vault-config.yaml → octopus.type_mapping |
+| `loom` | `~/pkm/loom/` | 内容创作 | vault-config.yaml → loom.type_mapping |
 
----
+**默认行为**：不传 `--vault` 时路由到 `octopus`（向后兼容）。
 
-## 智能路由逻辑
+类型→目录映射由 `~/.gorin-skills/openclaw/pkm-core/vault-config.yaml` 唯一定义。
 
-### 判断流程
+## 触发词
+
+| 触发词 | 功能 | 目标 |
+|--------|------|------|
+| `zk` | 通用笔记（自动判断类型） | 智能路由 |
+| `想法` / `idea` | 快速记闪念 | idea-creator |
+| `pks <query>` | 搜索 vault | 内置 grep |
+| `pkr` | 生成周报 | pkm-para-manager |
+| `pko` | 孤儿笔记检测 | pkm-para-manager |
+| `pkp [keyword]` | 闪念→永久升级 | pkm-save-note |
+| `pkh` / `pkh full` | 全库健康扫描（v2，12指标） | pkm-para-manager |
+
+## 路由逻辑
+
+## 实现状态（2026-03-28）
+
+| 能力 | 状态 | 当前实现 |
+|---|---|---|
+| 统一入口 | ✅ | `pkm_clip.py` 仅作兼容转发到 `zk-router` |
+| 主执行引擎 | ✅ | `zk.py`（Python 主实现），`zk.sh` 薄包装 |
+| 类型判定 | ✅ | `router.py`（Python 主实现）+ `router.sh` 薄包装 |
+| 文献抓取 | ✅ | web-reader（带重试） |
+| 去重 | ✅ | source_url + title，含候选打分 + dedup index 优先 |
+| dedup policy | ✅ | 读取 `pkm_dedup_policy.json`，支持 intentional 标记 |
+| force 新建 | ✅ | `ZK_FORCE=1` |
+| metadata/frontmatter 对齐 | ✅ | URL 文献主路径已统一 author/published/site/captured_via |
+| 关系发现/原子卡片 | ✅ | 已接入并默认开启（可用环境变量临时覆盖） |
+
+### zk <内容> [--vault NAME]
 
 ```
-用户输入: zk <内容>
-    ↓
-Step 1: URL检测 (置信度 +40%)
-    ├── 微信公众号/mp.weixin.qq.com → literature/articles
-    ├── 知乎/zhihu.com → literature/articles
-    ├── 技术博客/文档站点 → literature/articles
-    ├── 学术论文/arXiv/pdf → literature/papers
-    └── GitHub/代码仓库 → literature/code
-    
-Step 2: 关键词检测 (置信度 +30%)
-    ├── "会议/讨论/和XX聊/复盘" → meeting
-    ├── "想法/灵感/突然想到/idea" → idea
-    ├── "计划/task/待办/TODO" → plan
-    ├── "周总结/月回顾/复盘" → review
-    ├── "读书/看《XXX》/读后感" → literature/books
-    └── "决策/决定/选择" → decision
-    
-Step 3: 内容特征 (置信度 +20%)
-    ├── 长度 > 1000字 → 可能summary
-    ├── 有明确结构(1./- /标题) → 可能summary
-    └── 长度 < 50字 → fleeting
-    
-Step 4: 来源上下文 (置信度 +10%)
-    ├── 来自 daily-collector → literature (默认)
-    ├── 来自 edu-tl 且含"会议" → meeting
+Step 1: URL 检测（置信度 +40%）
+    ├── 微信公众号/mp.weixin.qq.com → zk-literature
+    ├── 知乎/zhihu.com → zk-literature
+    ├── 技术博客/文档站点 → zk-literature
+    ├── 学术论文/arXiv/pdf → zk-literature
+    └── GitHub/代码仓库 → zk-literature
+
+Step 2: 关键词检测（置信度 +30%）
+    ├── "会议/讨论/和XX聊/复盘" → pkm-save-note(meeting)
+    ├── "计划/task/待办" → pkm-save-note(plan)
+    ├── "周总结/月回顾" → pkm-save-note(review)
+    ├── "决定/选择" → pkm-save-note(decision)
+    └── 无明确关键词 → Step 3
+
+Step 3: 内容特征（置信度 +20%）
+    ├── 长度 > 500字 + 有结构 → pkm-save-note(insight)
+    ├── 长度 > 1000字 → pkm-save-note(summary)
+    └── 长度 < 50字 → idea-creator
+
+Step 4: 来源上下文（置信度 +10%）
+    ├── 来自 daily-collector + URL → zk-literature
     └── 来自群聊 → 可能需要确认
 
 Step 5: 决策
-    ├── 总分 ≥ 80% → 直接保存
-    ├── 50% ≤ 总分 < 80% → 保存+提示可调整
-    └── 总分 < 50% → 询问确认
+    ├── ≥ 80% → 直接保存
+    ├── 50-80% → 保存 + 提示可调整
+    └── < 50% → 询问确认
 ```
 
-### 类型映射
+### pks <query>
 
-| 判断类型 | 目标Skill | 保存位置 |
-|----------|-----------|----------|
-| literature/articles | zk-para-zettel | Zettels/2-Literature/Articles/ |
-| literature/papers | zk-para-zettel | Zettels/2-Literature/Papers/ |
-| literature/books | zk-para-zettel | Zettels/2-Literature/Books/ |
-| idea | idea-creator | Zettels/1-Fleeting/ |
-| meeting | pkm-save-note | Efforts/1-Projects/ |
-| plan | pkm-save-note | Efforts/1-Projects/ |
-| review | pkm-save-note | Calendar/Reviews/ |
-| decision | pkm-save-note | Zettels/3-Permanent/ |
-| summary | pkm-save-note | Zettels/3-Permanent/ |
-| fleeting (默认) | pkm-save-note | Zettels/1-Fleeting/ |
+```bash
+VAULT="${HOME}/Workspace/PKM/octopus"
+grep -rl "$query" "$VAULT" --include="*.md" -l | head -20
+```
 
----
+### pkr
 
-## 响应模式
+调用 pkm-para-manager 的 `/pkm_para review`。
+
+### pko
+
+调用 pkm-para-manager 的 `/pkm_para orphans`。
+
+### pkp [keyword]
+
+调用 pkm-save-note 的 promote 子流程。
+
+### pkh / pkh full
+
+调用 pkm-para-manager 的 health-v2 全量扫描：
+
+```bash
+python3 ~/.gorin-skills/openclaw/pkm-para-manager/scripts/health-v2.py --vault ~/Workspace/PKM/octopus
+```
+
+输出：
+- Markdown 报告：`Zettels/4-Structure/YYYYMMDD-PKM-Health-Report-WNN.md`
+- JSON 指标：`Calendar/Logs/pkm-health-latest.json`
+
+
+## 响应格式
 
 ### 高置信度 (≥80%)
 ```
@@ -100,80 +144,43 @@ Step 5: 决策
 
 📄 标题: {title}
 📁 位置: {path}
-
-如需调整，回复:
-• 改zku - 转为文献笔记
-• 改zki - 转为想法笔记
-• 改zkm - 转为会议记录
-• 其他类型请说明
 ```
 
 ### 低置信度 (<50%)
 ```
 🤔 难以确定类型，请选择:
 
-1. 文献笔记 (zku) - 文章/网页摘录
-2. 想法笔记 (zki) - 灵感/闪念
-3. 会议记录 (zkm) - 会议纪要
-4. 计划任务 (zkt) - 待办/计划
-5. 其他 (请说明)
+1. 文献笔记 - 文章/网页
+2. 想法笔记 - 灵感/闪念
+3. 会议记录
+4. 计划任务
+5. 永久笔记 - 成熟观点
 
-或回复"默认"保存为闪念笔记。
+或回复"默认"保存为闪念。
 ```
 
----
+## When NOT to Use
 
-## Agent调用方式
+- 内容不属于任何笔记类型。
+- 纯系统命令或无关闲聊。
 
-### 标准调用
-```
-Agent: "保存到笔记"
+## Error Handling
 
-系统自动:
-1. 分析当前上下文
-2. 判断内容类型
-3. 调用对应skill
-4. 返回保存结果
-```
-
-### 带类型提示
-```
-Agent: "保存到笔记 (会议纪要)"
-
-zk-router识别提示词，提高meeting类型权重
-```
-
----
-
-## 快速调整
-
-保存后如需调整类型，回复：
-
-| 指令 | 动作 |
-|------|------|
-| `改zku` | 转为文献笔记 |
-| `改zki` | 转为想法笔记 |
-| `改zkm` | 转为会议记录 |
-| `改zkt` | 转为计划任务 |
-| `改zkl` | 转为文献(书籍) |
-| `删除` | 删除刚保存的笔记 |
-
----
-
-## 依赖
-
-- `pkm-core` — vault路径、frontmatter规范
-- `pkm-save-note` — 通用笔记保存执行
-- `zk-para-zettel` — 文献笔记执行
-- `idea-creator` — 想法笔记执行
-
----
+- 路由失败时默认使用 pkm-save-note(fleeting)。
+- 目标技能不存在时回退到手动创建。
 
 ## Changelog
 
+### v2.1.0 (2026-04-04)
+- 新增 `--vault` 参数支持 atlas / octopus / loom 多 vault 路由
+- 类型映射从 vault-config.yaml 动态读取
+- 默认 vault 仍为 octopus（向后兼容）
+
+### v2.0.0 (2026-03-27)
+- 合并 pkm-commands（pks/pkr/pko/pkp）
+- 路由目标更新：zk-para-zettel → zk-literature
+- 删除 /pkm_* 斜杠命令，改用简短触发词
+- 新增 pkp promote 路由
+
 ### v1.0.0 (2026-03-23)
 - 初始版本
-- 单关键词`zk`智能路由
-- 置信度分级响应
-- Agent统一入口
-

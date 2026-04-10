@@ -1,0 +1,15 @@
+{
+  "vault": "/Users/gorin/Workspace/PKM/octopus",
+  "web_reader_candidates": [
+    "/Users/gorin/.gorin-skills/openclaw/web-reader/scripts/web-reader.sh"
+  ],
+  "dedup_policy_path": "/Users/gorin/.openclaw/workspace-daily-tl/scripts/pkm_dedup_policy.json",
+  "dedup_behavior_for_intentional": "skip",
+  "dedup_index_path": "/Users/gorin/Workspace/PKM/octopus/.zk-router/dedup_index.json",
+  "dedup_index_max_age_seconds": 21600,
+  "features": {
+    "relation_discovery": true,
+    "atomic_extraction": true,
+    "frontmatter_validate": true
+  }
+}

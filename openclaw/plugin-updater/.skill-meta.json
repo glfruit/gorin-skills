@@ -1,0 +1,15 @@
+{
+  "origin": "daily-devops",
+  "version": "1.0.0",
+  "description": "Safely check for and install OpenClaw plugin updates with config backup/restore, local patch preservation, verification, and gateway restart.",
+  "lifecycle": {
+    "maturity_score": 70,
+    "last_reviewed": "2026-04-04",
+    "review_cadence": "as-needed",
+    "readiness": "mvp",
+    "governance": {
+      "owner": "daily-devops",
+      "review_schedule": "on-use"
+    }
+  }
+}
