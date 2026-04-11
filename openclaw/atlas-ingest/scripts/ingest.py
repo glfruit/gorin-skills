@@ -764,9 +764,9 @@ EPUB_CHAPTER_SKIP_TOKENS = {
     "about", "about the author", "also by", "copyright", "cover", "dedication",
     "footnote", "index", "nav", "title", "about the publisher",
 }
-MAX_BOOK_CHAPTERS = 16
-MAX_CHAPTER_CHARS = 12000
-MIN_CHAPTER_TEXT = 800
+MAX_BOOK_CHAPTERS = 30
+MAX_CHAPTER_CHARS = 25000
+MIN_CHAPTER_TEXT = 500
 
 # ── Helpers ────────────────────────────────────────────────────────────────
 
@@ -1435,11 +1435,13 @@ def _probe_mineru_health() -> Dict[str, str]:
     return _mineru_health_cache
 
 
-def _extract_pdf_text_via_pymupdf4llm(filepath: str) -> str:
+def _extract_pdf_text_via_pymupdf4llm(filepath: str, keep_markdown: bool = False) -> str:
     if pymupdf4llm is None:
         return ""
     try:
         markdown = pymupdf4llm.to_markdown(filepath)
+        if keep_markdown:
+            return markdown
         return _markdown_to_plain_text(markdown)
     except Exception as e:
         print(f"  ⚠️  PyMuPDF4LLM 提取失败: {e}")
@@ -1712,7 +1714,7 @@ def _extract_pdf_text_via_mineru(filepath: str) -> str:
         shutil.rmtree(temp_dir, ignore_errors=True)
 
 
-def extract_text_from_pdf(filepath: str, allow_mineru: bool = True) -> str:
+def extract_text_from_pdf(filepath: str, allow_mineru: bool = True, keep_markdown: bool = False) -> str:
     """Extract text from PDF via PyMuPDF4LLM, optional MinerU, then OCR fallback."""
     best_text = ""
     mineru_health = {"enabled": "0", "reason": "classification mode" if not allow_mineru else "disabled"}
@@ -1730,7 +1732,7 @@ def extract_text_from_pdf(filepath: str, allow_mineru: bool = True) -> str:
     chain_steps.append("OCR fallback")
     print(f"  ℹ️  PDF 提取候选链路: {' -> '.join(chain_steps)}")
 
-    pymupdf_text = _extract_pdf_text_via_pymupdf4llm(filepath)
+    pymupdf_text = _extract_pdf_text_via_pymupdf4llm(filepath, keep_markdown=keep_markdown)
     if pymupdf_text:
         best_text = pymupdf_text
 
@@ -1955,8 +1957,203 @@ def extract_epub_chapters(filepath: str) -> list[dict]:
 
 def _normalize_pdf_heading(line: str) -> str:
     text = re.sub(r"\s+", " ", (line or "").strip())
+    text = re.sub(r"^#+\s*", "", text).strip()
     text = re.sub(r"^[\-\*•]+", "", text).strip()
+    text = re.sub(r"\*+$", "", text).strip()
     return text
+
+
+def _format_pdf_explicit_heading(kind: str, label: str, subtitle: str = "") -> str:
+    base = f"{'Chapter' if kind == 'chapter' else 'Part'} {label.upper()}"
+    cleaned = re.sub(r"\s+", " ", (subtitle or "").strip(" :-"))
+    cleaned = re.sub(r"^\((.+)\)$", r"\1", cleaned).strip()
+    cleaned = re.sub(r"\s*\[[^\]]+\]\.?$", "", cleaned).strip()
+    if cleaned:
+        return f"{base}: {cleaned}"
+    return base
+
+
+def _looks_like_pdf_sentence_tail(text: str) -> bool:
+    candidate = re.sub(r"\s*\[[^\]]+\]\.?$", "", (text or "").strip())
+    lower = candidate.lower()
+    if len(candidate.split()) > 16:
+        return True
+    if re.search(
+        r"\b(now|describes?|discusses?|explains?|shows?|presents?|covers?|focuses?|introduces?|is|are|was|were|has|have|can|may|should|will)\b",
+        lower,
+    ):
+        return True
+    if re.search(r"[a-z]{3,}\s+[a-z]{3,}\s+[a-z]{3,}", candidate):
+        return True
+    return False
+
+
+def _match_pdf_explicit_chapter_heading(line: str) -> tuple[str, str] | None:
+    text = _normalize_pdf_heading(line)
+    if not text:
+        return None
+
+    chapter_match = re.match(r"^chapter\s+([0-9]+|[ivxlcdm]+)\b(?:\s*[:.\-]\s*|\s+)?(.*)$", text, re.I)
+    if chapter_match:
+        label = chapter_match.group(1)
+        subtitle = chapter_match.group(2).strip()
+        if subtitle and _looks_like_pdf_sentence_tail(subtitle):
+            return None
+        return ("chapter", _format_pdf_explicit_heading("chapter", label, subtitle))
+
+    part_match = re.match(r"^part\s+([0-9]+|[ivxlcdm]+)\b(?:\s*[:.\-]\s*|\s+)?(.*)$", text, re.I)
+    if part_match:
+        label = part_match.group(1)
+        subtitle = part_match.group(2).strip()
+        if subtitle and _looks_like_pdf_sentence_tail(subtitle):
+            return None
+        return ("part", _format_pdf_explicit_heading("part", label, subtitle))
+
+    numbered_match = re.match(r"^(\d+)\.\s+(.+)$", text)
+    if numbered_match:
+        subtitle = numbered_match.group(2).strip()
+        word_count = len(subtitle.split())
+        if subtitle and word_count <= 14 and any(ch.isupper() for ch in subtitle) and not _looks_like_pdf_sentence_tail(subtitle):
+            return ("chapter", f"{numbered_match.group(1)}. {subtitle}")
+
+    return None
+
+
+def _looks_like_pdf_toc_entry(line: str) -> bool:
+    text = _normalize_pdf_heading(line)
+    if not text or len(text) > 120:
+        return False
+    if _match_pdf_explicit_chapter_heading(text):
+        return True
+    if re.match(r"^(chapter|part)\s+([0-9]+|[ivxlcdm]+)\b.*\d+$", text, re.I):
+        return True
+    return False
+
+
+def _looks_like_substantial_pdf_paragraph(line: str) -> bool:
+    text = _normalize_pdf_heading(line)
+    if not text:
+        return False
+    return len(text) >= 100 or (len(text.split()) >= 18 and bool(re.search(r"[,.:;]", text)))
+
+
+def _line_has_pdf_page_break_marker(line: str) -> bool:
+    text = _normalize_pdf_heading(line)
+    if not text:
+        return False
+    return text == "---" or bool(re.fullmatch(r"[-_*=]{3,}", text))
+
+
+def _has_substantial_body_after(lines: list[str], normalized_lines: list[str], idx: int) -> bool:
+    chars = 0
+    non_empty = 0
+    heading_continuations = 0
+    for j in range(idx + 1, min(len(lines), idx + 20)):
+        candidate = normalized_lines[j]
+        if not candidate or re.fullmatch(r"\d+", candidate):
+            continue
+        if _match_pdf_explicit_chapter_heading(candidate):
+            break
+        if _is_probably_pdf_book_heading(candidate):
+            if non_empty == 0 and heading_continuations < 2 and len(candidate) <= 80:
+                heading_continuations += 1
+                continue
+            break
+        non_empty += 1
+        chars += len(candidate)
+        if _looks_like_substantial_pdf_paragraph(candidate):
+            return True
+        if non_empty >= 3 and chars >= MIN_CHAPTER_TEXT:
+            return True
+    return False
+
+
+def _detect_and_skip_toc(lines: list[str], normalized_lines: list[str]) -> int:
+    """Return the index where actual content starts, skipping dense TOC blocks."""
+    scan_limit = min(len(lines), 200)
+    toc_refs = [idx for idx in range(scan_limit) if _looks_like_pdf_toc_entry(normalized_lines[idx])]
+    if len(toc_refs) < 5:
+        return 0
+
+    run_start = run_end = toc_refs[0]
+    best_start = best_end = toc_refs[0]
+    best_count = 1
+    count = 1
+    for idx in toc_refs[1:]:
+        if idx - run_end <= 5:
+            run_end = idx
+            count += 1
+        else:
+            if count > best_count:
+                best_start, best_end, best_count = run_start, run_end, count
+            run_start = run_end = idx
+            count = 1
+    if count > best_count:
+        best_start, best_end, best_count = run_start, run_end, count
+    if best_count < 3:
+        return 0
+
+    search_start = best_end + 1
+    blank_streak = 0
+    for idx in range(search_start, min(len(lines), search_start + 120)):
+        line = normalized_lines[idx]
+        if not line:
+            blank_streak += 1
+            continue
+        if _line_has_pdf_page_break_marker(line):
+            blank_streak = 0
+            continue
+        if _is_probably_pdf_book_heading(line) and _has_substantial_body_after(lines, normalized_lines, idx):
+            return idx
+        if (blank_streak >= 2 or idx == search_start) and _looks_like_substantial_pdf_paragraph(line):
+            probe = idx
+            while probe > 0 and probe - 1 > best_end and normalized_lines[probe - 1]:
+                prev = normalized_lines[probe - 1]
+                if _is_probably_pdf_book_heading(prev):
+                    return probe - 1
+                if len(prev) > 100:
+                    break
+                probe -= 1
+            return idx
+        blank_streak = 0
+
+    return search_start if search_start < len(lines) else 0
+
+
+def _is_pdf_heading_continuation(line: str) -> bool:
+    text = _normalize_pdf_heading(line)
+    if not text or len(text) > 100:
+        return False
+    plain = re.sub(r"^\((.+)\)$", r"\1", text).strip()
+    if not plain:
+        return False
+    if _looks_like_pdf_sentence_tail(plain):
+        return False
+    if text.startswith("(") and text.endswith(")"):
+        return True
+    if plain == plain.title() or plain.isupper():
+        return True
+    return len(plain.split()) <= 12 and bool(re.fullmatch(r"[A-Za-z0-9 '&/,\-]+", plain))
+
+
+def _combine_pdf_heading_title(primary_title: str, extra_lines: list[str]) -> str:
+    title = primary_title.strip()
+    extras = []
+    for extra in extra_lines:
+        cleaned = _normalize_pdf_heading(extra)
+        if not cleaned:
+            continue
+        cleaned = re.sub(r"^\((.+)\)$", r"\1", cleaned).strip()
+        cleaned = re.sub(r"\s*\[[^\]]+\]\.?$", "", cleaned).strip()
+        if not cleaned:
+            continue
+        if title.startswith(("Chapter ", "Part ")) and not re.search(r":\s*", title):
+            title = f"{title}: {cleaned}"
+        else:
+            extras.append(cleaned)
+    if extras:
+        title = f"{title} {' '.join(extras)}".strip()
+    return re.sub(r"\s+", " ", title)
 
 
 def _is_probably_pdf_book_heading(line: str) -> bool:
@@ -1968,7 +2165,7 @@ def _is_probably_pdf_book_heading(line: str) -> bool:
         return False
     if lower in EPUB_CHAPTER_SKIP_TOKENS:
         return False
-    if lower.startswith("chapter "):
+    if _match_pdf_explicit_chapter_heading(text):
         return True
     if re.match(r"^[ivxlcdm]+\.\s+[A-Z]", text):
         return True
@@ -1976,7 +2173,31 @@ def _is_probably_pdf_book_heading(line: str) -> bool:
         return True
     if lower in {"preface", "foreword", "prologue", "introduction", "afterword", "epilogue"}:
         return True
+    if len(text.split()) <= 10 and text == text.title() and not re.search(r"[.!?]$", text):
+        return True
+    if len(text.split()) <= 8 and text.isupper() and any(ch.isalpha() for ch in text):
+        return True
     return False
+
+
+def _finalize_pdf_book_chapters(chapters: list[dict]) -> list[dict]:
+    finalized = []
+    i = 0
+    while i < len(chapters):
+        chapter = dict(chapters[i])
+        if chapter["title"].startswith("Part ") and i + 1 < len(chapters):
+            merged_next = dict(chapters[i + 1])
+            merged_next["text"] = f"{chapter['text'].rstrip()}\n\n{merged_next['text'].lstrip()}"[:MAX_CHAPTER_CHARS]
+            chapters[i + 1] = merged_next
+            i += 1
+            continue
+        finalized.append(chapter)
+        i += 1
+
+    for idx, chapter in enumerate(finalized, start=1):
+        chapter["index"] = idx
+        chapter["slug"] = sanitize_filename(f"{idx:02d}-{chapter['title']}")[:80]
+    return finalized
 
 
 def extract_pdf_book_chapters(text: str) -> list[dict]:
@@ -1986,9 +2207,16 @@ def extract_pdf_book_chapters(text: str) -> list[dict]:
     current_title = ""
     current_lines = []
     normalized_lines = [_normalize_pdf_heading(line) for line in lines]
-    has_explicit_chapter_markers = any(re.fullmatch(r"CHAPTER\s+\d+", ln.upper()) for ln in normalized_lines)
+    content_start = _detect_and_skip_toc(lines, normalized_lines)
+    if content_start > 0:
+        lines = lines[content_start:]
+        normalized_lines = normalized_lines[content_start:]
+    has_explicit_chapter_markers = any(_match_pdf_explicit_chapter_heading(ln) for ln in normalized_lines)
+    prefer_markdown_headings = sum(1 for raw in lines if re.match(r"^#\s+", raw.lstrip())) >= 3
+    front_matter_headings = {"preface", "foreword", "prologue", "introduction", "afterword", "epilogue"}
+    seen_explicit_heading = False
 
-    def flush_current():
+    def flush_current(force: bool = False):
         nonlocal current_title, current_lines
         chunk = "\n".join(current_lines).strip()
         if current_title and len(chunk) >= MIN_CHAPTER_TEXT:
@@ -1999,63 +2227,82 @@ def extract_pdf_book_chapters(text: str) -> list[dict]:
                 "slug": sanitize_filename(f"{chapter_no:02d}-{current_title}")[:80],
                 "text": chunk[:MAX_CHAPTER_CHARS],
             })
+        elif current_title and chunk and chapters and not force:
+            merged = f"{chapters[-1]['text'].rstrip()}\n\n{chunk}".strip()
+            chapters[-1]["text"] = merged[:MAX_CHAPTER_CHARS]
         current_title = ""
         current_lines = []
+
+    def start_new_chapter(title: str):
+        nonlocal current_title, current_lines
+        flush_current()
+        current_title = title.strip()
+        current_lines = [current_title]
 
     i = 0
     while i < len(lines):
         raw_line = lines[i]
-        line = _normalize_pdf_heading(raw_line)
+        line = normalized_lines[i]
+        line_has_heading_marker = bool(re.match(r"^#\s+", raw_line.lstrip()))
         if not line:
             if current_lines:
                 current_lines.append("")
             i += 1
             continue
-        upper = line.upper()
-        lower = line.lower()
-        if re.fullmatch(r"CHAPTER\s+\d+", upper):
-            title_parts = [line.title()]
+
+        explicit_heading = _match_pdf_explicit_chapter_heading(line)
+        explicit_heading_allowed = (not prefer_markdown_headings) or line_has_heading_marker
+        if explicit_heading and explicit_heading_allowed and _has_substantial_body_after(lines, normalized_lines, i):
+            seen_explicit_heading = True
+            title_extras = []
             j = i + 1
             while j < len(lines):
-                nxt = _normalize_pdf_heading(lines[j])
+                nxt = normalized_lines[j]
                 if not nxt:
-                    j += 1
-                    if title_parts:
+                    if title_extras:
                         break
-                    continue
-                if len(nxt) > 120:
-                    break
-                if _is_probably_pdf_book_heading(nxt):
-                    break
-                if re.fullmatch(r"\d+", nxt):
                     j += 1
                     continue
-                title_parts.append(nxt)
-                j += 1
-                if len(" ".join(title_parts)) >= 120 or len(title_parts) >= 3:
+                if len(nxt) > 120 or re.fullmatch(r"\d+", nxt):
                     break
-            flush_current()
-            current_title = " ".join(title_parts).strip()
-            current_lines = [current_title]
+                if _match_pdf_explicit_chapter_heading(nxt):
+                    break
+                if _looks_like_substantial_pdf_paragraph(nxt):
+                    break
+                if not _is_pdf_heading_continuation(nxt):
+                    break
+                if _is_probably_pdf_book_heading(nxt) and title_extras:
+                    break
+                title_extras.append(nxt)
+                j += 1
+                if len(title_extras) >= 2:
+                    break
+            start_new_chapter(_combine_pdf_heading_title(explicit_heading[1], title_extras))
             i = j
             if len(chapters) >= MAX_BOOK_CHAPTERS:
                 break
             continue
+
         if has_explicit_chapter_markers:
-            if lower in {"preface", "foreword", "prologue", "introduction"} and not chapters and not current_title:
-                flush_current()
-                current_title = line.title()
-                current_lines = [current_title]
-                i += 1
-                continue
+            lower = line.lower()
+            if (
+                (not prefer_markdown_headings or line_has_heading_marker)
+                and not seen_explicit_heading
+                and lower in front_matter_headings
+                and _has_substantial_body_after(lines, normalized_lines, i)
+            ):
+                current_len = len("\n".join(current_lines).strip())
+                if not current_title or current_len >= MIN_CHAPTER_TEXT:
+                    start_new_chapter(line.title() if line.islower() else line)
+                    i += 1
+                    continue
             if current_title:
                 current_lines.append(line)
             i += 1
             continue
-        if _is_probably_pdf_book_heading(line):
-            flush_current()
-            current_title = line
-            current_lines = [line]
+
+        if ((not prefer_markdown_headings) or line_has_heading_marker) and _is_probably_pdf_book_heading(line) and _has_substantial_body_after(lines, normalized_lines, i):
+            start_new_chapter(line)
             if len(chapters) >= MAX_BOOK_CHAPTERS:
                 break
             i += 1
@@ -2065,8 +2312,17 @@ def extract_pdf_book_chapters(text: str) -> list[dict]:
         i += 1
 
     if len(chapters) < MAX_BOOK_CHAPTERS:
-        flush_current()
-    return chapters
+        flush_current(force=True)
+    return _finalize_pdf_book_chapters(chapters)
+
+
+def _debug_pdf_book_chapters(source_path: str, chapters: list[dict]) -> None:
+    if os.environ.get("ATLAS_DEBUG_BOOK_CHAPTERS", "").lower() not in {"1", "true", "yes", "on"}:
+        return
+    source_name = Path(source_path).name if source_path else "<unknown>"
+    print(f"  🧪 PDF chapter detection for {source_name}: {len(chapters)} chapters")
+    for chapter in chapters:
+        print(f"     - {chapter['index']:02d}. {chapter['title'][:70]} ({len(chapter['text'])} chars)")
 
 
 def relocate_literature_note(note_path: str, file_type: str) -> str:
@@ -2977,7 +3233,11 @@ def compile_book_chapters(book_note_path: str, work_path: str, source_path: str,
     if ext in {".epub", ".mobi"}:
         chapters = extract_epub_chapters(work_path)
     elif ext == ".pdf":
+        full_markdown = _extract_pdf_text_via_pymupdf4llm(work_path, keep_markdown=True)
+        if full_markdown:
+            extraction_text = full_markdown
         chapters = extract_pdf_book_chapters(extraction_text)
+        _debug_pdf_book_chapters(source_path, chapters)
     else:
         return 0, 0
 
