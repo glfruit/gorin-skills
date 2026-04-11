@@ -1,6 +1,17 @@
 ---
 name: obsidian-md
 description: "Create and edit Obsidian Flavored Markdown with wikilinks, embeds, callouts, properties, and other Obsidian-specific syntax."
+trigger-guide: |
+  典型触发短语:
+    - "帮我写一篇 Obsidian 笔记"
+    - "把这段改成 wikilink"
+    - "加一个 callout 和 frontmatter"
+    - "帮我整理成 Obsidian 能直接用的 markdown"
+  适用场景:
+    - 用户要创建或修改 Obsidian 专用 Markdown 时使用，尤其是涉及 wikilink、embed、callout、properties 等语法。
+    - 适合把普通 Markdown 或笔记草稿整理成可直接放进 Obsidian vault 的格式。
+  不适用场景:
+    - 纯标准 Markdown、非 Obsidian 文档、需要操作笔记软件本体而不是写内容时不该用这个 skill。
 triggers: ["obsidian markdown", "wikilink", "callout", "embed", "frontmatter", "obsidian note"]
 user-invocable: true
 agent-usable: true

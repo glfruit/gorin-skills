@@ -1,6 +1,17 @@
 ---
 name: code-review
 description: "Structured code review of git changes with senior engineer rigor. Checks SOLID violations, security risks, race conditions, error handling, performance, boundary bugs, and removal candidates. Outputs severity-classified findings (P0–P3) with actionable fixes. Don't use it for general coding tasks, non-git file editing, or writing new code from scratch."
+trigger-guide: |
+  典型触发短语:
+    - "帮我 review 一下这次改动"
+    - "看下这个 PR 有没有问题"
+    - "审查一下当前 diff"
+    - "合并前帮我做个代码审查"
+  适用场景:
+    - 用户要审查 git 变更、PR、分支差异或当前工作区改动时使用。
+    - 适合在提交、合并、发布前做结构化风险检查，并输出按严重级别分类的问题。
+  不适用场景:
+    - 写新功能、普通调试、非 git 上下文的文档审阅不该用这个 skill。
 triggers: ["review my code", "review this PR", "code review", "review changes", "review the diff", "check my code", "审查代码", "代码审查", "review current changes", "pre-merge review"]
 user-invocable: true
 agent-usable: true

@@ -1,6 +1,17 @@
 ---
 name: web-reader
 description: "Unified web page reading and interaction system. Three-layer architecture: L1 fast fetch (defuddle/Scrapling/web_fetch) to L2 browser rendering to L3 content cleaning. Supports sites requiring login (Zhihu, X, WeChat). Do NOT use for local file reading or API calls."
+trigger-guide: |
+  典型触发短语:
+    - "帮我看一下这个链接讲了什么"
+    - "搜一下这个主题有没有一手来源"
+    - "帮我核实这条说法是不是真的"
+    - "这个网页打不开，试试浏览器读取"
+  适用场景:
+    - 用户需要读取网页、搜索来源、核实网络信息，或从公开页面提取正文时使用。
+    - 也适合需要登录态、JS 渲染、点击翻页等网页交互的任务。
+  不适用场景:
+    - 本地文件读取、直接 API 调用、纯内容生成任务不该用这个 skill。
 triggers: ["读网页", "抓取", "web-reader", "/web-reader", "读取这个链接", "读取这篇文章", "查一下", "核实"]
 user-invocable: true
 command-dispatch: tool
