@@ -709,8 +709,9 @@ CONFIG = {
     "index_dir": os.path.expanduser("~/pkm/atlas/4-Structure/Index/"),
     "reports_dir": os.path.expanduser("~/.openclaw/reports/atlas/"),
 
-    # SQLite
+    # SQLite / state
     "db_path": os.path.expanduser("~/pkm/atlas/.state/dropbox.db"),
+    "hash_state_path": os.path.expanduser("~/pkm/atlas/.state/ingest-hashes.json"),
 
     # Temp dir for locked file copies
     "temp_dir": "/tmp/atlas-ingest",
@@ -922,13 +923,38 @@ def init_db(conn):
     conn.commit()
 
 
-def compute_sha256(filepath):
-    """Compute SHA256 hash of a file."""
+def compute_sha256(filepath, chunk_size=1024 * 1024):
+    """Compute SHA256 hash of a file with chunked reads."""
     h = hashlib.sha256()
     with open(filepath, "rb") as f:
-        for chunk in iter(lambda: f.read(8192), b""):
+        for chunk in iter(lambda: f.read(chunk_size), b""):
             h.update(chunk)
     return h.hexdigest()
+
+
+def load_ingest_hash_state() -> dict:
+    """Load PDF content-hash dedup state from disk."""
+    state_path = Path(CONFIG["hash_state_path"]).expanduser()
+    if not state_path.exists():
+        return {}
+    try:
+        with open(state_path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        if isinstance(data, dict):
+            return {str(k): str(v) for k, v in data.items() if k and v}
+    except Exception as e:
+        print(f"  ⚠️  ingest hash state 读取失败，回退为空: {e}")
+    return {}
+
+
+def save_ingest_hash_state(state: dict) -> None:
+    """Persist PDF content-hash dedup state atomically."""
+    state_path = Path(CONFIG["hash_state_path"]).expanduser()
+    state_path.parent.mkdir(parents=True, exist_ok=True)
+    temp_path = state_path.with_suffix(state_path.suffix + ".tmp")
+    with open(temp_path, "w", encoding="utf-8") as f:
+        json.dump(state, f, ensure_ascii=False, indent=2, sort_keys=True)
+    os.replace(temp_path, state_path)
 
 
 def sanitize_filename(name, max_len=80):
@@ -3204,6 +3230,20 @@ def append_to_index(note_title, file_type, note_rel_path, area=None):
 
 # ── Dropbox Ingest ────────────────────────────────────────────────────────
 
+def backup_source_file(src_path: Path) -> None:
+    """Move a processed raw source file into the backup directory."""
+    backup_dir = Path(CONFIG["backup_dir"]).expanduser()
+    backup_dir.mkdir(parents=True, exist_ok=True)
+    backup_dest = backup_dir / src_path.name
+    if backup_dest.exists():
+        stem = backup_dest.stem
+        suffix = backup_dest.suffix
+        ts = datetime.now(TZ).strftime("%Y%m%d%H%M%S")
+        backup_dest = backup_dir / f"{stem}_{ts}{suffix}"
+    shutil.move(str(src_path), str(backup_dest))
+    print(f"  📦 已备份: {src_path.name} → Dropbox raw/")
+
+
 def ingest_dropbox(dry_run=False, single_file=None, force=False):
     """Scan Dropbox raw/ directory and process new/modified files."""
     print(f"\n{'[DRY-RUN] ' if dry_run else ''}📁 Scanning Dropbox raw/...")
@@ -3215,6 +3255,7 @@ def ingest_dropbox(dry_run=False, single_file=None, force=False):
 
     conn = get_db()
     init_db(conn)
+    hash_state = load_ingest_hash_state()
 
     if single_file:
         files_to_check = [Path(single_file)]
@@ -3240,9 +3281,10 @@ def ingest_dropbox(dry_run=False, single_file=None, force=False):
 
         if not force and row and row["status"] in ("incomplete", "draft"):
             print(f"  🔄 Previously incomplete (status={row['status']}), retrying...")
-        elif not force and row and row["mtime"] == mtime and row["status"] == "success":
+        elif not force and row and row["mtime"] == mtime and row["status"] in ("success", "dedup_content"):
             stats["skipped"] += 1
-            stats["items"].append({"filename": filename, "status": "skipped", "detail": "mtime_unchanged"})
+            detail = "mtime_unchanged" if row["status"] == "success" else "content_hash_duplicate"
+            stats["items"].append({"filename": filename, "status": "skipped", "detail": detail})
             continue
 
         print(f"\n  📄 {filename}")
@@ -3258,6 +3300,40 @@ def ingest_dropbox(dry_run=False, single_file=None, force=False):
         else:
             work_path = full_path
             print(f"  [DRY-RUN] Would process this file")
+
+        pdf_content_hash = None
+        is_pdf = Path(work_path).suffix.lower() == ".pdf"
+        if not dry_run and is_pdf:
+            pdf_content_hash = compute_sha256(work_path)
+            existing_hash_note_path = hash_state.get(pdf_content_hash)
+            if existing_hash_note_path:
+                print(
+                    f"  [DEDUP] 跳过：内容与已有笔记 {existing_hash_note_path} 相同（hash: {pdf_content_hash[:8]}）"
+                )
+                conn.execute("""
+                    INSERT OR REPLACE INTO processed
+                    (path, filename, mtime, sha256, file_type, processed_at, target_note, status)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                """, (
+                    full_path, filename, mtime, pdf_content_hash, "pdf",
+                    now_iso(), existing_hash_note_path, "dedup_content"
+                ))
+                conn.commit()
+                stats["skipped"] += 1
+                stats["items"].append({
+                    "filename": filename,
+                    "status": "skipped",
+                    "detail": f"content_hash_duplicate:{pdf_content_hash[:8]}",
+                    "note_path": existing_hash_note_path,
+                })
+                try:
+                    if work_path != full_path and os.path.exists(full_path):
+                        backup_source_file(filepath)
+                except Exception as move_err:
+                    print(f"  ⚠️  备份失败（不影响处理结果）: {move_err}")
+                if work_path != full_path and os.path.exists(work_path):
+                    os.remove(work_path)
+                continue
 
         # Classify file
         file_type = classify_file(work_path)
@@ -3343,7 +3419,7 @@ def ingest_dropbox(dry_run=False, single_file=None, force=False):
                 _append_concept_links_to_note(note_path, cached_for_note.get("concepts", []))
 
             # Compute SHA256 of source
-            sha256 = compute_sha256(work_path)
+            sha256 = pdf_content_hash or compute_sha256(work_path)
 
             # Update SQLite
             is_update = row is not None or existing_note_path is not None
@@ -3364,6 +3440,10 @@ def ingest_dropbox(dry_run=False, single_file=None, force=False):
             else:
                 stats["new"] += 1
                 item_status = "created"
+
+            if pdf_content_hash and hash_state.get(pdf_content_hash) != note_path:
+                hash_state[pdf_content_hash] = note_path
+                save_ingest_hash_state(hash_state)
 
             # Update index
             note_rel_path = os.path.relpath(note_path, CONFIG["atlas_vault"])
@@ -3428,18 +3508,8 @@ def ingest_dropbox(dry_run=False, single_file=None, force=False):
 
             # Backup: move source file to backup dir on success
             if work_path != full_path and os.path.exists(full_path):
-                backup_dir = Path(CONFIG["backup_dir"]).expanduser()
-                backup_dir.mkdir(parents=True, exist_ok=True)
-                backup_dest = backup_dir / filepath.name
-                if backup_dest.exists():
-                    # Avoid overwrite: add timestamp suffix
-                    stem = backup_dest.stem
-                    suffix = backup_dest.suffix
-                    ts = datetime.now(TZ).strftime("%Y%m%d%H%M%S")
-                    backup_dest = backup_dir / f"{stem}_{ts}{suffix}"
                 try:
-                    shutil.move(str(filepath), str(backup_dest))
-                    print(f"  📦 已备份: {filename} → Dropbox raw/")
+                    backup_source_file(filepath)
                 except Exception as move_err:
                     print(f"  ⚠️  备份失败（不影响处理结果）: {move_err}")
 
