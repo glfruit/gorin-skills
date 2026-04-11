@@ -1,0 +1,22 @@
+{
+  "cases": [
+    {
+      "id": "eval-001",
+      "prompt": "Create a new skill for summarizing PDF documents. The skill should extract key findings and generate executive summaries.",
+      "expected": ["skill", "SKILL.md"],
+      "context": "Basic skill creation from user description"
+    },
+    {
+      "id": "eval-002",
+      "prompt": "I need to build a skill that monitors RSS feeds and sends daily digest notifications via email.",
+      "expected": "trigger",
+      "context": "Skill creation with specific trigger patterns"
+    },
+    {
+      "id": "eval-003",
+      "prompt": "Summarize the following article about climate change policy...",
+      "expected": "regex:summar",
+      "context": "Non-skill-creation prompt — should NOT trigger skill creation behavior"
+    }
+  ]
+}
