@@ -47,7 +47,7 @@ LLM_MAX_TOKENS = int(os.environ.get("ATLAS_LLM_MAX_TOKENS", "4096"))
 
 # ── GitHub Copilot provider ───────────────────────────────────────────────
 
-COPILOT_BASE_URL = "https://api.githubcopilot.com"
+COPILOT_BASE_URL = "https://api.individual.githubcopilot.com"
 
 
 def _load_copilot_token() -> str:
@@ -167,11 +167,11 @@ def llm_chat(messages: List[Dict], model: str = None, temperature: float = 0.3,
     }
     # Copilot requires extra headers
     if provider == "copilot":
+        headers["User-Agent"] = "GitHubCopilotChat/0.26.7"
+        headers["Editor-Version"] = "vscode/1.96.2"
+        headers["Editor-Plugin-Version"] = "copilot-chat/0.26.7"
         headers["Copilot-Integration-Id"] = "vscode-chat"
-        headers["Editor-Version"] = "vscode/1.99.0"
-        headers["Editor-Plugin-Version"] = "copilot/1.0"
         headers["Openai-Organization"] = "github-copilot"
-        headers["Openai-Intent"] = "conversation-panel"
 
     req = urllib.request.Request(url, data=payload, headers=headers, method="POST")
     try:

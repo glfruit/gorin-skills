@@ -1886,6 +1886,64 @@ def _is_probably_epub_chapter(name: str, raw: str, text: str) -> bool:
     return False
 
 
+def _get_epub_spine_order(zf: zipfile.ZipFile) -> list[str]:
+    """Return EPUB content members in OPF spine order when available."""
+    import xml.etree.ElementTree as ET
+
+    opf_path = None
+    try:
+        if "META-INF/container.xml" in zf.namelist():
+            container_raw = zf.read("META-INF/container.xml").decode("utf-8", errors="ignore")
+            root = ET.fromstring(container_raw)
+            for node in root.iter():
+                if node.tag.endswith("rootfile"):
+                    candidate = (node.attrib.get("full-path") or "").strip()
+                    if candidate:
+                        opf_path = candidate
+                        break
+    except Exception:
+        opf_path = None
+
+    if not opf_path:
+        for name in zf.namelist():
+            if name.lower().endswith(".opf"):
+                opf_path = name
+                break
+    if not opf_path:
+        return []
+
+    try:
+        opf_raw = zf.read(opf_path).decode("utf-8", errors="ignore")
+        root = ET.fromstring(opf_raw)
+    except Exception:
+        return []
+
+    manifest: dict[str, str] = {}
+    for node in root.iter():
+        if not node.tag.endswith("item"):
+            continue
+        item_id = (node.attrib.get("id") or "").strip()
+        href = (node.attrib.get("href") or "").strip()
+        if not item_id or not href:
+            continue
+        resolved = (Path(opf_path).parent / href).as_posix()
+        manifest[item_id] = resolved
+
+    ordered_members: list[str] = []
+    seen: set[str] = set()
+    for node in root.iter():
+        if not node.tag.endswith("itemref"):
+            continue
+        item_id = (node.attrib.get("idref") or "").strip()
+        member = manifest.get(item_id)
+        if not member or member in seen:
+            continue
+        ordered_members.append(member)
+        seen.add(member)
+
+    return ordered_members
+
+
 def extract_text_from_epub(filepath: str) -> str:
     """Extract text from EPUB/MOBI-like zipped content with pure Python fallback."""
     try:
@@ -1925,7 +1983,17 @@ def extract_epub_chapters(filepath: str) -> list[dict]:
                 if name.lower().endswith((".xhtml", ".html", ".htm", ".xml"))
                 and not name.startswith("__MACOSX/")
             ]
-            for name in sorted(members):
+            if not members:
+                return []
+
+            spine_members = [name for name in _get_epub_spine_order(zf) if name in members]
+            if spine_members:
+                spine_set = set(spine_members)
+                ordered_members = spine_members + sorted(name for name in members if name not in spine_set)
+            else:
+                ordered_members = sorted(members)
+
+            for name in ordered_members:
                 try:
                     raw = zf.read(name).decode("utf-8", errors="ignore")
                 except Exception:
@@ -1988,7 +2056,7 @@ def _looks_like_pdf_sentence_tail(text: str) -> bool:
     return False
 
 
-def _match_pdf_explicit_chapter_heading(line: str) -> tuple[str, str] | None:
+def _match_pdf_explicit_chapter_heading(line: str) -> Optional[tuple[str, str]]:
     text = _normalize_pdf_heading(line)
     if not text:
         return None
