@@ -20,6 +20,8 @@ agent-usable: true
 ## 8-Step Workflow
 
 ### Step 1: Narrow the Task
+**先扫当前对话历史**：如果用户正在做某件事（用了哪些工具、走了哪些步骤、做了哪些纠正），直接从对话中提取 workflow，不要让用户从零描述。缺失的细节再问。
+
 Ask: Domain, Scenario, Constraints, Audience. Classify via `references/skill-taxonomy.md` (12 types). Read `references/creation-patterns/{type}.md` for patterns.
 
 ### Step 2: Find Golden Cases (CRITICAL)
@@ -45,6 +47,17 @@ Only add theory when it explains **why** patterns work. No generic filler.
 4. Include `## Gotchas` section
 5. Assign readiness: scaffold / mvp / production-ready / integrated
 
+#### Writing Style
+- **解释 why，不要堆 MUST**：如果你发现自己在写 ALWAYS / NEVER / MUST，停下来，改成解释为什么这件事重要。LLM 理解动机比遵守规则更可靠。规则越多，skill 越脆。
+- **用祈使句**，不用被动语态。`Read the file first` 比 `The file should be read first` 更清晰。
+- **举例胜过描述**：与其说“格式要规范”，不如给一个 before/after 对比。
+
+#### Description 字段写作原则
+Claude 有“undertrigger”倒向——即使描述匹配，也可能不触发 skill。写 description 时要适度主动：
+- 不只说“this skill does X”，还要说“use this skill whenever Y / Z / W，even if the user doesn't explicitly mention X”
+- 把触发场景的关键词写进 description，不要只放在 triggers 数组里
+- description 是路由机制，不是文档——面向 Claude 的路由判断，不是面向人类阅读
+
 ### Step 6: Validate
 Run these in order (all must pass):
 1. `scripts/validate-skill.sh` — structural check
@@ -57,23 +70,46 @@ Run these in order (all must pass):
 8. Golden case test — output quality matches cases?
 9. Failure mode test — prevents known anti-patterns?
 
+**Baseline 对比（改进已有 skill 时必须执行）**：
+- 改进前先快照旧版：`cp -r <skill-path> /tmp/<skill-name>-snapshot/`
+- 用相同测试用例跑旧版和新版，对比输出质量
+- 没有 baseline 对比，无法证明改进有效
+
 If validation fails → return to Step 2 or 3 (almost always insufficient research).
 
-### Step 7: Internal Acceptance
+### Step 7: Eval Loop（迭代验证）
+运行真实测试用例，邀请用户 review 输出质量，根据反馈改进，再跑一遍。结构：
+
+```
+<skill-name>-workspace/
+├── iteration-1/
+│   ├── eval-0/
+│   │   ├── with_skill/outputs/
+│   │   ├── without_skill/outputs/   # 新建时；改进时用 old_skill/
+│   │   └── eval_metadata.json
+│   └── benchmark.json
+├── iteration-2/
+│   └── ...
+```
+
+每轮 eval 至少 2-3 个真实测试用例。用户 review 后给出反馈，改进 skill，进入下一轮。
+停止条件：用户满意 / 反馈全为空 / 已无实质性改进空间。
+
+### Step 8: Internal Acceptance
 Run one real happy-path case with concrete input. If fails: keep fixing. Record: command, input, expected/actual, result.
 Update `references/creation-patterns/{type}.md` with lessons learned.
 
-### Step 8: Prove Integration
+### Step 9: Prove Integration
 Run through upstream caller if applicable. Fix integration bugs before labeling `integrated`.
+
+## Delivery Contract
+Do **not** report "skill creation complete" unless: quick-validate ✓, strict-validate ✓, eval loop ≥ 1 iteration ✓, internal acceptance ✓, integration proven. On failure: report exact failures + recommended next step.
 
 ## Internal Acceptance
 - **Happy-path**: 创建一个 Type 5 (Monitor) 技能 `test-health-check`
 - **Invocation**: 直接调用 Step 1-6，在 `/tmp/test-health-check/` 生成
 - **Expected**: SKILL.md（frontmatter + 必填段 + 无 placeholder）、Python 脚本、.skill-meta.json
 - **Success**: validate-skill.sh + context_sizer Grade B+ + trigger_eval F1 ≥ 0.8
-
-## Delivery Contract
-Do **not** report "skill creation complete" unless: quick-validate ✓, strict-validate ✓, internal acceptance ✓, integration proven. On failure: report exact failures + recommended next step.
 
 ## Gotchas
 1. **validate-skill checks structure, not quality** — golden case test (Step 6 #8-9) is the real quality gate
