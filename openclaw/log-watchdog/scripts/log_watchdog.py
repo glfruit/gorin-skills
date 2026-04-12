@@ -34,6 +34,7 @@ from oclib.notify import send_telegram
 # ─── Paths ──────────────────────────────────────────────────────────
 SCRIPTS_DIR = Path(__file__).resolve().parent
 DATA_DIR = Path.home() / ".openclaw" / "logs"
+AGENTS_ROOT = Path.home() / ".openclaw" / "agents"
 LOG_SOURCE = DATA_DIR / "gateway.err.log"
 POS_FILE = DATA_DIR / "log-watchdog-pos"
 STATE_FILE = DATA_DIR / "log-watchdog-state.json"
@@ -73,6 +74,7 @@ SESSION_AGENT_RE = re.compile(
     r"session:agent:(?P<agent>[^:\s]+)(?::(?P<scope>subagent|cron|main|telegram|discord|feishu))?(?::(?P<subject>[^\s]+))?"
 )
 SESSION_AGENT_FULL_RE = re.compile(r"session:(agent:[^\s]+)")
+EXPLICIT_AGENT_RE = re.compile(r"(?:agentId|agent|childAgentId)=([^\s]+)")
 DURATION_RE = re.compile(r"durationMs=(\d+)")
 RUNID_RE = re.compile(r"runId=([^\s]+)")
 PATH_RE = re.compile(r"access '([^']+)'")
@@ -280,10 +282,105 @@ def extract_identity(line: str) -> Identity | None:
         subject = session_match.group("subject")
         return Identity(agent=agent, lane=scope, subject=subject)
 
+    explicit_agent_match = EXPLICIT_AGENT_RE.search(line)
     lane_match = re.search(r"lane=(\w+)", line)
+    if explicit_agent_match and lane_match:
+        return Identity(agent=explicit_agent_match.group(1), lane=lane_match.group(1))
+
     if lane_match:
         return Identity(agent="?", lane=lane_match.group(1))
     return None
+
+
+def parse_session_key_identity(session_key: str) -> Identity | None:
+    raw = session_key.strip()
+    if not raw.startswith("agent:"):
+        return None
+    parts = raw.split(":")
+    if len(parts) < 3:
+        return None
+    agent = parts[1] or "?"
+    lane = parts[2] or "unknown"
+    subject = ":".join(parts[3:]) if len(parts) > 3 else None
+    return Identity(agent=agent, lane=lane, subject=subject or None)
+
+
+def resolve_failover_context(lines: list[str], idx: int) -> dict:
+    current = lines[idx]
+    candidate_indices: list[int] = []
+    for offset in (0, 1, -1, 2, -2):
+        probe = idx + offset
+        if 0 <= probe < len(lines) and probe not in candidate_indices:
+            candidate_indices.append(probe)
+
+    chosen_index = idx
+    session_key: str | None = None
+    identity: Identity | None = None
+    for probe in candidate_indices:
+        session_match = SESSION_AGENT_FULL_RE.search(lines[probe])
+        if not session_match:
+            continue
+        session_key = session_match.group(1)
+        identity = parse_session_key_identity(session_key)
+        chosen_index = probe
+        break
+
+    if identity is None:
+        identity = extract_identity(current)
+
+    if session_key is None:
+        session_key = failover_session_key(current)
+
+    mark_lines = [current]
+    chosen_line = lines[chosen_index]
+    if chosen_line != current:
+        mark_lines.append(chosen_line)
+
+    return {
+        "session_key": session_key,
+        "identity": identity,
+        "sample_line": chosen_line,
+        "mark_lines": mark_lines,
+    }
+
+
+def load_sessions_index(agent_id: str, cache: dict[str, dict]) -> dict:
+    cached = cache.get(agent_id)
+    if cached is not None:
+        return cached
+    store_path = AGENTS_ROOT / agent_id / "sessions" / "sessions.json"
+    if not store_path.exists():
+        cache[agent_id] = {}
+        return cache[agent_id]
+    try:
+        cache[agent_id] = json.loads(store_path.read_text())
+    except (OSError, json.JSONDecodeError):
+        cache[agent_id] = {}
+    return cache[agent_id]
+
+
+def is_subagent_session_naturally_ended(session_key: str, cache: dict[str, dict]) -> bool:
+    identity = parse_session_key_identity(session_key)
+    if identity is None or identity.lane != "subagent":
+        return False
+    sessions_index = load_sessions_index(identity.agent, cache)
+    entry = sessions_index.get(session_key)
+    ended_at = entry.get("endedAt") if isinstance(entry, dict) else None
+    return isinstance(ended_at, (int, float)) and ended_at > 0
+
+
+def reconcile_pending_failovers(state: dict, sessions_cache: dict[str, dict]) -> None:
+    pending = state.setdefault("pending_failovers", {})
+    resolved_keys: list[str] = []
+    for session_key, entry in pending.items():
+        lane = entry.get("lane") if isinstance(entry, dict) else None
+        if lane != "subagent":
+            continue
+        if is_subagent_session_naturally_ended(session_key, sessions_cache):
+            resolved_keys.append(session_key)
+            log(f"🟢 Subagent failover auto-recovered after natural end: {session_key}")
+    for session_key in resolved_keys:
+        pending.pop(session_key, None)
 
 
 def extract_duration_seconds(line: str) -> str:
@@ -313,13 +410,17 @@ def _run() -> int:
     # Convert reported_hashes list to set for O(1) lookup
     if "reported_hashes_set" not in state:
         state["reported_hashes_set"] = set(state.get("reported_hashes", []))
+    state.setdefault("pending_failovers", {})
+    sessions_cache: dict[str, dict] = {}
+    reconcile_pending_failovers(state, sessions_cache)
 
     if not LOG_SOURCE.exists():
         log(f"⚠️ 日志文件不存在: {LOG_SOURCE}")
         return 0
 
     # ── Incremental scan ──────────────────────────────────────
-    total_lines = sum(1 for _ in open(LOG_SOURCE, "rb"))
+    with open(LOG_SOURCE, "rb") as fh:
+        total_lines = sum(1 for _ in fh)
     last_pos = read_position()
 
     # Log rotation
@@ -335,6 +436,7 @@ def _run() -> int:
     new_count = total_lines - last_pos
     if new_count <= 0:
         log(f"✅ 无新日志 (pos={total_lines})")
+        save_state(state)
         write_position(total_lines)
         return 0
 
@@ -354,7 +456,8 @@ def _run() -> int:
     # ── Classify ──────────────────────────────────────────────
     # Collect fresh (unreported) errors with their categories
     fresh_errors: dict[str, list[str]] = {}  # category → [sample_lines]
-    recovered_failovers: list[str] = []
+    failover_events: list[dict] = []
+    recovered_failovers: list[dict] = []
     failover_success_window = 30  # expanded from 20 to catch slower recoveries
     seen_failover_sessions: set[str] = set()  # deduplicate same-session double-counting
 
@@ -364,28 +467,42 @@ def _run() -> int:
             continue
 
         if cat == "failover":
-            # Deduplicate: same failover event appears as both lane=subagent and
-            # lane=session:agent:xxx:subagent:yyy — only count once per actual session/run.
-            session_key = failover_session_key(line)
+            context = resolve_failover_context(lines, idx)
+            session_key = context["session_key"]
+            identity = context["identity"]
             if session_key in seen_failover_sessions:
-                continue  # skip duplicate entry for same failover event
+                continue
             seen_failover_sessions.add(session_key)
 
-            # If a candidate succeeds shortly after this timeout, treat it as recovered failover,
-            # not as "all providers failed".
+            if identity and identity.lane == "subagent" and is_subagent_session_naturally_ended(session_key, sessions_cache):
+                state["pending_failovers"].pop(session_key, None)
+                for marked_line in context["mark_lines"]:
+                    mark_reported(state, marked_line)
+                log(f"🟢 Suppressed ended subagent failover follow-up: {session_key}")
+                continue
+
             lookahead = lines[idx + 1: idx + 1 + failover_success_window]
             if any("model fallback decision: decision=candidate_succeeded" in x for x in lookahead):
-                if not is_already_reported(state, line):
-                    mark_reported(state, line)
-                    recovered_failovers.append(line)
+                if not any(is_already_reported(state, marked_line) for marked_line in context["mark_lines"]):
+                    for marked_line in context["mark_lines"]:
+                        mark_reported(state, marked_line)
+                    recovered_failovers.append(context)
+                state["pending_failovers"].pop(session_key, None)
                 continue
+
+            if any(is_already_reported(state, marked_line) for marked_line in context["mark_lines"]):
+                continue
+            for marked_line in context["mark_lines"]:
+                mark_reported(state, marked_line)
+            failover_events.append(context)
+            continue
 
         if is_already_reported(state, line):
             continue
         mark_reported(state, line)
         fresh_errors.setdefault(cat, []).append(line)
 
-    if not fresh_errors:
+    if not fresh_errors and not failover_events and not recovered_failovers:
         log("✅ 无新增可操作错误")
         save_state(state)
         write_position(total_lines)
@@ -393,13 +510,12 @@ def _run() -> int:
 
     # ── Summary of what we found ──────────────────────────────
     summary_parts = []
-    for cat in ("fatal", "failover", "auth_401", "rate_429_send", "net_timeout", "enoent_core", "enoent_optional"):
+    for cat in ("fatal", "auth_401", "rate_429_send", "net_timeout", "enoent_core", "enoent_optional"):
         errs = fresh_errors.get(cat, [])
         if not errs:
             continue
         labels = {
             "fatal": "💀 致命错误",
-            "failover": "🔥 Failover 失败",
             "auth_401": "🔑 Auth 401",
             "rate_429_send": "🚦 429 发送失败",
             "net_timeout": "⏱ 网络超时",
@@ -407,6 +523,8 @@ def _run() -> int:
             "enoent_optional": "📝 可选工作文件缺失",
         }
         summary_parts.append(f"{labels.get(cat, cat)}: {len(errs)}")
+    if failover_events:
+        summary_parts.append(f"🔥 Failover 失败: {len(failover_events)}")
     if recovered_failovers:
         summary_parts.append(f"🟡 Failover 已恢复: {len(recovered_failovers)}")
 
@@ -423,24 +541,31 @@ def _run() -> int:
         log(f"🚨 P0 fatal 告警 ({len(fatals)})")
 
     # ── P0: Failover (only truly unrecovered) ────────────────
-    failovers = fresh_errors.get("failover", [])
-    if failovers and is_cooled_down(state, "failover", now):
-        sample = failovers[0]
-        identity = extract_identity(sample) or Identity(agent="?", lane="unknown")
-        duration_s = extract_duration_seconds(sample)
+    if failover_events and is_cooled_down(state, "failover", now):
+        sample = failover_events[0]
+        identity = sample["identity"] or Identity(agent="?", lane="unknown")
+        sample_line = sample["sample_line"]
+        duration_s = extract_duration_seconds(sample_line)
         notify(
-            f"🚨 模型 Failover 未恢复 ({len(failovers)}次)\n"
+            f"🚨 模型 Failover 未恢复 ({len(failover_events)}次)\n"
             f"对象: {identity.label} | 等待: {duration_s}s\n"
-            f"```\n{sample[:200]}\n```"
+            f"```\n{sample_line[:200]}\n```"
         )
+        state["pending_failovers"][sample["session_key"]] = {
+            "lane": identity.lane,
+            "agent": identity.agent,
+            "subject": identity.subject,
+            "firstAlertAt": now,
+        }
         set_cooldown(state, "failover", now)
-        log(f"🚨 P0 failover 告警 ({len(failovers)}) target={identity.label}")
+        log(f"🚨 P0 failover 告警 ({len(failover_events)}) target={identity.label}")
 
     # Recovered failovers — log but do NOT page; only notify if count is unusually high
     if recovered_failovers:
         sample = recovered_failovers[0]
-        identity = extract_identity(sample) or Identity(agent="?", lane="unknown")
-        duration_s = extract_duration_seconds(sample)
+        identity = sample["identity"] or Identity(agent="?", lane="unknown")
+        sample_line = sample["sample_line"]
+        duration_s = extract_duration_seconds(sample_line)
         log(f"🟡 Failover 已恢复 ({len(recovered_failovers)}) target={identity.label} wait={duration_s}s")
         # Only notify if 3+ recovered in same window (may indicate systemic issue)
         if len(recovered_failovers) >= 3 and is_cooled_down(state, "failover_recovered", now):
