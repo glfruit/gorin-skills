@@ -1,0 +1,95 @@
+---
+name: gorin-edu-chapter-illustrator
+description: Plan and specify textbook chapter illustrations with source-grounded visual intent, insertion points, prompts, and QA evidence. Adapted for Edu Team chapter workflows; does not directly invoke third-party baoyu skills.
+homepage: https://github.com/glfruit/gorin-skills/tree/main/skills/edu/gorin-edu-chapter-illustrator
+version: 0.1.0
+metadata:
+  {
+    "openclaw": {
+      "emoji": "🖼️",
+      "os": ["darwin", "linux"],
+      "requires": { "bins": [] }
+    }
+  }
+---
+
+# Edu Chapter Illustrator
+
+Use this skill when a textbook, course handout, or training handout needs
+chapter-level visual planning: conceptual illustrations, process figures,
+comparison visuals, activity cards, or explanatory images.
+
+This skill borrows the useful structure of `baoyu-article-illustrator`: content
+analysis, type × style thinking, saved outline, saved prompt files, and output
+directory discipline. It is adapted for Edu Team governance: Markdown source is
+truth, figures must have captions/placeholders/manifests, and no generated image
+can be claimed complete without QA evidence.
+
+## Trigger
+
+- "给章节配图"
+- "为教材章节设计插图"
+- "这章哪里需要图"
+- "根据章节内容规划图示"
+- "generate illustrations for chapter"
+
+## Workflow
+
+1. Lock source
+   - Identify canonical Markdown source.
+   - Do not derive final visual requirements from DOCX/PDF extraction when
+     Markdown exists.
+
+2. Analyze teaching need
+   - Identify learner difficulty, abstract concepts, workflows, comparisons,
+     and places where text alone is too heavy.
+   - Mark each proposed visual as one of: `concept`, `workflow`, `comparison`,
+     `case-scene`, `data-visual`, `activity-card`, `reference-card`.
+
+3. Create visual plan
+   - Write `design/visual-plan.md` or update the current phase visual plan.
+   - For each visual include source section, learning purpose, insertion
+     placeholder, caption draft, asset path, and QA requirement.
+
+4. Create prompt files before generation
+   - Save prompts under `assets/figures/prompts/`.
+   - Do not generate from ad-hoc inline prompts.
+   - Prompts must include teaching objective, audience, exact text labels, style
+     boundary, aspect ratio, and forbidden elements.
+
+5. Generate or hand off
+   - Use the project's approved image/diagram generator only after prompt files
+     exist.
+   - If generation is delegated, include the prompt path and expected output
+     path in the worker contract.
+
+6. Validate
+   - Ensure every generated asset appears in `design/figure-manifest.json` or
+     the project visual manifest.
+   - Check local file existence, caption, placeholder, source section, and
+     whether text in the image matches the source language.
+
+## Output Structure
+
+```text
+assets/figures/
+  prompts/
+    fig-05-01-workflow.md
+  source/
+  generated/
+    fig-05-01-workflow.png
+  qa/
+    fig-05-01-workflow-qa.md
+```
+
+## Not Allowed
+
+- Do not insert decorative images that do not support a learning objective.
+- Do not change unrelated chapter text while adding visuals.
+- Do not overwrite human-provided source artwork.
+- Do not claim "配图完成" without manifest and QA evidence.
+
+## References
+
+- `references/visual-plan-template.md`
+- `references/figure-prompt-template.md`

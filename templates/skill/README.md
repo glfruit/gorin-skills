@@ -6,7 +6,7 @@
 
 ## 简介
 
-{{SKILL_NAME}} 是一个用于 {{TARGET_TOOL }} 的技能，提供 {{BRIEF_FEATURE_SUMMARY}}。
+{{SKILL_NAME}} 是一个用于 {{TARGET_TOOL}} 的技能，提供 {{BRIEF_FEATURE_SUMMARY}}。
 
 ## 功能特性
 

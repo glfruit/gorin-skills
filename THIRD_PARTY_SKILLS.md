@@ -37,7 +37,7 @@ integration: 如何与 gorin-skills 集成
 
 | 名称 | 描述 | 状态 | 仓库 |
 |------|-------------|--------|------------|
-| *(暂无提交)* | | | |
+| baoyu-skills | 多媒体内容创作技能集合，包含文章配图、图解、信息图、Markdown 格式化、图片压缩等能力。本仓库不直接复用其技能，而是吸收组织结构和流程设计，改造成 `gorin-edu-*` 教学团队技能。 | stable | https://github.com/JimLiu/baoyu-skills |
 
 ### 通用技能
 
@@ -82,4 +82,4 @@ integration: 如何与 gorin-skills 集成
 
 ---
 
-最后更新：2026-02-06
+最后更新：2026-06-18

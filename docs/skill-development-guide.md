@@ -18,7 +18,7 @@
 
 # 按照提示输入信息
 # - 技能名称
-# - 类别（openclaw/general）
+# - 类别（skills/edu、openclaw/general）
 # - 描述
 # - 作者信息
 ```
@@ -27,10 +27,10 @@
 
 ```bash
 # 1. 创建目录
-mkdir -p openclaw/my-skill
+mkdir -p skills/edu/gorin-edu-my-skill
 
 # 2. 复制模板
-cp -r templates/skill/* openclaw/my-skill/
+cp -r templates/skill/* skills/edu/gorin-edu-my-skill/
 
 # 3. 替换占位符
 # 编辑文件，将 {{PLACEHOLDER}} 替换为实际内容
@@ -274,7 +274,7 @@ esac
 创建技能后，使用验证脚本检查：
 
 ```bash
-./scripts/validate-skill.sh openclaw/my-skill
+./scripts/validate-skill.sh skills/edu/gorin-edu-my-skill
 ```
 
 ### 检查项

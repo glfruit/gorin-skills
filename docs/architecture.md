@@ -13,7 +13,20 @@ gorin-skills 是一个模块化的技能仓库，旨在为多种 AI 开发工具
 技能按照目标工具类型分类存储：
 
 - **`openclaw/`** - OpenClaw 工具的技能
+- **`skills/`** - 按能力域组织的自研技能
 - **`general/`** - 其他工具（Claude Code、Codex 等）的技能
+
+### 1.1 命名约定
+
+本仓库自研、改造或重新封装的技能必须使用 `gorin-*` 前缀。面向教学团队的技能使用 `gorin-edu-*` 前缀，例如：
+
+- `gorin-edu-chapter-illustrator`
+- `gorin-edu-diagram-designer`
+- `gorin-edu-infographic-designer`
+- `gorin-edu-markdown-polisher`
+- `gorin-edu-image-optimizer`
+
+第三方技能可以保留原始前缀，例如 `baoyu-*`。如果吸收第三方技能思想形成教学团队适配版，应在 `skills/edu/` 创建新的 `gorin-edu-*` 技能，而不是直接复用或改写第三方技能目录。
 
 ### 2. 自包含技能
 
@@ -44,6 +57,8 @@ skill-name/
 
 ```
 gorin-skills/
+├── skills/             # 按能力域组织的自研技能
+│   └── edu/            # 教学团队技能
 ├── openclaw/           # OpenClaw 技能
 │   └── {skill-name}/   # 技能目录
 ├── general/            # 通用技能
@@ -54,6 +69,13 @@ gorin-skills/
 ├── docs/               # 项目文档
 └── .github/            # GitHub 配置
 ```
+
+`skills/edu/` 推荐按能力拆分，而不是把所有规则塞进一个大型提示词：
+
+- 视觉规划类：章节配图、图解、信息图
+- 源稿治理类：Markdown 格式化、章节体例、版本命名
+- 交付检查类：DOCX、PPTX、XLSX、资源包 QA
+- 协作控制类：分派合同、审查包、证据记录
 
 ## SKILL.md 格式
 

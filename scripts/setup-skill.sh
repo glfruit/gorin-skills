@@ -36,28 +36,40 @@ prompt() {
     local result
 
     if [ -n "$default_value" ]; then
-        read -p "$(echo -e ${BLUE}$prompt_text${NC} [$default_value]): " result
+        read -r -p "$(echo -e ${BLUE}$prompt_text${NC} [$default_value]): " result
         echo "${result:-$default_value}"
     else
-        read -p "$(echo -e ${BLUE}$prompt_text${NC}): " result
+        read -r -p "$(echo -e ${BLUE}$prompt_text${NC}): " result
         echo "$result"
     fi
 }
 
+escape_sed_replacement() {
+    local value="$1"
+    value="${value//\\/\\\\}"
+    value="${value//&/\\&}"
+    value="${value//|/\\|}"
+    printf '%s' "$value"
+}
+
 # Select category
 select_category() {
-    echo ""
-    log_info "选择技能类别:"
-    echo "  1) openclaw  - OpenClaw 工具的技能"
-    echo "  2) general   - Claude Code、Codex 等其他工具的技能"
-    echo ""
+    {
+        echo ""
+        log_info "选择技能类别:"
+        echo "  1) skills/edu - 教学团队领域技能"
+        echo "  2) openclaw   - OpenClaw 工具集成技能"
+        echo "  3) general    - Claude Code、Codex 等其他工具的技能"
+        echo ""
+    } >&2
 
     local choice
-    read -p "$(echo -e ${BLUE}请选择 [1-2]:${NC}) " choice
+    read -r -p "$(echo -e ${BLUE}请选择 [1-3]:${NC}) " choice
 
     case $choice in
-        1) echo "openclaw" ;;
-        2) echo "general" ;;
+        1) echo "skills/edu" ;;
+        2) echo "openclaw" ;;
+        3) echo "general" ;;
         *) log_error "无效选择"; exit 1 ;;
     esac
 }
@@ -87,7 +99,7 @@ main() {
     license=$(prompt "许可证" "MIT")
 
     # Set target tool based on category
-    if [ "$category" = "openclaw" ]; then
+    if [ "$category" = "openclaw" ] || [ "$category" = "skills/edu" ]; then
         target_tool="OpenClaw"
     else
         target_tool=$(prompt "目标工具" "Claude Code")
@@ -118,8 +130,8 @@ main() {
         "SKILL_DESCRIPTION=$description"
         "SKILL_EMOJI=$emoji"
         "TARGET_TOOL=$target_tool"
-        "TOOL_TYPE=$(echo $category | tr '[:lower:]' '[:upper:]')"
-        "HOMEPAGE=https://github.com/glfruit/gorin-skills"
+        "TOOL_TYPE=$(echo $category | tr '/[:lower:]' '_[:upper:]')"
+        "HOMEPAGE=https://github.com/glfruit/gorin-skills/tree/main/${category}/${skill_name}"
         "VERSION=0.1.0"
         "STATUS=beta"
         "MAINTAINER=$author"
@@ -129,18 +141,60 @@ main() {
         "OS_CHECK=darwin"
         "INSTALL_ID=${skill_name}-cli"
         "INSTALL_KIND=download"
-        "INSTALL_URL="
+        "INSTALL_URL=https://github.com/glfruit/gorin-skills"
         "EXTRACT=false"
         "TARGET_DIR=~/.local/bin"
-        "BINARIES=${skill_name}.py"
+        "BINARIES=\"${skill_name}.py\""
         "INSTALL_LABEL=Install ${skill_name}"
+        "REQUIREMENTS=\"bins\": []"
+        "SKILL_LONG_DESCRIPTION=$description"
+        "BRIEF_FEATURE_SUMMARY=$description"
+        "FEATURE_1=Follow the skill instructions in SKILL.md"
+        "FEATURE_2=Keep outputs bounded and evidence-backed"
+        "FEATURE_3=Use repository validation before publishing changes"
+        "REQUIREMENT_1=Access to the target AI tool"
+        "REQUIREMENT_2=Git workspace access"
+        "REQUIREMENT_3=Required project context for the task"
+        "AUTO_INSTALL_INSTRUCTIONS=Run install.sh only if the skill includes executable helpers."
+        "MANUAL_INSTALL_COMMANDS=Copy this skill directory into the target skills directory or install through the target tool's skill manager."
+        "USAGE_EXAMPLE_1=Use ${skill_name} when the task matches its description."
+        "USAGE_EXAMPLE_2=Read SKILL.md first, then follow the workflow and validation notes."
+        "CLI_EXAMPLE_1=python3 ${skill_name}.py --version"
+        "CLI_EXAMPLE_2=./install.sh"
+        "REQUIRED_CONFIG=None by default."
+        "OPTIONAL_CONFIG=None by default."
+        "TROUBLESHOOTING_PROBLEM=The skill does not trigger."
+        "TROUBLESHOOTING_SOLUTION=Check the skill name, description, and target tool skill loading path."
+        "DOCS_URL=https://github.com/glfruit/gorin-skills/tree/main/${category}/${skill_name}"
+        "API_URL=N/A"
+        "SKILL_SCRIPT=${skill_name}.py"
+        "EXAMPLE_1_PROMPT=Use ${skill_name} for this task."
+        "EXAMPLE_2_PROMPT=Validate this skill output."
+        "ENV_1=NONE"
+        "ENV_1_DESC=No required environment variable"
+        "ENV_1_DEFAULT=unset"
+        "ENV_2=NONE"
+        "ENV_2_DESC=No optional environment variable"
+        "ENV_2_DEFAULT=unset"
+        "CONFIG_PATH=N/A"
+        "PROBLEM_1_SYMPTOM=Validation reports missing metadata."
+        "PROBLEM_1_SOLUTION=Fill SKILL.md frontmatter and rerun scripts/validate-skill.sh."
+        "PROBLEM_2_SYMPTOM=Executable helper cannot run."
+        "PROBLEM_2_SOLUTION=Check interpreter, permissions, and declared dependencies."
+        "ISSUES_URL=https://github.com/glfruit/gorin-skills/issues"
+        "PREREQUISITE_CHECKS=:"
+        "INSTALL_COMMANDS=:"
+        "PERMISSION_COMMANDS=:"
+        "HELP_URL=https://github.com/glfruit/gorin-skills"
     )
 
     # Simple replacement (could use sed for better patterns)
     for placeholder in "${placeholders[@]}"; do
         local key="${placeholder%%=*}"
         local value="${placeholder#*=}"
-        find "$skill_dir" -type f -exec sed -i '' "s|{{$key}}|$value|g" {} \;
+        local escaped_value
+        escaped_value="$(escape_sed_replacement "$value")"
+        find "$skill_dir" -type f -exec sed -i '' "s|{{$key}}|$escaped_value|g" {} \;
     done
 
     # Make install.sh executable
@@ -162,7 +216,7 @@ def main():
 
     args = parser.parse_args()
 
-    # TODO: Implement your skill here
+    # Implement your skill here.
     print("{{SKILL_NAME}} is ready!")
 
 if __name__ == '__main__':
@@ -173,7 +227,9 @@ EOF
     for placeholder in "${placeholders[@]}"; do
         local key="${placeholder%%=*}"
         local value="${placeholder#*=}"
-        sed -i '' "s|{{$key}}|$value|g" "$skill_dir/${skill_name}.py"
+        local escaped_value
+        escaped_value="$(escape_sed_replacement "$value")"
+        sed -i '' "s|{{$key}}|$escaped_value|g" "$skill_dir/${skill_name}.py"
     done
 
     chmod +x "$skill_dir/${skill_name}.py"

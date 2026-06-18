@@ -10,6 +10,7 @@ set -e
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
 NC='\033[0m'
 
 # Configuration
@@ -22,19 +23,19 @@ checks=0
 
 log_info() {
     echo -e "${GREEN}[✓]${NC} $1"
-    ((checks++))
+    ((checks+=1))
 }
 
 log_warn() {
     echo -e "${YELLOW}[!]${NC} $1"
-    ((warnings++))
-    ((checks++))
+    ((warnings+=1))
+    ((checks+=1))
 }
 
 log_error() {
     echo -e "${RED}[✗]${NC} $1"
-    ((errors++))
-    ((checks++))
+    ((errors+=1))
+    ((checks+=1))
 }
 
 log_check() {
@@ -119,7 +120,7 @@ check_install_script() {
     local install_sh="$skill_path/install.sh"
 
     if [ ! -f "$install_sh" ]; then
-        log_warn "未找到 install.sh（推荐但非必需）"
+        log_info "未找到 install.sh（提示词/文档型技能可省略）"
         return
     fi
 
@@ -146,21 +147,21 @@ check_common_issues() {
     log_check "检查常见问题..."
 
     # Check for trailing whitespace
-    if grep -q ' $' "$skill_path"/*.md 2>/dev/null; then
+    if grep -r -I -q ' $' "$skill_path" --include='*.md' 2>/dev/null; then
         log_warn "发现行尾空白字符"
     else
         log_info "未发现行尾空白字符"
     fi
 
-    # Check for TODO/FIXME comments
-    if grep -r -i 'todo\|fixme' "$skill_path"/*.md "$skill_path"/*.py 2>/dev/null | grep -q .; then
-        log_warn "发现 TODO/FIXME 注释"
+    # Check for TODO/FIXME comments. Literal TODO as a checked placeholder is allowed.
+    if grep -r -I -i -E '(^|[[:space:]])(TODO|FIXME)(:|\\(|\\[)' "$skill_path" 2>/dev/null | grep -q .; then
+        log_warn "发现 TODO/FIXME 待办注释"
     else
         log_info "未发现 TODO/FIXME 注释"
     fi
 
     # Check for placeholder values
-    if grep -r '{{' "$skill_path"/*.md 2>/dev/null | grep -q .; then
+    if find "$skill_path" -type f -print0 | xargs -0 perl -ne 'print if /(?<!\{)\{\{[A-Z][A-Z0-9_ ]*\}\}(?!\})/' | grep -q .; then
         log_error "发现未替换的模板占位符 {{}}"
     else
         log_info "未发现模板占位符"
@@ -173,7 +174,7 @@ main() {
 
     if [ -z "$skill_path" ]; then
         echo "用法: $0 <skill-path>"
-        echo "示例: $0 openclaw/neobear"
+        echo "示例: $0 skills/edu/gorin-edu-chapter-illustrator"
         exit 1
     fi
 
