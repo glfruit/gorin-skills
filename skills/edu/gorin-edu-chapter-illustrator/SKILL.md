@@ -80,6 +80,11 @@ can be claimed complete without QA evidence.
      artwork; `openclaw_native_image` or `approved_gorin_skill` for approved AI
      images.
    - Do not switch to an undeclared backend in a worker prompt or chat message.
+   - Record `generation_backend` and `generation_evidence_path` before
+     generation. `generation_backend` must be recognizable for the selected
+     `generator_route` (for example Mermaid renderer for `mermaid_cli`,
+     `edu_generate_qr_assets.py` for `qr_generator`, or a concrete `gorin-*`
+     skill for `approved_gorin_skill`), not arbitrary prose.
 
 5. Create prompt or source files before generation
    - Save prompts under `assets/figures/prompts/`.
@@ -93,7 +98,8 @@ can be claimed complete without QA evidence.
    - Use the project's approved image/diagram generator only after prompt files
      or source files exist.
    - If generation is delegated, include the manifest item, source/prompt path,
-     engine, generator route, and expected output path in the worker contract.
+     engine, generator route, generation backend, evidence path, and expected
+     output path in the worker contract.
 
 7. Validate
    - Ensure every generated asset appears in `design/figure-manifest.json` or
