@@ -1,6 +1,8 @@
 ---
 figure_id: fig-00-01
-type: concept
+figure_type: concept_illustration
+engine: ai_image
+engine_reason: "Concept illustration may use AI image generation after prompt review."
 aspect: 16:9
 language: zh
 source_section: ""
@@ -8,6 +10,10 @@ output: assets/figures/generated/fig-00-01.png
 ---
 
 # Figure Prompt
+
+> Use this file only when `engine=ai_image`. For Mermaid/SVG/HTML/Python/real
+> screenshot figures, create a source file under `assets/figures/source/`
+> instead of writing an AI image prompt.
 
 ## Teaching Objective
 
@@ -36,3 +42,5 @@ brand logos, and unrelated icons.
 - Do not invent data.
 - Do not add extra terminology not present in the source.
 - Do not include unreadable tiny text.
+- Do not use this prompt for data models, ER/UML diagrams, code results, data
+  charts, tables, or software screenshots.

@@ -14,6 +14,7 @@ baoyu skill。
 
 - 视觉规划：`design/visual-plan.md`
 - 生成提示词：`assets/figures/prompts/*.md`
+- 确定性图源：`assets/figures/source/*`
 - 图像资产：`assets/figures/generated/*`
 - QA 记录：`assets/figures/qa/*.md`
 - 图表清单：项目 `design/figure-manifest.json`
@@ -22,5 +23,9 @@ baoyu skill。
 
 - 先锁定 Markdown 源稿。
 - 每张图必须服务学习目标。
+- 每张图必须先确定 `figure_type`、`engine` 和 `engine_reason`。
+- 能用 Mermaid / SVG / HTML / Python / 真实截图生成的，不使用 AI 图像生成。
+- 数据模型、代码结果、真实界面、表格和统计图禁止 AI 编造。
+- 二维码必须由真实目标值确定性生成；目标暂缺时必须登记 `target_status`、`target_note` 和证据路径，不能把占位二维码当成完成图。
 - 每张图必须有插入占位符、题注和 QA 证据。
 - 不直接把第三方技能输出当作可交付成果。
