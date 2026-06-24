@@ -67,7 +67,19 @@ can be claimed complete without QA evidence.
      `source_url`, or `source_value`. If the target is not available yet,
      record `target_status`, `target_note`, and evidence path instead of
      approving a placeholder.
-   - Record `engine` and `engine_reason` in `design/figure-manifest.json`.
+   - Record `engine`, `generator_route`, and `engine_reason` in
+     `design/figure-manifest.json`.
+   - Allowed generator routes are:
+     `mermaid_cli` / `html_mermaid_renderer` for Mermaid;
+     `plantuml_cli` for PlantUML; `graphviz_cli` for Graphviz;
+     `source_svg` for SVG; `html_svg_renderer` for HTML/SVG;
+     `html_canvas_renderer` for HTML canvas; `python_plot` for charts;
+     `python_table` for table figures; `browser_screenshot` or
+     `manual_screenshot` for screenshots; `runtime_capture` for real command
+     or code output; `qr_generator` for QR; `manual_source` for supplied
+     artwork; `openclaw_native_image` or `approved_gorin_skill` for approved AI
+     images.
+   - Do not switch to an undeclared backend in a worker prompt or chat message.
 
 5. Create prompt or source files before generation
    - Save prompts under `assets/figures/prompts/`.
@@ -81,7 +93,7 @@ can be claimed complete without QA evidence.
    - Use the project's approved image/diagram generator only after prompt files
      or source files exist.
    - If generation is delegated, include the manifest item, source/prompt path,
-     engine, and expected output path in the worker contract.
+     engine, generator route, and expected output path in the worker contract.
 
 7. Validate
    - Ensure every generated asset appears in `design/figure-manifest.json` or

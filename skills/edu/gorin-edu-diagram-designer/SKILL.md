@@ -44,10 +44,15 @@ automatic numbering, and no direct mutation of canonical manuscript text.
 1. Identify the canonical source section and target learner difficulty.
 2. Choose exactly one primary diagram type.
 3. Write a diagram spec under `assets/diagrams/specs/`.
-4. If using Mermaid/SVG, save source under `assets/diagrams/source/`.
-5. Render output under `assets/diagrams/rendered/`.
-6. Register the diagram in the project figure manifest.
-7. Run visual QA: no overlap, readable labels, correct terminology, valid
+4. Confirm the manifest `engine` and `generator_route`; diagrams may only use
+   routes allowed by the Edu Figure Engine Policy (`mermaid_cli`,
+   `html_mermaid_renderer`, `plantuml_cli`, `graphviz_cli`, `source_svg`, or
+   `html_svg_renderer` as appropriate).
+5. If using Mermaid/SVG/PlantUML/Graphviz/HTML, save source under
+   `assets/diagrams/source/`.
+6. Render output under `assets/diagrams/rendered/`.
+7. Register the diagram in the project figure manifest.
+8. Run visual QA: no overlap, readable labels, correct terminology, valid
    source/caption/placeholder.
 
 ## Required Spec
@@ -71,6 +76,8 @@ Every diagram spec must include:
   the product style spec explicitly permits it.
 - Do not invent relationships that are not in the source.
 - Do not skip source files; rendered images alone are not enough.
+- Do not call an image backend that is not declared as the manifest
+  `generator_route`.
 
 ## References
 

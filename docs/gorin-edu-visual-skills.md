@@ -8,9 +8,31 @@
 2. 所有教学团队定制技能统一使用 `gorin-edu-*` 前缀。
 3. Markdown 是教材、课程和培训资料的源稿真源；DOCX、PDF、PPTX、HTML 是交付形态。
 4. 配图、图表、信息图必须有占位符、题注、来源、生成提示词或确定性 source、QA 记录和 manifest 条目。
-5. 每张图必须先确定 `figure_type`、`engine`、`engine_reason`；能脚本或确定性工具生成的，不交给 AI 图像生成。
+5. 每张图必须先确定 `figure_type`、`engine`、`generator_route`、`engine_reason`；能脚本或确定性工具生成的，不交给 AI 图像生成。
 6. 格式化技能只做结构和版式规范化，不改写事实、观点、教学目标和章节结构。
 7. 能脚本检查的内容不交给 LLM 猜，技能只负责触发正确流程和保存证据。
+
+## 生成路线规范
+
+`engine` 只说明生成逻辑，`generator_route` 才说明具体允许的工具链。教学团队技能不得根据偏好临场选择后端，必须按项目 `figure-manifest.json` 执行：
+
+| engine | 允许 generator_route |
+| --- | --- |
+| `mermaid` | `mermaid_cli` / `html_mermaid_renderer` |
+| `plantuml` | `plantuml_cli` |
+| `graphviz` | `graphviz_cli` |
+| `svg` | `source_svg` |
+| `html_svg` | `html_svg_renderer` |
+| `html_canvas` | `html_canvas_renderer` |
+| `python_plot` | `python_plot` |
+| `python_table` | `python_table` |
+| `real_screenshot` | `browser_screenshot` / `manual_screenshot` |
+| `real_runtime_capture` | `runtime_capture` |
+| `qr` | `qr_generator` |
+| `manual_source` | `manual_source` |
+| `ai_image` | `openclaw_native_image` / `approved_gorin_skill` |
+
+如果需要换 route，先更新 manifest 和 source/prompt 证据，再生成；不能在 worker prompt 或聊天中临时改用第三方图片工具。
 
 ## 借鉴来源
 
