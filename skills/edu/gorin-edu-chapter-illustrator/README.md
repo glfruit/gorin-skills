@@ -23,7 +23,8 @@ baoyu skill。
 
 - 先锁定 Markdown 源稿。
 - 每张图必须服务学习目标。
-- 每张图必须先确定 `figure_type`、`engine` 和 `engine_reason`。
+- 每张图必须先确定 `figure_type`、`engine`、`generator_route`、`generation_backend` 和 `engine_reason`。
+- `generation_backend` 必须是受控渲染器、脚本或已批准的 `gorin-*` 技能，不能写成“随便用某个图片工具”。
 - 能用 Mermaid / SVG / HTML / Python / 真实截图生成的，不使用 AI 图像生成。
 - 数据模型、代码结果、真实界面、表格和统计图禁止 AI 编造。
 - 二维码必须由真实目标值确定性生成；目标暂缺时必须登记 `target_status`、`target_note` 和证据路径，不能把占位二维码当成完成图。

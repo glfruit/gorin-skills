@@ -2,7 +2,7 @@
 name: gorin-edu-chapter-illustrator
 description: Plan and specify textbook chapter illustrations with source-grounded visual intent, insertion points, prompts, and QA evidence. Adapted for Edu Team chapter workflows; does not directly invoke third-party baoyu skills.
 homepage: https://github.com/glfruit/gorin-skills/tree/main/skills/edu/gorin-edu-chapter-illustrator
-version: 0.1.0
+version: 0.1.1
 metadata:
   {
     "openclaw": {
