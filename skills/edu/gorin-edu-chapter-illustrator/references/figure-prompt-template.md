@@ -3,7 +3,8 @@ figure_id: fig-00-01
 figure_type: concept_illustration
 engine: ai_image
 generator_route: openclaw_native_image
-generation_backend: "openclaw_native_image <model-or-runtime-route>"
+generation_model: openai/gpt-image-2
+generation_backend: "openclaw_native_image openai/gpt-image-2"
 generation_evidence_path: assets/figures/qa/fig-00-01-generation.md
 engine_reason: "Concept illustration may use AI image generation after prompt review."
 aspect: 16:9
@@ -20,7 +21,8 @@ output: assets/figures/generated/fig-00-01.png
 >
 > Do not generate from this prompt until the corresponding
 > `design/figure-manifest.json` item records `generator_route`,
-> `generation_backend`, and `generation_evidence_path`.
+> approved `generation_model`, `generation_backend`, and
+> `generation_evidence_path`.
 
 ## Teaching Objective
 

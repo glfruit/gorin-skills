@@ -85,6 +85,9 @@ can be claimed complete without QA evidence.
      `generator_route` (for example Mermaid renderer for `mermaid_cli`,
      `edu_generate_qr_assets.py` for `qr_generator`, or a concrete `gorin-*`
      skill for `approved_gorin_skill`), not arbitrary prose.
+   - For `ai_image` items, record an approved image `generation_model`.
+     Current allowlist: `openai/gpt-image-2`. Do not record chat models,
+     provider aliases, or free-form prose as image models.
 
 5. Create prompt or source files before generation
    - Save prompts under `assets/figures/prompts/`.
