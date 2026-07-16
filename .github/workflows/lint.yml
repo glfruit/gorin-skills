@@ -2,33 +2,24 @@ name: Lint
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [main, develop]
   pull_request:
-    branches: [ main, develop ]
+    branches: [main, develop]
 
 jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Check Markdown files
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: git diff --check
+      - name: Reject stale v1 source references in active entry docs
         run: |
-          # Check for trailing whitespace in Markdown files
-          ! grep -rn ' $' --include="*.md" . || echo "Found trailing whitespace"
-
-      - name: Check skill structure
+          ! rg -n 'general/|skills/edu/|openclaw/neobear|openclaw/\*/' README.md CONTRIBUTING.md docs/architecture.md docs/skill-development-guide.md
+      - name: Syntax-check shell helpers without executing them
         run: |
-          # Find all skill directories and validate
-          ./scripts/validate-skill.sh openclaw/neobear
-
-      - name: Check shell scripts
-        run: |
-          # Check install.sh files have shebang
-          find . -name "install.sh" -type f -exec sh -c 'head -n1 "$1" | grep -q "^#!"' _ {} \;
-
-      - name: Check for template placeholders
-        run: |
-          # Ensure no template placeholders remain in skills
-          ! find openclaw general -name "*.md" -type f -exec grep -l '{{' {} \; || echo "No placeholders found"
+          while IFS= read -r script; do bash -n "$script"; done < <(rg --files -g '*.sh')

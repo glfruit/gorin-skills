@@ -1,0 +1,7 @@
+schema_version: 1
+summary: Qualify code review, Markdown polishing, and outline conformance as the first evidence-backed candidate wave.
+repository: minor
+skills:
+  gorin-code-review: minor
+  gorin-edu-markdown-polisher: minor
+  gorin-edu-outline-review: minor

@@ -1,9 +1,15 @@
 # Skills
 
-This directory contains first-party `gorin-*` skills grouped by capability domain.
+First-party standard Agent Skills sources grouped by stable capability domain:
 
-Use domain folders when a skill belongs to a reusable practice area rather than a single tool integration.
+- [`education/`](./education/)
+- [`content/`](./content/)
+- [`documents/`](./documents/)
+- [`knowledge/`](./knowledge/)
+- [`research/`](./research/)
+- [`agent-ops/`](./agent-ops/)
+- [`engineering/`](./engineering/)
 
-Current domains:
+Every direct skill directory contains `SKILL.md` and `manifest.yaml`. Lifecycle and target status do not change the source path. Use the [generated catalog](../docs/skills/index.md) for the authoritative list.
 
-- [`edu/`](./edu/) - textbook, course, training, teaching-material, and education-product workflows.
+`edu/` is an empty migration marker and must not receive new source. Unresolved third-party legacy copies remain isolated under `openclaw/` until final removal; they are not v2 skills.

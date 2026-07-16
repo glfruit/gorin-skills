@@ -1,0 +1,8 @@
+schema_version: 1
+name: content-lab
+description: Explicit opt-in for requalified content skills awaiting promotion.
+skills:
+  - gorin-bearclaw-native
+  - gorin-visual-knowledge-explainer
+allow_lifecycles:
+  - incubating

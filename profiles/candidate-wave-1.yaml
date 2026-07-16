@@ -1,0 +1,9 @@
+schema_version: 1
+name: candidate-wave-1
+description: Explicit trial set for the first evidence-backed candidate wave.
+skills:
+  - gorin-code-review
+  - gorin-edu-markdown-polisher
+  - gorin-edu-outline-review
+allow_lifecycles:
+  - candidate

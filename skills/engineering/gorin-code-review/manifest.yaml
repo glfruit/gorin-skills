@@ -1,0 +1,18 @@
+schema_version: 1
+version: 0.1.0
+domain: engineering
+lifecycle: candidate
+ownership: first-party
+audience: public
+targets:
+  - agent-skills
+  - codex
+  - claude-code
+  - openclaw
+aliases:
+  - code-review
+adapters:
+  openclaw:
+    user_invocable: true
+qualification:
+  evidence: quality/evidence.yaml

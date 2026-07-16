@@ -1,0 +1,9 @@
+schema_version: 1
+name: research-lab
+description: Explicit opt-in for requalified and deprecated research skills.
+skills:
+  - gorin-ai-builder-digest
+  - gorin-autoresearch
+allow_lifecycles:
+  - incubating
+  - deprecated

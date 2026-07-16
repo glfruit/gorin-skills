@@ -1,0 +1,21 @@
+schema_version: 1
+version: 1.0.0
+domain: agent-ops
+lifecycle: incubating
+ownership: first-party
+audience: public
+targets:
+  - agent-skills
+  - codex
+  - claude-code
+  - openclaw
+aliases:
+  - plugin-updater
+host_actions:
+  - action: update OpenClaw plugins
+    approval: required
+  - action: restart OpenClaw gateway
+    approval: required
+adapters:
+  openclaw:
+    user_invocable: true

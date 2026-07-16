@@ -1,0 +1,11 @@
+schema_version: 1
+id: matt-writing-great-skills
+version: 1.1.0
+lifecycle: incubating
+ownership: external
+audience: public
+description: Upstream reference skill for writing and editing predictable agent skills.
+source:
+  url: https://github.com/mattpocock/skills/tree/66898f60e8c744e269f8ce06c2b2b99ce7660d5f/skills/productivity/writing-great-skills
+  revision: 66898f60e8c744e269f8ce06c2b2b99ce7660d5f
+  license: MIT

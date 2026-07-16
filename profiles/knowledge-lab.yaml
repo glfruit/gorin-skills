@@ -1,0 +1,14 @@
+schema_version: 1
+name: knowledge-lab
+description: Explicit opt-in for requalified knowledge skills awaiting promotion.
+skills:
+  - gorin-idea-creator
+  - gorin-neobear
+  - gorin-outline
+  - gorin-pkm-core
+  - gorin-pkm-para-manager
+  - gorin-pkm-save-note
+  - gorin-web-reader
+  - gorin-zk-router
+allow_lifecycles:
+  - incubating

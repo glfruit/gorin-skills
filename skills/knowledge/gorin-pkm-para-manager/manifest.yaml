@@ -1,0 +1,23 @@
+schema_version: 1
+version: 0.1.0
+domain: knowledge
+lifecycle: incubating
+ownership: first-party
+audience: public
+targets:
+  - agent-skills
+  - codex
+  - claude-code
+  - openclaw
+aliases:
+  - pkm-para-manager
+adapters:
+  openclaw:
+    user_invocable: false
+    command_dispatch: tool
+    metadata:
+      requires:
+        skills:
+          - gorin-pkm-core
+        used-by:
+          - gorin-zk-router

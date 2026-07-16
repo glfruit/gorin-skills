@@ -1,0 +1,19 @@
+{
+  "name": "gorin-skills",
+  "version": "2.0.0-dev",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test test/**/*.test.mjs",
+    "validate": "node scripts/gorin-skills.mjs validate",
+    "catalog": "node scripts/gorin-skills.mjs catalog",
+    "docs": "node scripts/gorin-skills.mjs docs",
+    "build:all": "node scripts/gorin-skills.mjs build --all"
+  },
+  "dependencies": {
+    "yaml": "^2.8.1"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

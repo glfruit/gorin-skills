@@ -1,0 +1,16 @@
+schema_version: 1
+version: 0.1.0
+domain: research
+lifecycle: deprecated
+ownership: first-party
+audience: public
+targets:
+  - agent-skills
+  - codex
+  - claude-code
+  - openclaw
+aliases:
+  - ai-builder-digest
+adapters:
+  openclaw:
+    user_invocable: true

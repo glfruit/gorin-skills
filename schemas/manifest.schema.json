@@ -1,0 +1,99 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/glfruit/gorin-skills/schemas/manifest.schema.json",
+  "title": "Gorin Skills manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "version",
+    "domain",
+    "lifecycle",
+    "ownership",
+    "audience",
+    "targets"
+  ],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "version": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(?:-[0-9A-Za-z.-]+)?(?:\\+[0-9A-Za-z.-]+)?$"
+    },
+    "domain": {
+      "enum": [
+        "education",
+        "content",
+        "documents",
+        "knowledge",
+        "research",
+        "agent-ops",
+        "engineering"
+      ]
+    },
+    "lifecycle": {
+      "enum": ["incubating", "candidate", "promoted", "deprecated", "retired"]
+    },
+    "ownership": { "enum": ["first-party", "managed-mirror", "external"] },
+    "audience": { "enum": ["public", "private"] },
+    "targets": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "enum": ["agent-skills", "codex", "claude-code", "openclaw"] }
+    },
+    "aliases": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "adapters": { "type": "object" },
+    "provenance": { "type": "object" },
+    "host_actions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["action", "approval"],
+        "properties": {
+          "action": { "type": "string", "minLength": 1 },
+          "approval": { "const": "required" }
+        }
+      }
+    },
+    "qualification": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["evidence"],
+      "properties": {
+        "evidence": { "type": "string", "minLength": 1 }
+      }
+    },
+    "promotion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "evidence",
+        "documentation",
+        "approved_by",
+        "approved_on",
+        "maintenance_commitment"
+      ],
+      "properties": {
+        "evidence": { "type": "string", "minLength": 1 },
+        "documentation": { "type": "string", "minLength": 1 },
+        "approved_by": { "type": "string", "minLength": 1 },
+        "approved_on": { "type": "string", "format": "date" },
+        "maintenance_commitment": { "const": true }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "lifecycle": { "const": "candidate" } } },
+      "then": { "required": ["qualification"] }
+    },
+    {
+      "if": { "properties": { "lifecycle": { "const": "promoted" } } },
+      "then": { "required": ["promotion"] }
+    }
+  ]
+}

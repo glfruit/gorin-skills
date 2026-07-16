@@ -1,0 +1,42 @@
+schema_version: 1
+name: legacy-v1
+description: Explicit one-major compatibility profile using canonical v2 sources and generated aliases.
+end_of_support: before-repository-major-3
+compatibility_aliases: true
+skills:
+  - gorin-agent-team-composer
+  - gorin-ai-builder-digest
+  - gorin-autoresearch
+  - gorin-bearclaw-native
+  - gorin-code-review
+  - gorin-edu-chapter-illustrator
+  - gorin-edu-diagram-designer
+  - gorin-edu-dispatch-builder
+  - gorin-edu-docx-review
+  - gorin-edu-image-optimizer
+  - gorin-edu-infographic-designer
+  - gorin-edu-markdown-polisher
+  - gorin-edu-outline-review
+  - gorin-edu-pptx
+  - gorin-edu-xlsx
+  - gorin-enhanced-skill-creator
+  - gorin-harness-audit
+  - gorin-idea-creator
+  - gorin-log-watchdog
+  - gorin-neobear
+  - gorin-oc-card
+  - gorin-outline
+  - gorin-pkm-core
+  - gorin-pkm-para-manager
+  - gorin-pkm-save-note
+  - gorin-plugin-updater
+  - gorin-safe-mode
+  - gorin-superdoc
+  - gorin-teambook
+  - gorin-visual-knowledge-explainer
+  - gorin-web-reader
+  - gorin-zk-router
+allow_lifecycles:
+  - candidate
+  - deprecated
+  - incubating

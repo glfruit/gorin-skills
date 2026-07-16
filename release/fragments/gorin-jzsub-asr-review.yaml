@@ -1,0 +1,5 @@
+schema_version: 1
+summary: Add evidence-backed automatic-caption review with deterministic long-media MLX chunking and focused material or proper-name disagreement channels.
+repository: minor
+skills:
+  gorin-jzsub: minor

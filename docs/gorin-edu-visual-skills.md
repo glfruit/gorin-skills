@@ -120,8 +120,8 @@
 新增或修改教学视觉技能时至少满足：
 
 - 技能名使用 `gorin-edu-*`
-- `SKILL.md` 包含 `name`、`description`、`homepage`
+- `SKILL.md` 包含标准的 `name`、`description`；`homepage` 等兼容目标元数据只写入 `manifest.yaml` 的 adapter
 - 每个技能有 `README.md`、`LICENSE`
 - 有模板或 checklist 放在 `references/`
 - 文档明确“可做什么”和“不能做什么”
-- 能通过 `scripts/validate-skill.sh`
+- 能通过根治理验证 `npm run validate`

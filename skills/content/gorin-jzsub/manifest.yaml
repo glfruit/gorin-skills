@@ -1,0 +1,26 @@
+schema_version: 1
+version: 0.2.0
+domain: content
+lifecycle: candidate
+ownership: first-party
+audience: public
+targets:
+  - agent-skills
+  - codex
+  - claude-code
+aliases:
+  - jzsub
+provenance:
+  kind: adapted
+  adaptation_note: Renamed for the gorin namespace, moved target metadata into repository adapters, and retained upstream scripts, tests, and references for local evolution.
+  sources:
+    - url: https://github.com/pengchujin/jzsub
+      revision: b122dd18809082b44c9b7bf7380a3e3e04870c7a
+      license: MIT
+host_actions:
+  - action: Install missing yt-dlp, JavaScript runtime, libass-enabled FFmpeg, ffprobe, or MiSans dependencies
+    approval: required
+  - action: Install mlx-whisper or download explicitly approved ASR model weights for optional automatic-caption review
+    approval: required
+qualification:
+  evidence: quality/evidence.yaml

@@ -1,0 +1,73 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/glfruit/gorin-skills/schemas/profile.schema.json",
+  "title": "Gorin Skills profile",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "name"],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "name": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
+    "description": { "type": "string" },
+    "end_of_support": { "const": "before-repository-major-3" },
+    "compatibility_aliases": { "type": "boolean" },
+    "skills": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "profiles": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" }
+    },
+    "allow_lifecycles": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "enum": ["incubating", "candidate", "promoted", "deprecated", "retired"]
+      }
+    },
+    "select": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "lifecycles": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "enum": ["incubating", "candidate", "promoted", "deprecated", "retired"]
+          }
+        },
+        "domains": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "education",
+              "content",
+              "documents",
+              "knowledge",
+              "research",
+              "agent-ops",
+              "engineering"
+            ]
+          }
+        }
+      }
+    },
+    "legacy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["inventory", "end_of_support", "skills"],
+      "properties": {
+        "inventory": { "type": "string", "minLength": 1 },
+        "end_of_support": { "const": "before-repository-major-3" },
+        "skills": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1 }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,11 @@
+schema_version: 1
+id: baoyu-skills
+version: 1.60.0
+lifecycle: incubating
+ownership: external
+audience: public
+description: Upstream multimedia content-creation skill collection; local legacy copies are not released.
+source:
+  url: https://github.com/JimLiu/baoyu-skills/tree/6b7a2e417500561a5ecdd0b168332f4142584617
+  revision: 6b7a2e417500561a5ecdd0b168332f4142584617
+  license: MIT

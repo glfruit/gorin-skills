@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/glfruit/gorin-skills/schemas/external-source.schema.json",
+  "title": "Gorin Skills external source entry",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "id",
+    "version",
+    "lifecycle",
+    "ownership",
+    "audience",
+    "description",
+    "source"
+  ],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
+    "version": { "type": "string" },
+    "lifecycle": {
+      "enum": ["incubating", "candidate", "promoted", "deprecated", "retired"]
+    },
+    "ownership": { "const": "external" },
+    "audience": { "enum": ["public", "private"] },
+    "description": { "type": "string", "minLength": 1 },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["url", "revision", "license"],
+      "properties": {
+        "url": { "type": "string", "format": "uri" },
+        "revision": { "type": "string", "minLength": 1 },
+        "license": { "type": "string", "minLength": 1 }
+      }
+    }
+  }
+}

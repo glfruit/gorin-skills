@@ -1,0 +1,36 @@
+schema_version: 1
+summary: Introduce manifest-driven governance, curated profiles, reproducible target packages, managed installs, and v2 compatibility aliases.
+repository: major
+skills:
+  gorin-agent-team-composer: minor
+  gorin-ai-builder-digest: minor
+  gorin-autoresearch: minor
+  gorin-bearclaw-native: minor
+  gorin-code-review: minor
+  gorin-edu-chapter-illustrator: minor
+  gorin-edu-diagram-designer: minor
+  gorin-edu-dispatch-builder: minor
+  gorin-edu-docx-review: minor
+  gorin-edu-image-optimizer: minor
+  gorin-edu-infographic-designer: minor
+  gorin-edu-markdown-polisher: minor
+  gorin-edu-outline-review: minor
+  gorin-edu-pptx: minor
+  gorin-edu-xlsx: minor
+  gorin-enhanced-skill-creator: minor
+  gorin-harness-audit: minor
+  gorin-idea-creator: minor
+  gorin-log-watchdog: minor
+  gorin-neobear: minor
+  gorin-oc-card: minor
+  gorin-outline: minor
+  gorin-pkm-core: minor
+  gorin-pkm-para-manager: minor
+  gorin-pkm-save-note: minor
+  gorin-plugin-updater: minor
+  gorin-safe-mode: minor
+  gorin-superdoc: minor
+  gorin-teambook: minor
+  gorin-visual-knowledge-explainer: minor
+  gorin-web-reader: minor
+  gorin-zk-router: minor

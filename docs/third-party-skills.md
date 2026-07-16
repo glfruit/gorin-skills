@@ -1,245 +1,65 @@
-# 第三方技能指南
+# 第三方技能治理
 
-本文档介绍如何使用和集成第三方技能库。
+第三方内容不是本仓库源码的默认组成部分。`registry/external/*.yaml` 是外部来源的机器可读权威记录，必须固定到不可变 revision，并记录版本与许可证；生成 catalog 时只登记元数据，不复制、构建或执行上游代码。
 
-## 什么是第三方技能？
+## 三种来源模式
 
-第三方技能是由社区独立开发和维护的技能库，它们：
+| 模式 | 适用情况 | 存放位置 | 发布行为 |
+| --- | --- | --- | --- |
+| external | 上游独立维护，本仓库仅推荐或索引 | `registry/external/` | 只进入 catalog，不打包 |
+| managed-mirror | 必须保留完全一致的上游内容 | `skills/<domain>/<id>/` | 校验 revision、许可证和内容摘要后打包 |
+| adapted | 吸收上游思路并形成自研实现 | `skills/<domain>/gorin-*` | 按 first-party 发布，并声明来源与差异 |
 
-- 托管在 gorin-skills 仓库之外
-- 由原作者维护
-- 提供额外的功能和集成
+不要把下载脚本、Git 子模块或浮动分支当成来源声明，也不要在治理命令中执行上游 `install.sh`。安装外部技能属于独立的信任决策，应先审阅固定 revision，再按上游说明在隔离环境中操作。
 
-## 使用第三方技能
+## 登记 external 来源
 
-### 查找技能
-
-浏览 [THIRD_PARTY_SKILLS.md](../THIRD_PARTY_SKILLS.md) 注册表，查找你需要的技能。
-
-### 安装步骤
-
-1. **阅读文档**
-   - 访问技能的仓库主页
-   - 阅读安装说明
-   - 检查系统要求
-
-2. **安装技能**
-   ```bash
-   # 按照技能仓库的说明进行安装
-   # 通常包括：
-   git clone https://github.com/user/skill-repo.git
-   cd skill-repo
-   ./install.sh
-   ```
-
-3. **配置技能**
-   - 按照文档设置配置文件
-   - 设置必需的环境变量
-   - 配置 API 密钥（如需要）
-
-4. **测试技能**
-   - 运行技能的测试命令
-   - 在目标 AI 工具中验证
-
-### 安全注意事项
-
-安装第三方技能前，请注意：
-
-- [ ] 检查技能仓库是否活跃维护
-- [ ] 查看最近的提交活动
-- [ ] 阅读 ISSUE 和 PR 了解社区反馈
-- [ ] 检查 LICENSE 确保符合你的使用场景
-- [ ] 审查 install.sh 脚本内容
-- [ ] 注意技能要求的权限
-
-## 创建第三方技能
-
-### 项目结构建议
-
-遵循 gorin-skills 的结构约定：
-
-```
-your-skill/
-├── README.md        # 用户文档
-├── SKILL.md         # 技能元数据
-├── install.sh       # 安装脚本
-├── LICENSE          # 许可证
-└── src/             # 源代码
-```
-
-### SKILL.md 兼容性
-
-确保你的 SKILL.md 包含正确的元数据：
+在 `registry/external/<id>.yaml` 添加：
 
 ```yaml
----
-name: your-skill
-description: Your skill description
-homepage: https://github.com/yourusername/your-skill
-version: 1.0.0
-metadata:
-  {
-    "openclaw": {
-      "emoji": "✨",
-      "os": ["darwin"],
-      "requires": { "bins": ["python3"] }
-    }
-  }
----
+schema_version: 1
+id: example-skill
+version: 1.2.3
+lifecycle: incubating
+ownership: external
+audience: public
+description: A concise routing description.
+source:
+  url: https://github.com/example/skills/tree/<full-commit>/skills/example
+  revision: <full-commit>
+  license: MIT
 ```
 
-### 提交到注册表
-
-1. **确保技能稳定**
-   - 经过测试
-   - 有完整文档
-   - 有清晰的 LICENSE
-
-2. **Fork gorin-skills**
-   ```bash
-   git clone https://github.com/glfruit/gorin-skills.git
-   cd gorin-skills
-   ```
-
-3. **更新 THIRD_PARTY_SKILLS.md**
-   - 按照格式添加你的技能信息
-   - 包含所有必需字段
-
-4. **提交 PR**
-   - 说明技能的功能
-   - 提供测试结果
-   - 等待审核
-
-## 集成模式
-
-### 借鉴改造模式
-
-当第三方技能的流程设计有价值，但不能直接满足本仓库的治理要求时，应使用“借鉴改造模式”：
-
-1. 保留第三方技能原目录和名称，不在原技能上做项目化改造。
-2. 在 `skills/<domain>/` 下创建新的 `gorin-*` 技能；教学团队技能放在 `skills/edu/`。
-3. 在新技能文档中说明借鉴点、差异点和不可直接调用的边界。
-4. 把教学团队要求固化进去，例如 Markdown 源稿为准、产出物版本命名、证据清单、QA 门禁、图片题注和占位符。
-5. 在 `THIRD_PARTY_SKILLS.md` 登记来源，避免后续误以为新技能是直接 vendor 版本。
-
-`baoyu-skills` 当前采用这种模式。相关教学适配说明见 [教学视觉与格式化技能](./gorin-edu-visual-skills.md)。
-
-### 与 OpenClaw 集成
-
-```yaml
-metadata:
-  {
-    "openclaw": {
-      "install": [
-        {
-          "id": "your-skill",
-          "kind": "git",
-          "url": "https://github.com/yourusername/your-skill.git",
-          "targetDir": "~/.openclaw/skills/your-skill"
-        }
-      ]
-    }
-  }
-```
-
-### 与 Claude Code 集成
-
-```yaml
-metadata:
-  {
-    "claude-code": {
-      "install": [
-        {
-          "id": "your-skill",
-          "kind": "npm",
-          "package": "@yourusername/your-skill"
-        }
-      ]
-    }
-  }
-```
-
-## 维护建议
-
-### 保持技能更新
-
-- 定期发布新版本
-- 及时修复 bug
-- 响应用户问题
-- 更新文档
-
-### 版本管理
-
-- 遵循语义化版本
-- 使用 Git 标签标记版本
-- 在 SKILL.md 中更新版本号
-
-### 依赖管理
-
-- 明确声明依赖
-- 锁定依赖版本
-- 提供依赖安装说明
-
-### 文档维护
-
-- 保持文档与代码同步
-- 添加使用示例
-- 记录变更历史
-
-## 退出维护
-
-如果你无法继续维护技能：
-
-1. 在 README 中添加「寻找维护者」声明
-2. 通知 gorin-skills 维护团队
-3. 考虑转移仓库给新维护者
-4. 在注册表中标记状态
-
-## 示例
-
-### 示例 1：Python 技能
+随后运行：
 
 ```bash
-# my-skill/
-├── README.md
-├── SKILL.md
-├── install.sh
-├── my_skill.py
-└── requirements.txt
+npm run validate
+npm run catalog
+git diff -- catalog/index.json
 ```
 
-### 示例 2：Node.js 技能
+外部条目不等于安全背书。审阅者仍需核实：revision 是否不可变、许可证是否覆盖拟议用途、仓库是否存在安装脚本/网络下载/凭据读取/宿主机写操作，以及条目描述是否会误触发。
 
-```bash
-# my-skill/
-├── README.md
-├── SKILL.md
-├── install.sh
-├── package.json
-├── lib/
-│   └── index.js
-└── bin/
-    └── my-skill
-```
+## 建立 managed mirror
 
-### 示例 3：Shell 脚本技能
+仅当离线、可重复构建或上游消失风险确实要求保留副本时采用 mirror。manifest 必须包含：
 
-```bash
-# my-skill/
-├── README.md
-├── SKILL.md
-├── install.sh
-└── my-skill.sh
-```
+- 上游 URL 与固定 revision；
+- SPDX 许可证和仓库内许可证证据；
+- `gorin-skills digest --path ...` 生成的内容摘要；
+- 与上游完全一致的边界，禁止在镜像目录内夹带本地修补。
 
-## 资源
+需要本地变化时，转为 adapted 技能，并用 `gorin-` 命名空间表达维护责任。
 
-- [技能开发指南](./skill-development-guide.md)
-- [项目架构](./architecture.md)
-- [第三方技能注册表](../THIRD_PARTY_SKILLS.md)
+## 建立 adapted 技能
 
-## 获取帮助
+adapted 技能必须解释借鉴点、行为差异和不兼容边界，不能暗示它仍是上游原件。教学视觉技能是当前实例，见[教学视觉与格式化技能](./gorin-edu-visual-skills.md)。源码统一位于七个稳定能力域之一，不再使用 `skills/edu/`、`general/` 或 `openclaw/` 作为 v2 源码入口。
 
-- 提交 Issue 到 gorin-skills
-- 在技能仓库中提问
-- 加入社区讨论
+## 退出与升级
+
+- revision 或许可证变化：作为供应链变更单独审阅；
+- external 失去维护：标记 deprecated/retired，不静默换源；
+- mirror 产生本地差异：转 adapted，重新命名并记录迁移；
+- adapted 不再维护：按五态生命周期退役，兼容 alias 最迟在仓库 v3 前移除。
+
+当前机器可读来源见 [`registry/external/`](../registry/external/)，生成后的统一索引见[技能目录](./skills/index.md)。

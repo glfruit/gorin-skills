@@ -1,0 +1,13 @@
+schema_version: 1
+name: agent-ops-lab
+description: Explicit opt-in for requalified agent operations skills awaiting promotion.
+skills:
+  - gorin-agent-team-composer
+  - gorin-harness-audit
+  - gorin-log-watchdog
+  - gorin-oc-card
+  - gorin-plugin-updater
+  - gorin-safe-mode
+  - gorin-teambook
+allow_lifecycles:
+  - incubating

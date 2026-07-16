@@ -1,0 +1,9 @@
+schema_version: 1
+name: engineering-lab
+description: Explicit opt-in for requalified engineering skills awaiting promotion.
+skills:
+  - gorin-code-review
+  - gorin-enhanced-skill-creator
+allow_lifecycles:
+  - incubating
+  - candidate

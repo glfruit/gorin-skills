@@ -1,0 +1,24 @@
+schema_version: 1
+version: 0.1.0
+domain: agent-ops
+lifecycle: incubating
+ownership: first-party
+audience: public
+targets:
+  - agent-skills
+  - codex
+  - claude-code
+  - openclaw
+aliases:
+  - log-watchdog
+adapters:
+  openclaw:
+    metadata:
+      requires:
+        bins:
+          - python3.13
+        env:
+          - OPENCLAW_HOME
+host_actions:
+  - action: provide the OpenClaw oclib host package and monitoring schedule
+    approval: required

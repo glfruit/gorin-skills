@@ -1,0 +1,6 @@
+schema_version: 1
+name: default
+description: Maintained skills with explicit promoted status.
+select:
+  lifecycles:
+    - promoted

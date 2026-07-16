@@ -1,0 +1,35 @@
+schema_version: 1
+spec: passed
+schema: passed
+provenance_and_license: passed
+positive_triggers:
+  - repair-fences
+  - normalize-cjk-spacing
+  - repair-local-table
+negative_triggers:
+  - rewrite-chapter
+  - convert-pdf
+  - change-outline
+golden_cases:
+  - unclosed-fence
+  - table-pipe-repair
+  - semantic-request-hidden-in-formatting
+tests:
+  - command: node scripts/gorin-skills.mjs qualify --skill gorin-edu-markdown-polisher
+    result: passed
+  - command: npm test
+    result: passed
+target_smoke:
+  agent-skills:
+    build: passed
+    install: passed
+  codex:
+    build: passed
+    install: passed
+  claude-code:
+    build: passed
+    install: passed
+  openclaw:
+    build: passed
+    install: passed
+runtime_output: clean

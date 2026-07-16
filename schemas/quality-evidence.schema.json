@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/glfruit/gorin-skills/schemas/quality-evidence.schema.json",
+  "title": "Gorin Skills qualification and promotion evidence",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "spec",
+    "schema",
+    "provenance_and_license",
+    "positive_triggers",
+    "negative_triggers",
+    "golden_cases",
+    "tests",
+    "target_smoke",
+    "runtime_output"
+  ],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "spec": { "const": "passed" },
+    "schema": { "const": "passed" },
+    "provenance_and_license": { "const": "passed" },
+    "positive_triggers": { "type": "array", "minItems": 1 },
+    "negative_triggers": { "type": "array", "minItems": 1 },
+    "golden_cases": { "type": "array", "minItems": 1 },
+    "tests": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["command", "result"],
+        "properties": {
+          "command": { "type": "string", "minLength": 1 },
+          "result": { "const": "passed" }
+        }
+      }
+    },
+    "target_smoke": { "type": "object", "minProperties": 1 },
+    "runtime_output": { "const": "clean" }
+  }
+}

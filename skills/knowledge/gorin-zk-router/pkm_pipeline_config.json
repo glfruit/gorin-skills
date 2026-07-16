@@ -1,0 +1,13 @@
+{
+  "default_vault": "octopus",
+  "web_reader_candidates": [],
+  "dedup_policy_path": "",
+  "dedup_behavior_for_intentional": "skip",
+  "dedup_index_path": "",
+  "dedup_index_max_age_seconds": 21600,
+  "features": {
+    "relation_discovery": true,
+    "atomic_extraction": true,
+    "frontmatter_validate": true
+  }
+}

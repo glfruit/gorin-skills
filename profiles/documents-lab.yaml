@@ -1,0 +1,7 @@
+schema_version: 1
+name: documents-lab
+description: Explicit opt-in for requalified document skills awaiting promotion.
+skills:
+  - gorin-superdoc
+allow_lifecycles:
+  - incubating

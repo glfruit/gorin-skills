@@ -1,0 +1,67 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/glfruit/gorin-skills/schemas/qualification-cases.schema.json",
+  "title": "Gorin Skills qualification cases",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "positive_triggers",
+    "negative_triggers",
+    "golden_cases"
+  ],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "positive_triggers": {
+      "type": "array",
+      "minItems": 2,
+      "items": { "$ref": "#/$defs/trigger" }
+    },
+    "negative_triggers": {
+      "type": "array",
+      "minItems": 2,
+      "items": { "$ref": "#/$defs/trigger" }
+    },
+    "golden_cases": {
+      "type": "array",
+      "minItems": 2,
+      "items": { "$ref": "#/$defs/golden" }
+    }
+  },
+  "$defs": {
+    "trigger": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "prompt", "expected_route"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
+        "prompt": { "type": "string", "minLength": 1 },
+        "expected_route": { "type": "string", "minLength": 1 }
+      }
+    },
+    "golden": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "input",
+        "expected_observations",
+        "forbidden_observations"
+      ],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
+        "input": { "type": "string", "minLength": 1 },
+        "expected_observations": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "forbidden_observations": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 1 }
+        }
+      }
+    }
+  }
+}

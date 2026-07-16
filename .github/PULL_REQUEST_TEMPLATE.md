@@ -16,13 +16,15 @@
 ## 技能信息
 <!-- 如果是新技能或更新技能，请填写 -->
 **技能名称:**
-**技能类别:** openclaw / general
+**能力域:** education / content / documents / knowledge / research / agent-ops / engineering
 **技能描述:**
 
 ## 测试
 <!-- 描述你完成的测试 -->
 - [ ] 本地测试通过
-- [ ] 验证脚本通过 (`./scripts/validate-skill.sh path/to/skill`)
+- [ ] 治理测试通过 (`npm test`)
+- [ ] 仓库验证通过 (`npm run validate`)
+- [ ] 生成索引无漂移 (`npm run catalog && npm run docs`)
 - [ ] 在目标 AI 工具中测试
 - [ ] 更新了相关文档
 

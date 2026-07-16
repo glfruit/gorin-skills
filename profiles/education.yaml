@@ -1,0 +1,8 @@
+schema_version: 1
+name: education
+description: Maintained promoted education skills only.
+select:
+  lifecycles:
+    - promoted
+  domains:
+    - education

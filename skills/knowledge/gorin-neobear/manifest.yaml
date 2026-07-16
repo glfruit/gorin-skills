@@ -1,0 +1,32 @@
+schema_version: 1
+version: 0.1.0
+domain: knowledge
+lifecycle: incubating
+ownership: first-party
+audience: public
+targets:
+  - agent-skills
+  - codex
+  - claude-code
+  - openclaw
+aliases:
+  - neobear
+adapters:
+  openclaw:
+    homepage: https://bear.app
+    metadata:
+      emoji: 🐻💫
+      os:
+        - darwin
+      requires:
+        bins:
+          - python3
+      install:
+        - id: neobear-cli
+          kind: download
+          url: https://raw.githubusercontent.com/glfruit/neobear/main/neobear_cli.py
+          extract: false
+          targetDir: ~/.local/bin
+          bins:
+            - neobear_cli.py
+          label: Install neobear_cli.py (Python script)

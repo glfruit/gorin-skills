@@ -1,0 +1,8 @@
+schema_version: 1
+name: engineering
+description: Maintained promoted engineering skills only.
+select:
+  lifecycles:
+    - promoted
+  domains:
+    - engineering

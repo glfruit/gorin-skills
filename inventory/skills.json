@@ -1,0 +1,1841 @@
+{
+  "schema_version": 1,
+  "summary": {
+    "local_skills": 68,
+    "legacy_v1": 36,
+    "v2": 32,
+    "distributable_legacy": 0,
+    "external_sources": 2
+  },
+  "external_sources": [
+    {
+      "id": "baoyu-skills",
+      "ownership": "external",
+      "source": {
+        "url": "https://github.com/JimLiu/baoyu-skills/tree/6b7a2e417500561a5ecdd0b168332f4142584617",
+        "revision": "6b7a2e417500561a5ecdd0b168332f4142584617",
+        "license": "MIT"
+      }
+    },
+    {
+      "id": "matt-writing-great-skills",
+      "ownership": "external",
+      "source": {
+        "url": "https://github.com/mattpocock/skills/tree/66898f60e8c744e269f8ce06c2b2b99ce7660d5f/skills/productivity/writing-great-skills",
+        "revision": "66898f60e8c744e269f8ce06c2b2b99ce7660d5f",
+        "license": "MIT"
+      }
+    }
+  ],
+  "skills": [
+    {
+      "id": "ai-image-digest",
+      "version": "0.0.0-legacy",
+      "path": "openclaw/ai-image-digest",
+      "representation": "legacy-v1",
+      "domain": "research",
+      "lifecycle": "incubating",
+      "ownership": "managed-mirror",
+      "source_type": "managed-mirror",
+      "classification_basis": "conservative fallback: no first-party provenance evidence",
+      "frontmatter_status": "valid",
+      "license": {
+        "status": "unresolved",
+        "evidence": "upstream revision, digest, and distributable license chain are incomplete"
+      },
+      "distributable_legacy": false,
+      "migration": {
+        "disposition": "externalize-or-pin",
+        "target": null
+      },
+      "findings": {
+        "personal_absolute_paths": [
+          "SKILL.md",
+          "config/cron-payload.md"
+        ],
+        "hard_coded_install_roots": [
+          {
+            "root": "~/.gorin-skills",
+            "files": [
+              "SKILL.md",
+              "config/cron-payload-v2.md",
+              "config/cron-payload.md"
+            ]
+          },
+          {
+            "root": "~/.openclaw/skills",
+            "files": [
+              "SKILL.md"
+            ]
+          }
+        ],
+        "tracked_runtime_artifacts": []
+      }
+    },
+    {
+      "id": "atlas-ingest",
+      "version": "0.0.0-legacy",
+      "path": "openclaw/atlas-ingest",
+      "representation": "legacy-v1",
+      "domain": "knowledge",
+      "lifecycle": "incubating",
+      "ownership": "managed-mirror",
+      "source_type": "managed-mirror",
+      "classification_basis": "conservative fallback: no first-party provenance evidence",
+      "frontmatter_status": "valid",
+      "license": {
+        "status": "unresolved",
+        "evidence": "upstream revision, digest, and distributable license chain are incomplete"
+      },
+      "distributable_legacy": false,
+      "migration": {
+        "disposition": "externalize-or-pin",
+        "target": null
+      },
+      "findings": {
+        "personal_absolute_paths": [
+          "SKILL.md",
+          "scripts/clip-url.py"
+        ],
+        "hard_coded_install_roots": [
+          {
+            "root": "~/.gorin-skills",
+            "files": [
+              "SKILL.md",
+              "scripts/clip-url.py"
+            ]
+          }
+        ],
+        "tracked_runtime_artifacts": []
+      }
+    },
+    {
+      "id": "baoyu-article-illustrator",
+      "version": "1.57.0",
+      "path": "openclaw/baoyu-article-illustrator",
+      "representation": "legacy-v1",
+      "domain": "content",
+      "lifecycle": "incubating",
+      "ownership": "managed-mirror",
+      "source_type": "managed-mirror",
+      "classification_basis": "known third-party family",
+      "frontmatter_status": "valid",
+      "license": {
+        "status": "unresolved",
+        "evidence": "upstream revision, digest, and distributable license chain are incomplete"
+      },
+      "distributable_legacy": false,
+      "migration": {
+        "disposition": "externalize-or-pin",
+        "target": null
+      },
+      "findings": {
+        "personal_absolute_paths": [],
+        "hard_coded_install_roots": [],
+        "tracked_runtime_artifacts": []
+      }
+    },
+    {
+      "id": "baoyu-comic",
+      "version": "1.56.1",
+      "path": "openclaw/baoyu-comic",
+      "representation": "legacy-v1",
+      "domain": "content",
+      "lifecycle": "incubating",
+      "ownership": "managed-mirror",
+      "source_type": "managed-mirror",
+      "classification_basis": "known third-party family",
+      "frontmatter_status": "valid",
+      "license": {
+        "status": "unresolved",
+        "evidence": "upstream revision, digest, and distributable license chain are incomplete"
+      },
+      "distributable_legacy": false,
+      "migration": {
+        "disposition": "externalize-or-pin",
+        "target": null
+      },
+      "findings": {
+        "personal_absolute_paths": [],
+        "hard_coded_install_roots": [],
+        "tracked_runtime_artifacts": []
+      }
+    },
+    {
+      "id": "baoyu-compress-image",
+      "version": "1.56.1",
+      "path": "openclaw/baoyu-compress-image",
+      "representation": "legacy-v1",
+      "domain": "content",
+      "lifecycle": "incubating",
+      "ownership": "managed-mirror",
+      "source_type": "managed-mirror",
+      "classification_basis": "known third-party family",
+      "frontmatter_status": "valid",
+      "license": {
+        "status": "unresolved",
+        "evidence": "upstream revision, digest, and distributable license chain are incomplete"
+      },
+      "distributable_legacy": false,
+      "migration": {
+        "disposition": "externalize-or-pin",
+        "target": null
+      },
+      "findings": {
+        "personal_absolute_paths": [],
+        "hard_coded_install_roots": [],
+        "tracked_runtime_artifacts": []
+      }
+    },
+    {
+      "id": "baoyu-cover-image",
+      "version": "1.56.1",
+      "path": "openclaw/baoyu-cover-image",
+      "representation": "legacy-v1",
+      "domain": "content",
+      "lifecycle": "incubating",
+      "ownership": "managed-mirror",
+      "source_type": "managed-mirror",
+      "classification_basis": "known third-party family",
+      "frontmatter_status": "valid",
+      "license": {
+        "status": "unresolved",
+        "evidence": "upstream revision, digest, and distributable license chain are incomplete"
+      },
+      "distributable_legacy": false,
+      "migration": {
+        "disposition": "externalize-or-pin",
+        "target": null
+      },
+      "findings": {
+        "personal_absolute_paths": [],
+        "hard_coded_install_roots": [],
+        "tracked_runtime_artifacts": []
+      }
+    },
+    {
+      "id": "baoyu-danger-gemini-web",
+      "version": "1.56.1",
+      "path": "openclaw/baoyu-danger-gemini-web",
+      "representation": "legacy-v1",
+      "domain": "content",
+      "lifecycle": "incubating",
+      "ownership": "managed-mirror",
+      "source_type": "managed-mirror",
+      "classification_basis": "known third-party family",
+      "frontmatter_status": "valid",
+      "license": {
+        "status": "unresolved",
+        "evidence": "upstream revision, digest, and distributable license chain are incomplete"
+      },
+      "distributable_legacy": false,
+      "migration": {
+        "disposition": "externalize-or-pin",
+        "target": null
+      },
+      "findings": {
+        "personal_absolute_paths": [],
+        "hard_coded_install_roots": [],
+        "tracked_runtime_artifacts": []
+      }
+    },
+    {
+      "id": "baoyu-danger-x-to-markdown",
+      "version": "1.56.1",
+      "path": "openclaw/baoyu-danger-x-to-markdown",
+      "representation": "legacy-v1",
+      "domain": "content",
+      "lifecycle": "incubating",
+      "ownership": "managed-mirror",
+      "source_type": "managed-mirror",
+      "classification_basis": "known third-party family",
+      "frontmatter_status": "valid",
+      "license": {
+        "status": "unresolved",
+        "evidence": "upstream revision, digest, and distributable license chain are incomplete"
+      },
+      "distributable_legacy": false,
+      "migration": {
+        "disposition": "externalize-or-pin",
+        "target": null
+      },
+      "findings": {
+        "personal_absolute_paths": [],
+        "hard_coded_install_roots": [],
+        "tracked_runtime_artifacts": []
+      }
+    },
+    {
+      "id": "baoyu-format-markdown",
+      "version": "1.57.0",
+      "path": "openclaw/baoyu-format-markdown",
+      "representation": "legacy-v1",
+      "domain": "content",
+      "lifecycle": "incubating",
+      "ownership": "managed-mirror",
+      "source_type": "managed-mirror",
+      "classification_basis": "known third-party family",
+      "frontmatter_status": "valid",
+      "license": {
+        "status": "unresolved",
+        "evidence": "upstream revision, digest, and distributable license chain are incomplete"
+      },
+      "distributable_legacy": false,
+      "migration": {
+        "disposition": "externalize-or-pin",
+        "target": null
+      },
+      "findings": {
+        "personal_absolute_paths": [],
+        "hard_coded_install_roots": [],
+        "tracked_runtime_artifacts": []
+      }
+    },
+    {
+      "id": "baoyu-image-cards",
+      "version": "1.56.1",
+      "path": "openclaw/baoyu-image-cards",
+      "representation": "legacy-v1",
+      "domain": "content",
+      "lifecycle": "incubating",
+      "ownership": "managed-mirror",
+      "source_type": "managed-mirror",
+      "classification_basis": "known third-party family",
+      "frontmatter_status": "valid",
+      "license": {
+        "status": "unresolved",
+        "evidence": "upstream revision, digest, and distributable license chain are incomplete"
+      },
+      "distributable_legacy": false,
+      "migration": {
+        "disposition": "externalize-or-pin",
+        "target": null
+      },
+      "findings": {
+        "personal_absolute_paths": [],
+        "hard_coded_install_roots": [],
+        "tracked_runtime_artifacts": []
+      }
+    },
+    {
+      "id": "baoyu-image-gen",
+      "version": "1.56.4",
+      "path": "openclaw/baoyu-image-gen",
+      "representation": "legacy-v1",
+      "domain": "content",
+      "lifecycle": "incubating",
+      "ownership": "managed-mirror",
+      "source_type": "managed-mirror",
+      "classification_basis": "known third-party family",
+      "frontmatter_status": "valid",
+      "license": {
+        "status": "unresolved",
+        "evidence": "upstream revision, digest, and distributable license chain are incomplete"
+      },
+      "distributable_legacy": false,
+      "migration": {
+        "disposition": "externalize-or-pin",
+        "target": null
+      },
+      "findings": {
+        "personal_absolute_paths": [],
+        "hard_coded_install_roots": [],
+        "tracked_runtime_artifacts": []
+      }
+    },
+    {
+      "id": "baoyu-imagine",
+      "version": "1.56.4",
+      "path": "openclaw/baoyu-imagine",
+      "representation": "legacy-v1",
+      "domain": "content",
+      "lifecycle": "incubating",
+      "ownership": "managed-mirror",
+      "source_type": "managed-mirror",
+      "classification_basis": "known third-party family",
+      "frontmatter_status": "valid",
+      "license": {
+        "status": "unresolved",
+        "evidence": "upstream revision, digest, and distributable license chain are incomplete"
+      },
+      "distributable_legacy": false,
+      "migration": {
+        "disposition": "externalize-or-pin",
+        "target": null
+      },
+      "findings": {
+        "personal_absolute_paths": [],
+        "hard_coded_install_roots": [],
+        "tracked_runtime_artifacts": []
+      }
+    },
+    {
+      "id": "baoyu-infographic",
+      "version": "1.56.1",
+      "path": "openclaw/baoyu-infographic",
+      "representation": "legacy-v1",
+      "domain": "content",
+      "lifecycle": "incubating",
+      "ownership": "managed-mirror",
+      "source_type": "managed-mirror",
+      "classification_basis": "known third-party family",
+      "frontmatter_status": "valid",
+      "license": {
+        "status": "unresolved",
+        "evidence": "upstream revision, digest, and distributable license chain are incomplete"
+      },
+      "distributable_legacy": false,
+      "migration": {
+        "disposition": "externalize-or-pin",
+        "target": null
+      },
+      "findings": {
+        "personal_absolute_paths": [],
+        "hard_coded_install_roots": [],
+        "tracked_runtime_artifacts": []
+      }
+    },
+    {
+      "id": "baoyu-markdown-to-html",
+      "version": "1.56.1",
+      "path": "openclaw/baoyu-markdown-to-html",
+      "representation": "legacy-v1",
+      "domain": "content",
+      "lifecycle": "incubating",
+      "ownership": "managed-mirror",
+      "source_type": "managed-mirror",
+      "classification_basis": "known third-party family",
+      "frontmatter_status": "valid",
+      "license": {
+        "status": "unresolved",
+        "evidence": "upstream revision, digest, and distributable license chain are incomplete"
+      },
+      "distributable_legacy": false,
+      "migration": {
+        "disposition": "externalize-or-pin",
+        "target": null
+      },
+      "findings": {
+        "personal_absolute_paths": [],
+        "hard_coded_install_roots": [],
+        "tracked_runtime_artifacts": []
+      }
+    },
+    {
+      "id": "baoyu-post-to-wechat",
+      "version": "1.56.1",
+      "path": "openclaw/baoyu-post-to-wechat",
+      "representation": "legacy-v1",
+      "domain": "content",
+      "lifecycle": "incubating",
+      "ownership": "managed-mirror",
+      "source_type": "managed-mirror",
+      "classification_basis": "known third-party family",
+      "frontmatter_status": "valid",
+      "license": {
+        "status": "unresolved",
+        "evidence": "upstream revision, digest, and distributable license chain are incomplete"
+      },
+      "distributable_legacy": false,
+      "migration": {
+        "disposition": "externalize-or-pin",
+        "target": null
+      },
+      "findings": {
+        "personal_absolute_paths": [],
+        "hard_coded_install_roots": [],
+        "tracked_runtime_artifacts": []
+      }
+    },
+    {
+      "id": "baoyu-post-to-weibo",
+      "version": "1.56.1",
+      "path": "openclaw/baoyu-post-to-weibo",
+      "representation": "legacy-v1",
+      "domain": "content",
+      "lifecycle": "incubating",
+      "ownership": "managed-mirror",
+      "source_type": "managed-mirror",
+      "classification_basis": "known third-party family",
+      "frontmatter_status": "valid",
+      "license": {
+        "status": "unresolved",
+        "evidence": "upstream revision, digest, and distributable license chain are incomplete"
+      },
+      "distributable_legacy": false,
+      "migration": {
+        "disposition": "externalize-or-pin",
+        "target": null
+      },
+      "findings": {
+        "personal_absolute_paths": [],
+        "hard_coded_install_roots": [],
+        "tracked_runtime_artifacts": []
+      }
+    },
+    {
+      "id": "baoyu-post-to-x",
+      "version": "1.56.1",
+      "path": "openclaw/baoyu-post-to-x",
+      "representation": "legacy-v1",
+      "domain": "content",
+      "lifecycle": "incubating",
+      "ownership": "managed-mirror",
+      "source_type": "managed-mirror",
+      "classification_basis": "known third-party family",
+      "frontmatter_status": "valid",
+      "license": {
+        "status": "unresolved",
+        "evidence": "upstream revision, digest, and distributable license chain are incomplete"
+      },
+      "distributable_legacy": false,
+      "migration": {
+        "disposition": "externalize-or-pin",
+        "target": null
+      },
+      "findings": {
+        "personal_absolute_paths": [],
+        "hard_coded_install_roots": [],
+        "tracked_runtime_artifacts": []
+      }
+    },
+    {
+      "id": "baoyu-slide-deck",
+      "version": "1.56.1",
+      "path": "openclaw/baoyu-slide-deck",
+      "representation": "legacy-v1",
+      "domain": "content",
+      "lifecycle": "incubating",
+      "ownership": "managed-mirror",
+      "source_type": "managed-mirror",
+      "classification_basis": "known third-party family",
+      "frontmatter_status": "valid",
+      "license": {
+        "status": "unresolved",
+        "evidence": "upstream revision, digest, and distributable license chain are incomplete"
+      },
+      "distributable_legacy": false,
+      "migration": {
+        "disposition": "externalize-or-pin",
+        "target": null
+      },
+      "findings": {
+        "personal_absolute_paths": [],
+        "hard_coded_install_roots": [],
+        "tracked_runtime_artifacts": []
+      }
+    },
+    {
+      "id": "baoyu-translate",
+      "version": "1.59.0",
+      "path": "openclaw/baoyu-translate",
+      "representation": "legacy-v1",
+      "domain": "content",
+      "lifecycle": "incubating",
+      "ownership": "managed-mirror",
+      "source_type": "managed-mirror",
+      "classification_basis": "known third-party family",
+      "frontmatter_status": "valid",
+      "license": {
+        "status": "unresolved",
+        "evidence": "upstream revision, digest, and distributable license chain are incomplete"
+      },
+      "distributable_legacy": false,
+      "migration": {
+        "disposition": "externalize-or-pin",
+        "target": null
+      },
+      "findings": {
+        "personal_absolute_paths": [],
+        "hard_coded_install_roots": [],
+        "tracked_runtime_artifacts": []
+      }
+    },
+    {
+      "id": "baoyu-url-to-markdown",
+      "version": "1.60.0",
+      "path": "openclaw/baoyu-url-to-markdown",
+      "representation": "legacy-v1",
+      "domain": "content",
+      "lifecycle": "incubating",
+      "ownership": "managed-mirror",
+      "source_type": "managed-mirror",
+      "classification_basis": "known third-party family",
+      "frontmatter_status": "valid",
+      "license": {
+        "status": "unresolved",
+        "evidence": "upstream revision, digest, and distributable license chain are incomplete"
+      },
+      "distributable_legacy": false,
+      "migration": {
+        "disposition": "externalize-or-pin",
+        "target": null
+      },
+      "findings": {
+        "personal_absolute_paths": [],
+        "hard_coded_install_roots": [],
+        "tracked_runtime_artifacts": []
+      }
+    },
+    {
+      "id": "baoyu-xhs-images",
+      "version": "1.56.1",
+      "path": "openclaw/baoyu-xhs-images",
+      "representation": "legacy-v1",
+      "domain": "content",
+      "lifecycle": "deprecated",
+      "ownership": "managed-mirror",
+      "source_type": "managed-mirror",
+      "classification_basis": "known third-party family",
+      "frontmatter_status": "valid",
+      "license": {
+        "status": "unresolved",
+        "evidence": "upstream revision, digest, and distributable license chain are incomplete"
+      },
+      "distributable_legacy": false,
+      "migration": {
+        "disposition": "externalize-or-pin",
+        "target": null
+      },
+      "findings": {
+        "personal_absolute_paths": [],
+        "hard_coded_install_roots": [],
+        "tracked_runtime_artifacts": []
+      }
+    },
+    {
+      "id": "baoyu-youtube-transcript",
+      "version": "1.1.0",
+      "path": "openclaw/baoyu-youtube-transcript",
+      "representation": "legacy-v1",
+      "domain": "content",
+      "lifecycle": "incubating",
+      "ownership": "managed-mirror",
+      "source_type": "managed-mirror",
+      "classification_basis": "known third-party family",
+      "frontmatter_status": "valid",
+      "license": {
+        "status": "unresolved",
+        "evidence": "upstream revision, digest, and distributable license chain are incomplete"
+      },
+      "distributable_legacy": false,
+      "migration": {
+        "disposition": "externalize-or-pin",
+        "target": null
+      },
+      "findings": {
+        "personal_absolute_paths": [],
+        "hard_coded_install_roots": [],
+        "tracked_runtime_artifacts": []
+      }
+    },
+    {
+      "id": "docx",
+      "version": "0.0.0-legacy",
+      "path": "openclaw/docx",
+      "representation": "legacy-v1",
+      "domain": "documents",
+      "lifecycle": "incubating",
+      "ownership": "managed-mirror",
+      "source_type": "managed-mirror",
+      "classification_basis": "known third-party family",
+      "frontmatter_status": "valid",
+      "license": {
+        "status": "restricted",
+        "evidence": "openclaw/docx/LICENSE.txt"
+      },
+      "distributable_legacy": false,
+      "migration": {
+        "disposition": "retire-local-copy",
+        "target": null
+      },
+      "findings": {
+        "personal_absolute_paths": [],
+        "hard_coded_install_roots": [],
+        "tracked_runtime_artifacts": []
+      }
+    },
+    {
+      "id": "download-anything",
+      "version": "0.0.0-legacy",
+      "path": "openclaw/download-anything",
+      "representation": "legacy-v1",
+      "domain": "research",
+      "lifecycle": "incubating",
+      "ownership": "managed-mirror",
+      "source_type": "managed-mirror",
+      "classification_basis": "conservative fallback: no first-party provenance evidence",
+      "frontmatter_status": "valid",
+      "license": {
+        "status": "unresolved",
+        "evidence": "upstream revision, digest, and distributable license chain are incomplete"
+      },
+      "distributable_legacy": false,
+      "migration": {
+        "disposition": "externalize-or-pin",
+        "target": null
+      },
+      "findings": {
+        "personal_absolute_paths": [],
+        "hard_coded_install_roots": [],
+        "tracked_runtime_artifacts": []
+      }
+    },
+    {
+      "id": "md2pdf",
+      "version": "0.0.0-legacy",
+      "path": "openclaw/md2pdf",
+      "representation": "legacy-v1",
+      "domain": "documents",
+      "lifecycle": "incubating",
+      "ownership": "first-party",
+      "source_type": "adapted-first-party",
+      "classification_basis": ".skill-meta.json or known legacy metadata declares an adaptation",
+      "frontmatter_status": "valid",
+      "license": {
+        "status": "unresolved",
+        "evidence": "upstream license/attribution is not bundled with the adaptation"
+      },
+      "distributable_legacy": false,
+      "migration": {
+        "disposition": "rebuild-adaptation",
+        "target": "skills/documents/gorin-md2pdf"
+      },
+      "findings": {
+        "personal_absolute_paths": [],
+        "hard_coded_install_roots": [],
+        "tracked_runtime_artifacts": []
+      }
+    },
+    {
+      "id": "obsidian-bases",
+      "version": "0.0.0-legacy",
+      "path": "openclaw/obsidian-bases",
+      "representation": "legacy-v1",
+      "domain": "knowledge",
+      "lifecycle": "incubating",
+      "ownership": "managed-mirror",
+      "source_type": "managed-mirror",
+      "classification_basis": "known third-party family",
+      "frontmatter_status": "valid",
+      "license": {
+        "status": "unresolved",
+        "evidence": "upstream revision, digest, and distributable license chain are incomplete"
+      },
+      "distributable_legacy": false,
+      "migration": {
+        "disposition": "externalize-or-pin",
+        "target": null
+      },
+      "findings": {
+        "personal_absolute_paths": [],
+        "hard_coded_install_roots": [],
+        "tracked_runtime_artifacts": []
+      }
+    },
+    {
+      "id": "obsidian-canvas",
+      "version": "0.0.0-legacy",
+      "path": "openclaw/obsidian-canvas",
+      "representation": "legacy-v1",
+      "domain": "knowledge",
+      "lifecycle": "incubating",
+      "ownership": "managed-mirror",
+      "source_type": "managed-mirror",
+      "classification_basis": "known third-party family",
+      "frontmatter_status": "valid",
+      "license": {
+        "status": "unresolved",
+        "evidence": "upstream revision, digest, and distributable license chain are incomplete"
+      },
+      "distributable_legacy": false,
+      "migration": {
+        "disposition": "externalize-or-pin",
+        "target": null
+      },
+      "findings": {
+        "personal_absolute_paths": [],
+        "hard_coded_install_roots": [],
+        "tracked_runtime_artifacts": []
+      }
+    },
+    {
+      "id": "obsidian-cli",
+      "version": "0.0.0-legacy",
+      "path": "openclaw/obsidian-cli",
+      "representation": "legacy-v1",
+      "domain": "knowledge",
+      "lifecycle": "incubating",
+      "ownership": "managed-mirror",
+      "source_type": "managed-mirror",
+      "classification_basis": "known third-party family",
+      "frontmatter_status": "valid",
+      "license": {
+        "status": "unresolved",
+        "evidence": "upstream revision, digest, and distributable license chain are incomplete"
+      },
+      "distributable_legacy": false,
+      "migration": {
+        "disposition": "externalize-or-pin",
+        "target": null
+      },
+      "findings": {
+        "personal_absolute_paths": [],
+        "hard_coded_install_roots": [],
+        "tracked_runtime_artifacts": []
+      }
+    },
+    {
+      "id": "obsidian-defuddle",
+      "version": "0.0.0-legacy",
+      "path": "openclaw/obsidian-defuddle",
+      "representation": "legacy-v1",
+      "domain": "knowledge",
+      "lifecycle": "incubating",
+      "ownership": "managed-mirror",
+      "source_type": "managed-mirror",
+      "classification_basis": "known third-party family",
+      "frontmatter_status": "valid",
+      "license": {
+        "status": "unresolved",
+        "evidence": "upstream revision, digest, and distributable license chain are incomplete"
+      },
+      "distributable_legacy": false,
+      "migration": {
+        "disposition": "externalize-or-pin",
+        "target": null
+      },
+      "findings": {
+        "personal_absolute_paths": [],
+        "hard_coded_install_roots": [],
+        "tracked_runtime_artifacts": []
+      }
+    },
+    {
+      "id": "obsidian-md",
+      "version": "0.0.0-legacy",
+      "path": "openclaw/obsidian-md",
+      "representation": "legacy-v1",
+      "domain": "knowledge",
+      "lifecycle": "incubating",
+      "ownership": "managed-mirror",
+      "source_type": "managed-mirror",
+      "classification_basis": "known third-party family",
+      "frontmatter_status": "valid",
+      "license": {
+        "status": "unresolved",
+        "evidence": "upstream revision, digest, and distributable license chain are incomplete"
+      },
+      "distributable_legacy": false,
+      "migration": {
+        "disposition": "externalize-or-pin",
+        "target": null
+      },
+      "findings": {
+        "personal_absolute_paths": [],
+        "hard_coded_install_roots": [],
+        "tracked_runtime_artifacts": []
+      }
+    },
+    {
+      "id": "obsidian-ontology-sync",
+      "version": "0.0.0-legacy",
+      "path": "openclaw/obsidian-ontology-sync",
+      "representation": "legacy-v1",
+      "domain": "knowledge",
+      "lifecycle": "incubating",
+      "ownership": "managed-mirror",
+      "source_type": "managed-mirror",
+      "classification_basis": "conservative fallback: no first-party provenance evidence",
+      "frontmatter_status": "valid",
+      "license": {
+        "status": "unresolved",
+        "evidence": "upstream revision, digest, and distributable license chain are incomplete"
+      },
+      "distributable_legacy": false,
+      "migration": {
+        "disposition": "externalize-or-pin",
+        "target": null
+      },
+      "findings": {
+        "personal_absolute_paths": [],
+        "hard_coded_install_roots": [],
+        "tracked_runtime_artifacts": []
+      }
+    },
+    {
+      "id": "openmaic",
+      "version": "0.0.0-legacy",
+      "path": "openclaw/openmaic",
+      "representation": "legacy-v1",
+      "domain": "education",
+      "lifecycle": "incubating",
+      "ownership": "managed-mirror",
+      "source_type": "managed-mirror",
+      "classification_basis": "conservative fallback: no first-party provenance evidence",
+      "frontmatter_status": "valid",
+      "license": {
+        "status": "unresolved",
+        "evidence": "upstream revision, digest, and distributable license chain are incomplete"
+      },
+      "distributable_legacy": false,
+      "migration": {
+        "disposition": "externalize-or-pin",
+        "target": null
+      },
+      "findings": {
+        "personal_absolute_paths": [],
+        "hard_coded_install_roots": [],
+        "tracked_runtime_artifacts": []
+      }
+    },
+    {
+      "id": "pdf",
+      "version": "0.0.0-legacy",
+      "path": "openclaw/pdf",
+      "representation": "legacy-v1",
+      "domain": "documents",
+      "lifecycle": "incubating",
+      "ownership": "managed-mirror",
+      "source_type": "managed-mirror",
+      "classification_basis": "known third-party family",
+      "frontmatter_status": "valid",
+      "license": {
+        "status": "restricted",
+        "evidence": "openclaw/pdf/LICENSE.txt"
+      },
+      "distributable_legacy": false,
+      "migration": {
+        "disposition": "retire-local-copy",
+        "target": null
+      },
+      "findings": {
+        "personal_absolute_paths": [],
+        "hard_coded_install_roots": [],
+        "tracked_runtime_artifacts": []
+      }
+    },
+    {
+      "id": "voice-to-zettel",
+      "version": "0.0.0-legacy",
+      "path": "openclaw/voice-to-zettel",
+      "representation": "legacy-v1",
+      "domain": "knowledge",
+      "lifecycle": "incubating",
+      "ownership": "managed-mirror",
+      "source_type": "managed-mirror",
+      "classification_basis": "conservative fallback: no first-party provenance evidence",
+      "frontmatter_status": "valid",
+      "license": {
+        "status": "unresolved",
+        "evidence": "upstream revision, digest, and distributable license chain are incomplete"
+      },
+      "distributable_legacy": false,
+      "migration": {
+        "disposition": "externalize-or-pin",
+        "target": null
+      },
+      "findings": {
+        "personal_absolute_paths": [],
+        "hard_coded_install_roots": [],
+        "tracked_runtime_artifacts": []
+      }
+    },
+    {
+      "id": "xlsx",
+      "version": "0.0.0-legacy",
+      "path": "openclaw/xlsx",
+      "representation": "legacy-v1",
+      "domain": "documents",
+      "lifecycle": "incubating",
+      "ownership": "managed-mirror",
+      "source_type": "managed-mirror",
+      "classification_basis": "known third-party family",
+      "frontmatter_status": "valid",
+      "license": {
+        "status": "restricted",
+        "evidence": "openclaw/xlsx/LICENSE.txt"
+      },
+      "distributable_legacy": false,
+      "migration": {
+        "disposition": "retire-local-copy",
+        "target": null
+      },
+      "findings": {
+        "personal_absolute_paths": [],
+        "hard_coded_install_roots": [],
+        "tracked_runtime_artifacts": []
+      }
+    },
+    {
+      "id": "zk-literature",
+      "version": "0.0.0-legacy",
+      "path": "openclaw/zk-literature",
+      "representation": "legacy-v1",
+      "domain": "research",
+      "lifecycle": "deprecated",
+      "ownership": "managed-mirror",
+      "source_type": "managed-mirror",
+      "classification_basis": "conservative fallback: no first-party provenance evidence",
+      "frontmatter_status": "valid",
+      "license": {
+        "status": "unresolved",
+        "evidence": "upstream revision, digest, and distributable license chain are incomplete"
+      },
+      "distributable_legacy": false,
+      "migration": {
+        "disposition": "externalize-or-pin",
+        "target": null
+      },
+      "findings": {
+        "personal_absolute_paths": [],
+        "hard_coded_install_roots": [],
+        "tracked_runtime_artifacts": []
+      }
+    },
+    {
+      "id": "gorin-agent-team-composer",
+      "version": "0.1.0",
+      "path": "skills/agent-ops/gorin-agent-team-composer",
+      "representation": "v2",
+      "domain": "agent-ops",
+      "lifecycle": "incubating",
+      "ownership": "first-party",
+      "source_type": "first-party",
+      "aliases": [
+        "agent-team-composer"
+      ],
+      "license": {
+        "status": "resolved",
+        "evidence": "LICENSE"
+      },
+      "distributable_legacy": false,
+      "migration": {
+        "disposition": "complete",
+        "target": null
+      },
+      "findings": {
+        "personal_absolute_paths": [],
+        "hard_coded_install_roots": [],
+        "tracked_runtime_artifacts": []
+      }
+    },
+    {
+      "id": "gorin-harness-audit",
+      "version": "0.1.0",
+      "path": "skills/agent-ops/gorin-harness-audit",
+      "representation": "v2",
+      "domain": "agent-ops",
+      "lifecycle": "incubating",
+      "ownership": "first-party",
+      "source_type": "first-party",
+      "aliases": [
+        "harness-audit"
+      ],
+      "license": {
+        "status": "resolved",
+        "evidence": "LICENSE"
+      },
+      "distributable_legacy": false,
+      "migration": {
+        "disposition": "complete",
+        "target": null
+      },
+      "findings": {
+        "personal_absolute_paths": [],
+        "hard_coded_install_roots": [],
+        "tracked_runtime_artifacts": []
+      }
+    },
+    {
+      "id": "gorin-log-watchdog",
+      "version": "0.1.0",
+      "path": "skills/agent-ops/gorin-log-watchdog",
+      "representation": "v2",
+      "domain": "agent-ops",
+      "lifecycle": "incubating",
+      "ownership": "first-party",
+      "source_type": "first-party",
+      "aliases": [
+        "log-watchdog"
+      ],
+      "license": {
+        "status": "resolved",
+        "evidence": "LICENSE"
+      },
+      "distributable_legacy": false,
+      "migration": {
+        "disposition": "complete",
+        "target": null
+      },
+      "findings": {
+        "personal_absolute_paths": [],
+        "hard_coded_install_roots": [],
+        "tracked_runtime_artifacts": []
+      }
+    },
+    {
+      "id": "gorin-oc-card",
+      "version": "0.1.0",
+      "path": "skills/agent-ops/gorin-oc-card",
+      "representation": "v2",
+      "domain": "agent-ops",
+      "lifecycle": "incubating",
+      "ownership": "first-party",
+      "source_type": "first-party",
+      "aliases": [
+        "oc-card"
+      ],
+      "license": {
+        "status": "resolved",
+        "evidence": "LICENSE"
+      },
+      "distributable_legacy": false,
+      "migration": {
+        "disposition": "complete",
+        "target": null
+      },
+      "findings": {
+        "personal_absolute_paths": [],
+        "hard_coded_install_roots": [],
+        "tracked_runtime_artifacts": []
+      }
+    },
+    {
+      "id": "gorin-plugin-updater",
+      "version": "1.0.0",
+      "path": "skills/agent-ops/gorin-plugin-updater",
+      "representation": "v2",
+      "domain": "agent-ops",
+      "lifecycle": "incubating",
+      "ownership": "first-party",
+      "source_type": "first-party",
+      "aliases": [
+        "plugin-updater"
+      ],
+      "license": {
+        "status": "resolved",
+        "evidence": "LICENSE"
+      },
+      "distributable_legacy": false,
+      "migration": {
+        "disposition": "complete",
+        "target": null
+      },
+      "findings": {
+        "personal_absolute_paths": [],
+        "hard_coded_install_roots": [],
+        "tracked_runtime_artifacts": []
+      }
+    },
+    {
+      "id": "gorin-safe-mode",
+      "version": "0.1.0",
+      "path": "skills/agent-ops/gorin-safe-mode",
+      "representation": "v2",
+      "domain": "agent-ops",
+      "lifecycle": "incubating",
+      "ownership": "first-party",
+      "source_type": "first-party",
+      "aliases": [
+        "safe-mode"
+      ],
+      "license": {
+        "status": "resolved",
+        "evidence": "LICENSE"
+      },
+      "distributable_legacy": false,
+      "migration": {
+        "disposition": "complete",
+        "target": null
+      },
+      "findings": {
+        "personal_absolute_paths": [],
+        "hard_coded_install_roots": [],
+        "tracked_runtime_artifacts": []
+      }
+    },
+    {
+      "id": "gorin-teambook",
+      "version": "0.1.0",
+      "path": "skills/agent-ops/gorin-teambook",
+      "representation": "v2",
+      "domain": "agent-ops",
+      "lifecycle": "incubating",
+      "ownership": "first-party",
+      "source_type": "first-party",
+      "aliases": [
+        "teambook"
+      ],
+      "license": {
+        "status": "resolved",
+        "evidence": "LICENSE"
+      },
+      "distributable_legacy": false,
+      "migration": {
+        "disposition": "complete",
+        "target": null
+      },
+      "findings": {
+        "personal_absolute_paths": [],
+        "hard_coded_install_roots": [],
+        "tracked_runtime_artifacts": []
+      }
+    },
+    {
+      "id": "gorin-bearclaw-native",
+      "version": "2.1.0",
+      "path": "skills/content/gorin-bearclaw-native",
+      "representation": "v2",
+      "domain": "content",
+      "lifecycle": "incubating",
+      "ownership": "first-party",
+      "source_type": "first-party",
+      "aliases": [
+        "bearclaw-native"
+      ],
+      "license": {
+        "status": "resolved",
+        "evidence": "skills/content/gorin-bearclaw-native/LICENSE"
+      },
+      "distributable_legacy": false,
+      "migration": {
+        "disposition": "complete",
+        "target": null
+      },
+      "findings": {
+        "personal_absolute_paths": [],
+        "hard_coded_install_roots": [],
+        "tracked_runtime_artifacts": []
+      }
+    },
+    {
+      "id": "gorin-visual-knowledge-explainer",
+      "version": "0.1.0",
+      "path": "skills/content/gorin-visual-knowledge-explainer",
+      "representation": "v2",
+      "domain": "content",
+      "lifecycle": "incubating",
+      "ownership": "first-party",
+      "source_type": "first-party",
+      "aliases": [
+        "visual-knowledge-explainer"
+      ],
+      "license": {
+        "status": "resolved",
+        "evidence": "LICENSE"
+      },
+      "distributable_legacy": false,
+      "migration": {
+        "disposition": "complete",
+        "target": null
+      },
+      "findings": {
+        "personal_absolute_paths": [],
+        "hard_coded_install_roots": [],
+        "tracked_runtime_artifacts": []
+      }
+    },
+    {
+      "id": "gorin-superdoc",
+      "version": "1.0.0",
+      "path": "skills/documents/gorin-superdoc",
+      "representation": "v2",
+      "domain": "documents",
+      "lifecycle": "incubating",
+      "ownership": "first-party",
+      "source_type": "first-party",
+      "aliases": [
+        "superdoc"
+      ],
+      "license": {
+        "status": "resolved",
+        "evidence": "LICENSE"
+      },
+      "distributable_legacy": false,
+      "migration": {
+        "disposition": "complete",
+        "target": null
+      },
+      "findings": {
+        "personal_absolute_paths": [],
+        "hard_coded_install_roots": [],
+        "tracked_runtime_artifacts": []
+      }
+    },
+    {
+      "id": "gorin-edu-chapter-illustrator",
+      "version": "0.1.1",
+      "path": "skills/education/gorin-edu-chapter-illustrator",
+      "representation": "v2",
+      "domain": "education",
+      "lifecycle": "incubating",
+      "ownership": "first-party",
+      "source_type": "first-party",
+      "aliases": [],
+      "license": {
+        "status": "resolved",
+        "evidence": "skills/education/gorin-edu-chapter-illustrator/LICENSE"
+      },
+      "distributable_legacy": false,
+      "migration": {
+        "disposition": "complete",
+        "target": null
+      },
+      "findings": {
+        "personal_absolute_paths": [],
+        "hard_coded_install_roots": [],
+        "tracked_runtime_artifacts": []
+      }
+    },
+    {
+      "id": "gorin-edu-diagram-designer",
+      "version": "0.1.0",
+      "path": "skills/education/gorin-edu-diagram-designer",
+      "representation": "v2",
+      "domain": "education",
+      "lifecycle": "incubating",
+      "ownership": "first-party",
+      "source_type": "first-party",
+      "aliases": [],
+      "license": {
+        "status": "resolved",
+        "evidence": "skills/education/gorin-edu-diagram-designer/LICENSE"
+      },
+      "distributable_legacy": false,
+      "migration": {
+        "disposition": "complete",
+        "target": null
+      },
+      "findings": {
+        "personal_absolute_paths": [],
+        "hard_coded_install_roots": [],
+        "tracked_runtime_artifacts": []
+      }
+    },
+    {
+      "id": "gorin-edu-dispatch-builder",
+      "version": "0.1.0",
+      "path": "skills/education/gorin-edu-dispatch-builder",
+      "representation": "v2",
+      "domain": "education",
+      "lifecycle": "incubating",
+      "ownership": "first-party",
+      "source_type": "first-party",
+      "aliases": [],
+      "license": {
+        "status": "resolved",
+        "evidence": "skills/education/gorin-edu-dispatch-builder/LICENSE"
+      },
+      "distributable_legacy": false,
+      "migration": {
+        "disposition": "complete",
+        "target": null
+      },
+      "findings": {
+        "personal_absolute_paths": [],
+        "hard_coded_install_roots": [],
+        "tracked_runtime_artifacts": []
+      }
+    },
+    {
+      "id": "gorin-edu-docx-review",
+      "version": "0.1.0-scaffold",
+      "path": "skills/education/gorin-edu-docx-review",
+      "representation": "v2",
+      "domain": "education",
+      "lifecycle": "incubating",
+      "ownership": "first-party",
+      "source_type": "first-party",
+      "aliases": [],
+      "license": {
+        "status": "resolved",
+        "evidence": "skills/education/gorin-edu-docx-review/LICENSE"
+      },
+      "distributable_legacy": false,
+      "migration": {
+        "disposition": "complete",
+        "target": null
+      },
+      "findings": {
+        "personal_absolute_paths": [],
+        "hard_coded_install_roots": [],
+        "tracked_runtime_artifacts": []
+      }
+    },
+    {
+      "id": "gorin-edu-image-optimizer",
+      "version": "0.1.0",
+      "path": "skills/education/gorin-edu-image-optimizer",
+      "representation": "v2",
+      "domain": "education",
+      "lifecycle": "incubating",
+      "ownership": "first-party",
+      "source_type": "first-party",
+      "aliases": [],
+      "license": {
+        "status": "resolved",
+        "evidence": "skills/education/gorin-edu-image-optimizer/LICENSE"
+      },
+      "distributable_legacy": false,
+      "migration": {
+        "disposition": "complete",
+        "target": null
+      },
+      "findings": {
+        "personal_absolute_paths": [],
+        "hard_coded_install_roots": [],
+        "tracked_runtime_artifacts": []
+      }
+    },
+    {
+      "id": "gorin-edu-infographic-designer",
+      "version": "0.1.0",
+      "path": "skills/education/gorin-edu-infographic-designer",
+      "representation": "v2",
+      "domain": "education",
+      "lifecycle": "incubating",
+      "ownership": "first-party",
+      "source_type": "first-party",
+      "aliases": [],
+      "license": {
+        "status": "resolved",
+        "evidence": "skills/education/gorin-edu-infographic-designer/LICENSE"
+      },
+      "distributable_legacy": false,
+      "migration": {
+        "disposition": "complete",
+        "target": null
+      },
+      "findings": {
+        "personal_absolute_paths": [],
+        "hard_coded_install_roots": [],
+        "tracked_runtime_artifacts": []
+      }
+    },
+    {
+      "id": "gorin-edu-markdown-polisher",
+      "version": "0.1.0",
+      "path": "skills/education/gorin-edu-markdown-polisher",
+      "representation": "v2",
+      "domain": "education",
+      "lifecycle": "candidate",
+      "ownership": "first-party",
+      "source_type": "first-party",
+      "aliases": [],
+      "license": {
+        "status": "resolved",
+        "evidence": "skills/education/gorin-edu-markdown-polisher/LICENSE"
+      },
+      "distributable_legacy": false,
+      "migration": {
+        "disposition": "complete",
+        "target": null
+      },
+      "findings": {
+        "personal_absolute_paths": [],
+        "hard_coded_install_roots": [],
+        "tracked_runtime_artifacts": []
+      }
+    },
+    {
+      "id": "gorin-edu-outline-review",
+      "version": "0.1.0",
+      "path": "skills/education/gorin-edu-outline-review",
+      "representation": "v2",
+      "domain": "education",
+      "lifecycle": "candidate",
+      "ownership": "first-party",
+      "source_type": "first-party",
+      "aliases": [],
+      "license": {
+        "status": "resolved",
+        "evidence": "skills/education/gorin-edu-outline-review/LICENSE"
+      },
+      "distributable_legacy": false,
+      "migration": {
+        "disposition": "complete",
+        "target": null
+      },
+      "findings": {
+        "personal_absolute_paths": [],
+        "hard_coded_install_roots": [],
+        "tracked_runtime_artifacts": []
+      }
+    },
+    {
+      "id": "gorin-edu-pptx",
+      "version": "0.1.0",
+      "path": "skills/education/gorin-edu-pptx",
+      "representation": "v2",
+      "domain": "education",
+      "lifecycle": "incubating",
+      "ownership": "first-party",
+      "source_type": "first-party",
+      "aliases": [],
+      "license": {
+        "status": "resolved",
+        "evidence": "skills/education/gorin-edu-pptx/LICENSE"
+      },
+      "distributable_legacy": false,
+      "migration": {
+        "disposition": "complete",
+        "target": null
+      },
+      "findings": {
+        "personal_absolute_paths": [],
+        "hard_coded_install_roots": [],
+        "tracked_runtime_artifacts": []
+      }
+    },
+    {
+      "id": "gorin-edu-xlsx",
+      "version": "0.1.0",
+      "path": "skills/education/gorin-edu-xlsx",
+      "representation": "v2",
+      "domain": "education",
+      "lifecycle": "incubating",
+      "ownership": "first-party",
+      "source_type": "first-party",
+      "aliases": [],
+      "license": {
+        "status": "resolved",
+        "evidence": "skills/education/gorin-edu-xlsx/LICENSE"
+      },
+      "distributable_legacy": false,
+      "migration": {
+        "disposition": "complete",
+        "target": null
+      },
+      "findings": {
+        "personal_absolute_paths": [],
+        "hard_coded_install_roots": [],
+        "tracked_runtime_artifacts": []
+      }
+    },
+    {
+      "id": "gorin-code-review",
+      "version": "0.1.0",
+      "path": "skills/engineering/gorin-code-review",
+      "representation": "v2",
+      "domain": "engineering",
+      "lifecycle": "candidate",
+      "ownership": "first-party",
+      "source_type": "first-party",
+      "aliases": [
+        "code-review"
+      ],
+      "license": {
+        "status": "resolved",
+        "evidence": "LICENSE"
+      },
+      "distributable_legacy": false,
+      "migration": {
+        "disposition": "complete",
+        "target": null
+      },
+      "findings": {
+        "personal_absolute_paths": [],
+        "hard_coded_install_roots": [],
+        "tracked_runtime_artifacts": []
+      }
+    },
+    {
+      "id": "gorin-enhanced-skill-creator",
+      "version": "4.0.0",
+      "path": "skills/engineering/gorin-enhanced-skill-creator",
+      "representation": "v2",
+      "domain": "engineering",
+      "lifecycle": "incubating",
+      "ownership": "first-party",
+      "source_type": "first-party",
+      "aliases": [
+        "enhanced-skill-creator"
+      ],
+      "license": {
+        "status": "resolved",
+        "evidence": "LICENSE"
+      },
+      "distributable_legacy": false,
+      "migration": {
+        "disposition": "complete",
+        "target": null
+      },
+      "findings": {
+        "personal_absolute_paths": [],
+        "hard_coded_install_roots": [],
+        "tracked_runtime_artifacts": []
+      }
+    },
+    {
+      "id": "gorin-idea-creator",
+      "version": "0.1.0",
+      "path": "skills/knowledge/gorin-idea-creator",
+      "representation": "v2",
+      "domain": "knowledge",
+      "lifecycle": "incubating",
+      "ownership": "first-party",
+      "source_type": "first-party",
+      "aliases": [
+        "idea-creator"
+      ],
+      "license": {
+        "status": "resolved",
+        "evidence": "LICENSE"
+      },
+      "distributable_legacy": false,
+      "migration": {
+        "disposition": "complete",
+        "target": null
+      },
+      "findings": {
+        "personal_absolute_paths": [],
+        "hard_coded_install_roots": [],
+        "tracked_runtime_artifacts": []
+      }
+    },
+    {
+      "id": "gorin-neobear",
+      "version": "0.1.0",
+      "path": "skills/knowledge/gorin-neobear",
+      "representation": "v2",
+      "domain": "knowledge",
+      "lifecycle": "incubating",
+      "ownership": "first-party",
+      "source_type": "first-party",
+      "aliases": [
+        "neobear"
+      ],
+      "license": {
+        "status": "resolved",
+        "evidence": "skills/knowledge/gorin-neobear/LICENSE"
+      },
+      "distributable_legacy": false,
+      "migration": {
+        "disposition": "complete",
+        "target": null
+      },
+      "findings": {
+        "personal_absolute_paths": [],
+        "hard_coded_install_roots": [],
+        "tracked_runtime_artifacts": []
+      }
+    },
+    {
+      "id": "gorin-outline",
+      "version": "1.0.0",
+      "path": "skills/knowledge/gorin-outline",
+      "representation": "v2",
+      "domain": "knowledge",
+      "lifecycle": "incubating",
+      "ownership": "first-party",
+      "source_type": "first-party",
+      "aliases": [
+        "outline"
+      ],
+      "license": {
+        "status": "resolved",
+        "evidence": "LICENSE"
+      },
+      "distributable_legacy": false,
+      "migration": {
+        "disposition": "complete",
+        "target": null
+      },
+      "findings": {
+        "personal_absolute_paths": [],
+        "hard_coded_install_roots": [],
+        "tracked_runtime_artifacts": []
+      }
+    },
+    {
+      "id": "gorin-pkm-core",
+      "version": "0.1.0",
+      "path": "skills/knowledge/gorin-pkm-core",
+      "representation": "v2",
+      "domain": "knowledge",
+      "lifecycle": "incubating",
+      "ownership": "first-party",
+      "source_type": "first-party",
+      "aliases": [
+        "pkm-core"
+      ],
+      "license": {
+        "status": "resolved",
+        "evidence": "LICENSE"
+      },
+      "distributable_legacy": false,
+      "migration": {
+        "disposition": "complete",
+        "target": null
+      },
+      "findings": {
+        "personal_absolute_paths": [],
+        "hard_coded_install_roots": [],
+        "tracked_runtime_artifacts": []
+      }
+    },
+    {
+      "id": "gorin-pkm-para-manager",
+      "version": "0.1.0",
+      "path": "skills/knowledge/gorin-pkm-para-manager",
+      "representation": "v2",
+      "domain": "knowledge",
+      "lifecycle": "incubating",
+      "ownership": "first-party",
+      "source_type": "first-party",
+      "aliases": [
+        "pkm-para-manager"
+      ],
+      "license": {
+        "status": "resolved",
+        "evidence": "LICENSE"
+      },
+      "distributable_legacy": false,
+      "migration": {
+        "disposition": "complete",
+        "target": null
+      },
+      "findings": {
+        "personal_absolute_paths": [],
+        "hard_coded_install_roots": [],
+        "tracked_runtime_artifacts": []
+      }
+    },
+    {
+      "id": "gorin-pkm-save-note",
+      "version": "0.1.0",
+      "path": "skills/knowledge/gorin-pkm-save-note",
+      "representation": "v2",
+      "domain": "knowledge",
+      "lifecycle": "incubating",
+      "ownership": "first-party",
+      "source_type": "first-party",
+      "aliases": [
+        "pkm-save-note"
+      ],
+      "license": {
+        "status": "resolved",
+        "evidence": "LICENSE"
+      },
+      "distributable_legacy": false,
+      "migration": {
+        "disposition": "complete",
+        "target": null
+      },
+      "findings": {
+        "personal_absolute_paths": [],
+        "hard_coded_install_roots": [],
+        "tracked_runtime_artifacts": []
+      }
+    },
+    {
+      "id": "gorin-web-reader",
+      "version": "0.1.0",
+      "path": "skills/knowledge/gorin-web-reader",
+      "representation": "v2",
+      "domain": "knowledge",
+      "lifecycle": "incubating",
+      "ownership": "first-party",
+      "source_type": "first-party",
+      "aliases": [
+        "web-reader"
+      ],
+      "license": {
+        "status": "resolved",
+        "evidence": "LICENSE"
+      },
+      "distributable_legacy": false,
+      "migration": {
+        "disposition": "complete",
+        "target": null
+      },
+      "findings": {
+        "personal_absolute_paths": [],
+        "hard_coded_install_roots": [],
+        "tracked_runtime_artifacts": []
+      }
+    },
+    {
+      "id": "gorin-zk-router",
+      "version": "0.1.0",
+      "path": "skills/knowledge/gorin-zk-router",
+      "representation": "v2",
+      "domain": "knowledge",
+      "lifecycle": "incubating",
+      "ownership": "first-party",
+      "source_type": "first-party",
+      "aliases": [
+        "zk-router"
+      ],
+      "license": {
+        "status": "resolved",
+        "evidence": "LICENSE"
+      },
+      "distributable_legacy": false,
+      "migration": {
+        "disposition": "complete",
+        "target": null
+      },
+      "findings": {
+        "personal_absolute_paths": [],
+        "hard_coded_install_roots": [],
+        "tracked_runtime_artifacts": []
+      }
+    },
+    {
+      "id": "gorin-ai-builder-digest",
+      "version": "0.1.0",
+      "path": "skills/research/gorin-ai-builder-digest",
+      "representation": "v2",
+      "domain": "research",
+      "lifecycle": "deprecated",
+      "ownership": "first-party",
+      "source_type": "first-party",
+      "aliases": [
+        "ai-builder-digest"
+      ],
+      "license": {
+        "status": "resolved",
+        "evidence": "LICENSE"
+      },
+      "distributable_legacy": false,
+      "migration": {
+        "disposition": "complete",
+        "target": null
+      },
+      "findings": {
+        "personal_absolute_paths": [],
+        "hard_coded_install_roots": [],
+        "tracked_runtime_artifacts": []
+      }
+    },
+    {
+      "id": "gorin-autoresearch",
+      "version": "0.1.0",
+      "path": "skills/research/gorin-autoresearch",
+      "representation": "v2",
+      "domain": "research",
+      "lifecycle": "incubating",
+      "ownership": "first-party",
+      "source_type": "first-party",
+      "aliases": [
+        "autoresearch"
+      ],
+      "license": {
+        "status": "resolved",
+        "evidence": "LICENSE"
+      },
+      "distributable_legacy": false,
+      "migration": {
+        "disposition": "complete",
+        "target": null
+      },
+      "findings": {
+        "personal_absolute_paths": [],
+        "hard_coded_install_roots": [],
+        "tracked_runtime_artifacts": []
+      }
+    }
+  ]
+}

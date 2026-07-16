@@ -2,57 +2,47 @@ name: Test
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [main, develop]
   pull_request:
-    branches: [ main, develop ]
+    branches: [main, develop]
 
 jobs:
-  validate:
+  governance:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Python
-        uses: actions/setup-python@v5
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
-          python-version: '3.x'
-
-      - name: Install dependencies
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - run: npm run validate
+      - name: Verify lifecycle transitions against the released baseline
         run: |
-          python -m pip install --upgrade pip
-          # Add skill-specific dependencies here
-
-      - name: Validate skill structure
+          version="$(node -e "const fs=require('fs'); const YAML=require('yaml'); process.stdout.write(YAML.parse(fs.readFileSync('release/repository.yaml','utf8')).version)")"
+          node scripts/gorin-skills.mjs validate --baseline "release/baselines/catalog-$version.json"
+      - name: Verify generated catalog
         run: |
-          ./scripts/validate-skill.sh openclaw/neobear
-
-      - name: Check SKILL.md frontmatter
+          node scripts/gorin-skills.mjs catalog --output /tmp/gorin-catalog.json
+          diff -u catalog/index.json /tmp/gorin-catalog.json
+      - name: Verify generated human index
         run: |
-          # Validate YAML frontmatter in SKILL.md files
-          for skill in openclaw/*/ general/*/; do
-            if [ -f "$skill/SKILL.md" ]; then
-              echo "Checking $skill/SKILL.md"
-              head -n1 "$skill/SKILL.md" | grep -q '^---$' || echo "Missing frontmatter in $skill"
-            fi
+          node scripts/gorin-skills.mjs docs --output /tmp/gorin-skills-index.md
+          diff -u docs/skills/index.md /tmp/gorin-skills-index.md
+      - name: Build every declared target and compatibility alias
+        run: node scripts/gorin-skills.mjs build --all --output /tmp/gorin-targets
+      - name: Resolve release profiles
+        run: |
+          for profile_file in profiles/*.yaml; do
+            profile="$(basename "$profile_file" .yaml)"
+            node scripts/gorin-skills.mjs profile --name "$profile" > "/tmp/$profile.json"
           done
-
-      - name: Test install scripts
+      - name: Qualify every candidate through target build and managed install
         run: |
-          # Test install.sh scripts (dry-run style checks)
-          find . -name "install.sh" -type f -exec sh -c '
-            echo "Checking {}"
-            bash -n "{}"  # Syntax check
-          ' \;
-
-      - name: Check LICENSE files
-        run: |
-          # Ensure all skills have LICENSE files
-          missing=0
-          for skill_dir in openclaw/*/ general/*/; do
-            if [ -d "$skill_dir" ] && [ ! -f "$skill_dir/LICENSE" ]; then
-              echo "Missing LICENSE in $skill_dir"
-              missing=1
-            fi
-          done
-          exit $missing
+          node -e "const c=require('./catalog/index.json'); for (const s of c.skills.filter(s => s.lifecycle === 'candidate')) console.log(s.id)" |
+            while IFS= read -r skill; do
+              node scripts/gorin-skills.mjs qualify --skill "$skill" > "/tmp/$skill-qualification.json"
+            done
+      - name: Generate and verify the v2 release in an isolated staging area
+        run: node scripts/gorin-skills.mjs release --dry-run > /tmp/gorin-release-plan.json

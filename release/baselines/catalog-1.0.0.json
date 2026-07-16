@@ -1,0 +1,546 @@
+{
+  "schema_version": 1,
+  "catalog_version": "1.0.0",
+  "skills": [
+    {
+      "id": "baoyu-skills",
+      "version": "1.60.0",
+      "lifecycle": "incubating",
+      "ownership": "external",
+      "audience": "public",
+      "description": "Upstream multimedia content-creation skill collection; local legacy copies are not released.",
+      "source_type": "external",
+      "source": {
+        "url": "https://github.com/JimLiu/baoyu-skills/tree/6b7a2e417500561a5ecdd0b168332f4142584617",
+        "revision": "6b7a2e417500561a5ecdd0b168332f4142584617",
+        "license": "MIT"
+      }
+    },
+    {
+      "id": "gorin-agent-team-composer",
+      "version": "0.1.0",
+      "domain": "agent-ops",
+      "lifecycle": "incubating",
+      "ownership": "first-party",
+      "audience": "public",
+      "targets": [
+        "agent-skills",
+        "codex",
+        "claude-code",
+        "openclaw"
+      ],
+      "description": "从自然语言团队需求生成 OpenClaw 多智能体团队脚手架，包括 SOUL.md、AGENTS.md、协作规则和 YAML 配置。Do NOT use for single-agent creation or modifying existing team configs.",
+      "source": "skills/agent-ops/gorin-agent-team-composer"
+    },
+    {
+      "id": "gorin-ai-builder-digest",
+      "version": "0.1.0",
+      "domain": "research",
+      "lifecycle": "deprecated",
+      "ownership": "first-party",
+      "audience": "public",
+      "targets": [
+        "agent-skills",
+        "codex",
+        "claude-code",
+        "openclaw"
+      ],
+      "description": "每日 AI 行业信息聚合 digest，覆盖中英文 builder/podcast/blog 来源。多源抓取→去重→中文摘要→发 Telegram 群+存 PKM 笔记。当用户要求每日 AI 新闻聚合、AI builder 动态收集、创建/运行 AI digest 时触发。Don't use for single-article summaries (use web_reader+zk directly) or generic RSS monitoring (use blogwatcher instead) or non-AI content aggregation.",
+      "source": "skills/research/gorin-ai-builder-digest"
+    },
+    {
+      "id": "gorin-autoresearch",
+      "version": "0.1.0",
+      "domain": "research",
+      "lifecycle": "incubating",
+      "ownership": "first-party",
+      "audience": "public",
+      "targets": [
+        "agent-skills",
+        "codex",
+        "claude-code",
+        "openclaw"
+      ],
+      "description": "Autonomously optimize any OpenClaw skill via repeated sub-agent runs, binary eval scoring, prompt mutation, and improvement retention. Based on Karpathy's autoresearch. Don't use for one-off skill edits, creating new skills, or optimizing non-skill configs.",
+      "source": "skills/research/gorin-autoresearch"
+    },
+    {
+      "id": "gorin-bearclaw-native",
+      "version": "2.1.0",
+      "domain": "content",
+      "lifecycle": "incubating",
+      "ownership": "first-party",
+      "audience": "public",
+      "targets": [
+        "agent-skills",
+        "codex",
+        "claude-code",
+        "openclaw"
+      ],
+      "description": "Rock-solid Bear Blog publishing using OpenClaw's native browser (no Chrome extension needed). Do NOT use for reading Bear notes or non-Bear-Blog platforms.",
+      "source": "skills/content/gorin-bearclaw-native"
+    },
+    {
+      "id": "gorin-code-review",
+      "version": "0.1.0",
+      "domain": "engineering",
+      "lifecycle": "incubating",
+      "ownership": "first-party",
+      "audience": "public",
+      "targets": [
+        "agent-skills",
+        "codex",
+        "claude-code",
+        "openclaw"
+      ],
+      "description": "Structured code review of git changes with senior engineer rigor. Checks SOLID violations, security risks, race conditions, error handling, performance, boundary bugs, and removal candidates. Outputs severity-classified findings (P0–P3) with actionable fixes. Don't use it for general coding tasks, non-git file editing, or writing new code from scratch.",
+      "source": "skills/engineering/gorin-code-review"
+    },
+    {
+      "id": "gorin-edu-chapter-illustrator",
+      "version": "0.1.1",
+      "domain": "education",
+      "lifecycle": "incubating",
+      "ownership": "first-party",
+      "audience": "public",
+      "targets": [
+        "agent-skills",
+        "codex",
+        "claude-code",
+        "openclaw"
+      ],
+      "description": "Plan and specify textbook chapter illustrations with source-grounded visual intent, insertion points, prompts, and QA evidence. Adapted for Edu Team chapter workflows; does not directly invoke third-party baoyu skills.",
+      "source": "skills/education/gorin-edu-chapter-illustrator"
+    },
+    {
+      "id": "gorin-edu-diagram-designer",
+      "version": "0.1.0",
+      "domain": "education",
+      "lifecycle": "incubating",
+      "ownership": "first-party",
+      "audience": "public",
+      "targets": [
+        "agent-skills",
+        "codex",
+        "claude-code",
+        "openclaw"
+      ],
+      "description": "Design source-grounded educational diagrams for textbook, course, and training products, including workflow, architecture, state, data-flow, timeline, and structure diagrams.",
+      "source": "skills/education/gorin-edu-diagram-designer"
+    },
+    {
+      "id": "gorin-edu-dispatch-builder",
+      "version": "0.1.0",
+      "domain": "education",
+      "lifecycle": "incubating",
+      "ownership": "first-party",
+      "audience": "public",
+      "targets": [
+        "agent-skills",
+        "codex",
+        "claude-code",
+        "openclaw"
+      ],
+      "description": "Phase 2 派发前：从 Excel 大纲的板块规格行构造完整的 edu-content 子代理派发指令。确保写手收到所有必要信息，不需要自己查找。不用于实际派发执行，只生成指令文本。",
+      "source": "skills/education/gorin-edu-dispatch-builder"
+    },
+    {
+      "id": "gorin-edu-docx-review",
+      "version": "0.1.0-scaffold",
+      "domain": "education",
+      "lifecycle": "incubating",
+      "ownership": "first-party",
+      "audience": "public",
+      "targets": [
+        "agent-skills",
+        "codex",
+        "claude-code",
+        "openclaw"
+      ],
+      "description": "教材出版规范审核，对照出版社要求检查 Word 文档结构、图片、表格、代码、公式、中英文格式与内容合规，输出 Markdown 审核报告。不要用于 docx 生成或排版生产。",
+      "source": "skills/education/gorin-edu-docx-review"
+    },
+    {
+      "id": "gorin-edu-image-optimizer",
+      "version": "0.1.0",
+      "domain": "education",
+      "lifecycle": "incubating",
+      "ownership": "first-party",
+      "audience": "public",
+      "targets": [
+        "agent-skills",
+        "codex",
+        "claude-code",
+        "openclaw"
+      ],
+      "description": "Optimize teaching-product image assets without overwriting source files, while preserving manifest entries, captions, and review evidence.",
+      "source": "skills/education/gorin-edu-image-optimizer"
+    },
+    {
+      "id": "gorin-edu-infographic-designer",
+      "version": "0.1.0",
+      "domain": "education",
+      "lifecycle": "incubating",
+      "ownership": "first-party",
+      "audience": "public",
+      "targets": [
+        "agent-skills",
+        "codex",
+        "claude-code",
+        "openclaw"
+      ],
+      "description": "Design educational infographics for textbook, course, and training products with learning objectives, layout selection, source preservation, and QA evidence.",
+      "source": "skills/education/gorin-edu-infographic-designer"
+    },
+    {
+      "id": "gorin-edu-markdown-polisher",
+      "version": "0.1.0",
+      "domain": "education",
+      "lifecycle": "incubating",
+      "ownership": "first-party",
+      "audience": "public",
+      "targets": [
+        "agent-skills",
+        "codex",
+        "claude-code",
+        "openclaw"
+      ],
+      "description": "Normalize Edu Team Markdown sources for textbook, course, and training products without changing meaning, version truth, or unrelated sections.",
+      "source": "skills/education/gorin-edu-markdown-polisher"
+    },
+    {
+      "id": "gorin-edu-outline-review",
+      "version": "0.1.0",
+      "domain": "education",
+      "lifecycle": "incubating",
+      "ownership": "first-party",
+      "audience": "public",
+      "targets": [
+        "agent-skills",
+        "codex",
+        "claude-code",
+        "openclaw"
+      ],
+      "description": "Phase 2 第一阶段审查：对照 Excel 大纲逐行检查手稿 Markdown 的大纲符合度。输出 pass/fail + 覆盖率 + 缺失项 + 不一致项。不用于教学质量评审。",
+      "source": "skills/education/gorin-edu-outline-review"
+    },
+    {
+      "id": "gorin-edu-pptx",
+      "version": "0.1.0",
+      "domain": "education",
+      "lifecycle": "incubating",
+      "ownership": "first-party",
+      "audience": "public",
+      "targets": [
+        "agent-skills",
+        "codex",
+        "claude-code",
+        "openclaw"
+      ],
+      "description": "教学课件 PPT 生成与编辑的统一入口。从零创建用 PptxGenJS，编辑已有 PPT 用 OfficeCLI， 对外展示类可选用 banana-slides。支持教学主题系统和视觉 QA 流程。\n",
+      "source": "skills/education/gorin-edu-pptx"
+    },
+    {
+      "id": "gorin-edu-xlsx",
+      "version": "0.1.0",
+      "domain": "education",
+      "lifecycle": "incubating",
+      "ownership": "first-party",
+      "audience": "public",
+      "targets": [
+        "agent-skills",
+        "codex",
+        "claude-code",
+        "openclaw"
+      ],
+      "description": "Edu outline Excel operations: identify, read, edit, validate, and extract from textbook/course/training .xlsx outline files. Do not use for general spreadsheet tasks — use xlsx skill instead. Not for Word docs or PowerPoint.",
+      "source": "skills/education/gorin-edu-xlsx"
+    },
+    {
+      "id": "gorin-enhanced-skill-creator",
+      "version": "4.0.0",
+      "domain": "engineering",
+      "lifecycle": "incubating",
+      "ownership": "first-party",
+      "audience": "public",
+      "targets": [
+        "agent-skills",
+        "codex",
+        "claude-code",
+        "openclaw"
+      ],
+      "description": "Create high-quality skills using case-based methodology from domain masters. Research real examples, extract patterns, and generate skills with real content. Use when the user wants to create or rebuild an AgentSkill. Don't use it for simple one-off script edits, trivial aliases, or direct minor SKILL.md tweaks.",
+      "source": "skills/engineering/gorin-enhanced-skill-creator"
+    },
+    {
+      "id": "gorin-harness-audit",
+      "version": "0.1.0",
+      "domain": "agent-ops",
+      "lifecycle": "incubating",
+      "ownership": "first-party",
+      "audience": "public",
+      "targets": [
+        "agent-skills",
+        "codex",
+        "claude-code",
+        "openclaw"
+      ],
+      "description": "Reviewer-type skill for auditing OpenClaw agent harness configuration health. Scans SOUL.md, AGENTS.md, SKILL.md, and cron jobs across all agent workspaces for bloat, stale references, rule duplication, and hard-coded payloads. Outputs severity-classified findings (P0-P3) with trend tracking across audits. Do NOT use for code review (use code-review skill) or host security (use healthcheck).",
+      "source": "skills/agent-ops/gorin-harness-audit"
+    },
+    {
+      "id": "gorin-idea-creator",
+      "version": "0.1.0",
+      "domain": "knowledge",
+      "lifecycle": "incubating",
+      "ownership": "first-party",
+      "audience": "public",
+      "targets": [
+        "agent-skills",
+        "codex",
+        "claude-code",
+        "openclaw"
+      ],
+      "description": "创建和管理想法笔记，自动发现关系。使用 '想法 xxx' 或 '/pkm_idea' 触发。依赖 pkm-core 进行智能分类和关系发现。Do NOT use for general notes or literature excerpts.",
+      "source": "skills/knowledge/gorin-idea-creator"
+    },
+    {
+      "id": "gorin-log-watchdog",
+      "version": "0.1.0",
+      "domain": "agent-ops",
+      "lifecycle": "incubating",
+      "ownership": "first-party",
+      "audience": "public",
+      "targets": [
+        "agent-skills",
+        "codex",
+        "claude-code",
+        "openclaw"
+      ],
+      "description": "Gateway 错误日志增量扫描器。只报真正需要关注的问题，安静时不出声。",
+      "source": "skills/agent-ops/gorin-log-watchdog"
+    },
+    {
+      "id": "gorin-neobear",
+      "version": "0.1.0",
+      "domain": "knowledge",
+      "lifecycle": "incubating",
+      "ownership": "first-party",
+      "audience": "public",
+      "targets": [
+        "agent-skills",
+        "codex",
+        "claude-code",
+        "openclaw"
+      ],
+      "description": "Next-gen Bear notes integration with perfect URL encoding. Create, search, and manage Bear notes. Do NOT use for Bear Blog publishing (use bearclaw-native) or non-Bear apps.",
+      "source": "skills/knowledge/gorin-neobear"
+    },
+    {
+      "id": "gorin-oc-card",
+      "version": "0.1.0",
+      "domain": "agent-ops",
+      "lifecycle": "incubating",
+      "ownership": "first-party",
+      "audience": "public",
+      "targets": [
+        "agent-skills",
+        "codex",
+        "claude-code",
+        "openclaw"
+      ],
+      "description": "OpenClaw-native router for ambiguous card-format requests. Use when the user says '做成图', '做成卡片', '转成视觉卡片', 'long card', or wants help choosing a visual card format from source material. Don't use it for summarization, prose cleanup, publishing, tabular conversion, or when the user already named a specific downstream visual generator.",
+      "source": "skills/agent-ops/gorin-oc-card"
+    },
+    {
+      "id": "gorin-outline",
+      "version": "1.0.0",
+      "domain": "knowledge",
+      "lifecycle": "incubating",
+      "ownership": "first-party",
+      "audience": "public",
+      "targets": [
+        "agent-skills",
+        "codex",
+        "claude-code",
+        "openclaw"
+      ],
+      "description": "Manage Outline knowledge base — create/read/search/update/delete documents and collections. Use when the user asks to create wiki pages, search knowledge base, manage collections, organize team docs, share documents, or batch import content to Outline. Triggers: 'outline', '知识库', 'wiki', 'collection', '创建文档 outline', '搜索知识库'. Do NOT use for editing .docx files (use superdoc skill) or PDFs (use pdf skill).",
+      "source": "skills/knowledge/gorin-outline"
+    },
+    {
+      "id": "gorin-pkm-core",
+      "version": "0.1.0",
+      "domain": "knowledge",
+      "lifecycle": "incubating",
+      "ownership": "first-party",
+      "audience": "public",
+      "targets": [
+        "agent-skills",
+        "codex",
+        "claude-code",
+        "openclaw"
+      ],
+      "description": "PKM 基础层 — vault 路径、frontmatter 规范、命名规则、Obsidian 语法。所有笔记类 skills 的公共依赖。不要直接触发，由 pkm-save-note、idea-creator、zk-para-zettel 等引用。 Do NOT use directly — invoked by other PKM skills only.",
+      "source": "skills/knowledge/gorin-pkm-core"
+    },
+    {
+      "id": "gorin-pkm-para-manager",
+      "version": "0.1.0",
+      "domain": "knowledge",
+      "lifecycle": "incubating",
+      "ownership": "first-party",
+      "audience": "public",
+      "targets": [
+        "agent-skills",
+        "codex",
+        "claude-code",
+        "openclaw"
+      ],
+      "description": "PKM 治理与防退化引擎。提供 pkr(周报)、pko(孤儿检测)、pkh(全库健康评分 v2)。",
+      "source": "skills/knowledge/gorin-pkm-para-manager"
+    },
+    {
+      "id": "gorin-pkm-save-note",
+      "version": "0.1.0",
+      "domain": "knowledge",
+      "lifecycle": "incubating",
+      "ownership": "first-party",
+      "audience": "public",
+      "targets": [
+        "agent-skills",
+        "codex",
+        "claude-code",
+        "openclaw"
+      ],
+      "description": "通用笔记保存接口（非文献、非想法）。支持 insight/decision/summary/meeting/plan/review/moc/fleeting。由 zk-router 路由调用。",
+      "source": "skills/knowledge/gorin-pkm-save-note"
+    },
+    {
+      "id": "gorin-plugin-updater",
+      "version": "1.0.0",
+      "domain": "agent-ops",
+      "lifecycle": "incubating",
+      "ownership": "first-party",
+      "audience": "public",
+      "targets": [
+        "agent-skills",
+        "codex",
+        "claude-code",
+        "openclaw"
+      ],
+      "description": "Safely check for and install OpenClaw plugin updates. Handles config backup/restore, local patch preservation, verification, and gateway restart. Use when an agent or user wants to update an OpenClaw plugin (lossless-claw, nowledge-mem, etc).",
+      "source": "skills/agent-ops/gorin-plugin-updater"
+    },
+    {
+      "id": "gorin-safe-mode",
+      "version": "0.1.0",
+      "domain": "agent-ops",
+      "lifecycle": "incubating",
+      "ownership": "first-party",
+      "audience": "public",
+      "targets": [
+        "agent-skills",
+        "codex",
+        "claude-code",
+        "openclaw"
+      ],
+      "description": "Session-scoped safety modes for destructive or sensitive operations. Activate via /careful, /freeze, or /dry-run keywords. Do NOT use for routine operations or read-only tasks.",
+      "source": "skills/agent-ops/gorin-safe-mode"
+    },
+    {
+      "id": "gorin-superdoc",
+      "version": "1.0.0",
+      "domain": "documents",
+      "lifecycle": "incubating",
+      "ownership": "first-party",
+      "audience": "public",
+      "targets": [
+        "agent-skills",
+        "codex",
+        "claude-code",
+        "openclaw"
+      ],
+      "description": "Edit Word documents (.docx) using SuperDoc MCP tools or CLI. Use when the user asks to find-and-replace, insert, delete, format, add comments, or make tracked changes in a .docx file. Triggers: 'superdoc', 'edit docx', 'word edit', 'tracked changes', 'review document', '批注', '修订', '审阅文档'. Also use when reading/analyzing .docx that needs mutation. Do NOT use for PDFs, creating new .docx from scratch (use docx skill), spreadsheets, or non-.docx files.",
+      "source": "skills/documents/gorin-superdoc"
+    },
+    {
+      "id": "gorin-teambook",
+      "version": "0.1.0",
+      "domain": "agent-ops",
+      "lifecycle": "incubating",
+      "ownership": "first-party",
+      "audience": "public",
+      "targets": [
+        "agent-skills",
+        "codex",
+        "claude-code",
+        "openclaw"
+      ],
+      "description": "Teambook multi-platform content aggregation system. Collects, processes, and delivers curated content feeds from multiple sources to Telegram channels. Do NOT use for general Telegram messaging or non-content-delivery tasks.",
+      "source": "skills/agent-ops/gorin-teambook"
+    },
+    {
+      "id": "gorin-visual-knowledge-explainer",
+      "version": "0.1.0",
+      "domain": "content",
+      "lifecycle": "incubating",
+      "ownership": "first-party",
+      "audience": "public",
+      "targets": [
+        "agent-skills",
+        "codex",
+        "claude-code",
+        "openclaw"
+      ],
+      "description": "把教材、培训资料、读书笔记、文章知识、流程说明、技术内容，转成结构清晰、视觉化、适合讲解、复习、培训、分享的 HTML explainer 页面或 slide-style 页面。Use when user asks for \"visual explainer\", \"知识讲解页\", \"培训资料页\", \"教学 explainer\", or \"讲义页\". NOT for: 单纯摘要、普通 markdown 排版、插画/封面/海报生成、社媒图片卡片、PPTX/DOCX/PDF 操作.",
+      "source": "skills/content/gorin-visual-knowledge-explainer"
+    },
+    {
+      "id": "gorin-web-reader",
+      "version": "0.1.0",
+      "domain": "knowledge",
+      "lifecycle": "incubating",
+      "ownership": "first-party",
+      "audience": "public",
+      "targets": [
+        "agent-skills",
+        "codex",
+        "claude-code",
+        "openclaw"
+      ],
+      "description": "Unified web page reading and interaction system. Three-layer architecture: L1 fast fetch (defuddle/Scrapling/web_fetch) to L2 browser rendering to L3 content cleaning. Supports sites requiring login (Zhihu, X, WeChat). Do NOT use for local file reading or API calls.",
+      "source": "skills/knowledge/gorin-web-reader"
+    },
+    {
+      "id": "gorin-zk-router",
+      "version": "0.1.0",
+      "domain": "knowledge",
+      "lifecycle": "incubating",
+      "ownership": "first-party",
+      "audience": "public",
+      "targets": [
+        "agent-skills",
+        "codex",
+        "claude-code",
+        "openclaw"
+      ],
+      "description": "PKM 统一入口。zk <内容> 智能路由。pks/pkr/pko/pkp/pkh 快捷命令。",
+      "source": "skills/knowledge/gorin-zk-router"
+    },
+    {
+      "id": "matt-writing-great-skills",
+      "version": "1.1.0",
+      "lifecycle": "incubating",
+      "ownership": "external",
+      "audience": "public",
+      "description": "Upstream reference skill for writing and editing predictable agent skills.",
+      "source_type": "external",
+      "source": {
+        "url": "https://github.com/mattpocock/skills/tree/66898f60e8c744e269f8ce06c2b2b99ce7660d5f/skills/productivity/writing-great-skills",
+        "revision": "66898f60e8c744e269f8ce06c2b2b99ce7660d5f",
+        "license": "MIT"
+      }
+    }
+  ]
+}

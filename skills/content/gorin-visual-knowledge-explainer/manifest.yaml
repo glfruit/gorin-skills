@@ -1,0 +1,13 @@
+schema_version: 1
+version: 0.1.0
+domain: content
+lifecycle: incubating
+ownership: first-party
+audience: public
+targets:
+  - agent-skills
+  - codex
+  - claude-code
+  - openclaw
+aliases:
+  - visual-knowledge-explainer

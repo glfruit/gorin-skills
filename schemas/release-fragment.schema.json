@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/glfruit/gorin-skills/schemas/release-fragment.schema.json",
+  "title": "Gorin Skills release fragment",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "summary", "repository", "skills"],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "summary": { "type": "string", "minLength": 1 },
+    "repository": { "enum": ["patch", "minor", "major"] },
+    "skills": {
+      "type": "object",
+      "additionalProperties": { "enum": ["patch", "minor", "major"] }
+    }
+  }
+}

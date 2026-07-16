@@ -1,0 +1,20 @@
+schema_version: 1
+version: 1.0.0
+domain: documents
+lifecycle: incubating
+ownership: first-party
+audience: public
+targets:
+  - agent-skills
+  - codex
+  - claude-code
+  - openclaw
+aliases:
+  - superdoc
+adapters:
+  openclaw:
+    user_invocable: true
+    metadata:
+      requires:
+        bins:
+          - superdoc

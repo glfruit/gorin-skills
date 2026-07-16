@@ -1,0 +1,8 @@
+schema_version: 1
+name: agent-ops
+description: Maintained promoted agent operations skills only.
+select:
+  lifecycles:
+    - promoted
+  domains:
+    - agent-ops

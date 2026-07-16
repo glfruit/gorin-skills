@@ -1,0 +1,17 @@
+schema_version: 1
+name: education-lab
+description: Explicit opt-in for requalified education skills that are not promoted yet.
+skills:
+  - gorin-edu-chapter-illustrator
+  - gorin-edu-diagram-designer
+  - gorin-edu-dispatch-builder
+  - gorin-edu-docx-review
+  - gorin-edu-image-optimizer
+  - gorin-edu-infographic-designer
+  - gorin-edu-markdown-polisher
+  - gorin-edu-outline-review
+  - gorin-edu-pptx
+  - gorin-edu-xlsx
+allow_lifecycles:
+  - incubating
+  - candidate

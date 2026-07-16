@@ -1,0 +1,14 @@
+schema_version: 1
+version: 0.1.0
+domain: education
+lifecycle: incubating
+ownership: first-party
+audience: public
+targets:
+  - agent-skills
+  - codex
+  - claude-code
+  - openclaw
+adapters:
+  openclaw:
+    homepage: https://github.com/glfruit/gorin-skills/tree/main/skills/education/gorin-edu-pptx
