@@ -584,6 +584,29 @@ test("catalog writes a deterministic skill index sorted by skill identifier", ()
   );
 });
 
+test("catalog prefers the released repository version over the package development version", () => {
+  const root = createRepositoryFixture();
+  writeFileSync(
+    join(root, "package.json"),
+    `${JSON.stringify({ name: "fixture", version: "2.0.0-dev" }, null, 2)}\n`,
+  );
+  mkdirSync(join(root, "release"), { recursive: true });
+  writeFileSync(
+    join(root, "release", "repository.yaml"),
+    "schema_version: 1\nversion: 2.0.0\n",
+  );
+  const outputPath = join(root, "catalog", "index.json");
+
+  execFileSync(
+    process.execPath,
+    [cliPath, "catalog", "--root", root, "--output", outputPath],
+    { encoding: "utf8" },
+  );
+
+  const catalog = JSON.parse(readFileSync(outputPath, "utf8"));
+  assert.equal(catalog.catalog_version, "2.0.0");
+});
+
 test("build creates byte-stable packages for all four targets without executing skill code", () => {
   const root = createRepositoryFixture();
   const skillDir = join(root, "skills", "education", "gorin-lesson-review");
@@ -1898,6 +1921,12 @@ test("release dry-run and apply derive every artifact from one multi-skill versi
     readFileSync(join(releaseDir, "baselines", "catalog-2.1.0.json"), "utf8"),
     readFileSync(join(root, "catalog", "index.json"), "utf8"),
   );
+  const documentationIndex = readFileSync(
+    join(root, "docs", "skills", "index.md"),
+    "utf8",
+  );
+  assert.match(documentationIndex, /`gorin-lesson-review`.*0\.2\.0/);
+  assert.match(documentationIndex, /`gorin-article-lab`.*1\.4\.3/);
   assert.match(readFileSync(join(root, "CHANGELOG.md"), "utf8"), /## 2\.1\.0/);
   assert.equal(existsSync(fragmentPath), false);
   assert.equal(

@@ -1,0 +1,4 @@
+schema_version: 1
+summary: Keep generated catalogs and documentation aligned with the released repository version, and skip release previews when no fragments are pending.
+repository: patch
+skills: {}

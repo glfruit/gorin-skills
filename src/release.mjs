@@ -13,6 +13,7 @@ import {
   buildCatalog,
   buildSkillPackages,
   loadExternalSources,
+  renderDocumentationIndex,
   resolveProfile,
   validateRepository,
   validateLifecycleTransitions,
@@ -158,6 +159,7 @@ export async function computeReleasePlan(root) {
     artifacts: [
       "CHANGELOG.md",
       "catalog/index.json",
+      "docs/skills/index.md",
       "release/packages/",
       "release/profiles/",
       "release/baselines/",
@@ -223,6 +225,12 @@ async function stageRelease(root, computed) {
     await mkdir(dirname(catalogPath), { recursive: true });
     const catalogSource = `${JSON.stringify(catalog, null, 2)}\n`;
     await writeFile(catalogPath, catalogSource);
+    const documentationPath = join(stageRoot, "docs", "skills", "index.md");
+    await mkdir(dirname(documentationPath), { recursive: true });
+    await writeFile(
+      documentationPath,
+      renderDocumentationIndex(stagedSkills, context.externalSources),
+    );
     const baselineOutput = join(
       stageRoot,
       "release",
@@ -364,6 +372,10 @@ export async function applyRelease(root, computed) {
       staged: join(stageRoot, "catalog", "index.json"),
     },
     {
+      destination: join(root, "docs", "skills", "index.md"),
+      staged: join(stageRoot, "docs", "skills", "index.md"),
+    },
+    {
       destination: join(
         root,
         "release",
@@ -412,6 +424,7 @@ export async function verifyRelease(root, computed) {
     const requiredArtifacts = [
       join(stageRoot, "CHANGELOG.md"),
       join(stageRoot, "catalog", "index.json"),
+      join(stageRoot, "docs", "skills", "index.md"),
       join(stageRoot, "release", "repository.yaml"),
       join(
         stageRoot,

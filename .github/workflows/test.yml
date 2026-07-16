@@ -44,5 +44,11 @@ jobs:
             while IFS= read -r skill; do
               node scripts/gorin-skills.mjs qualify --skill "$skill" > "/tmp/$skill-qualification.json"
             done
-      - name: Generate and verify the v2 release in an isolated staging area
-        run: node scripts/gorin-skills.mjs release --dry-run > /tmp/gorin-release-plan.json
+      - name: Generate and verify a pending release in an isolated staging area
+        shell: bash
+        run: |
+          if compgen -G 'release/fragments/*.yaml' > /dev/null; then
+            node scripts/gorin-skills.mjs release --dry-run > /tmp/gorin-release-plan.json
+          else
+            echo "No pending release fragments; released baseline was verified above."
+          fi
