@@ -1,5 +1,8 @@
 # Changelog
 
+## 2.0.2
+
+- Upgrade GitHub workflow actions to their current Node 24-compatible majors and apply least-privilege repository permissions.
 ## 2.0.1
 
 - Keep generated catalogs and documentation aligned with the released repository version, and skip release previews when no fragments are pending.
