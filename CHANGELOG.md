@@ -1,5 +1,8 @@
 # Changelog
 
+## 2.0.1
+
+- Keep generated catalogs and documentation aligned with the released repository version, and skip release previews when no fragments are pending.
 ## 2.0.0
 
 - Qualify code review, Markdown polishing, and outline conformance as the first evidence-backed candidate wave.
