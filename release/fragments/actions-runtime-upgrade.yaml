@@ -1,0 +1,4 @@
+schema_version: 1
+summary: Upgrade GitHub workflow actions to their current Node 24-compatible majors and apply least-privilege repository permissions.
+repository: patch
+skills: {}
