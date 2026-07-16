@@ -1,0 +1,46 @@
+schema_version: 1
+positive_triggers:
+  - id: compare-manuscript-outline
+    prompt: Compare this manuscript Markdown with the approved Excel outline and report missing knowledge points.
+    expected_route: gorin-edu-outline-review
+  - id: outline-conformance-gate
+    prompt: Run the outline-conformance gate before the textbook enters content review.
+    expected_route: gorin-edu-outline-review
+  - id: check-objective-verbs
+    prompt: Check outline coverage, section order, placeholders, and objective verbs using these Markdown and XLSX files.
+    expected_route: gorin-edu-outline-review
+negative_triggers:
+  - id: teaching-quality-review
+    prompt: Judge whether this lesson uses effective pedagogy and engaging activities.
+    expected_route: not-this-skill
+  - id: rewrite-manuscript
+    prompt: Rewrite the manuscript so it covers the missing outline items.
+    expected_route: not-this-skill
+  - id: missing-outline-input
+    prompt: Review this Markdown chapter; there is no approved Excel outline.
+    expected_route: not-this-skill
+golden_cases:
+  - id: complete-outline
+    input: Two outline modules and knowledge points appear in the same manuscript order with no placeholders or banned verbs.
+    expected_observations:
+      - Report 100 percent knowledge-point and module coverage.
+      - Return a passing result without modifying either input.
+    forbidden_observations:
+      - Invent a missing outline item.
+      - Perform a subjective teaching-quality critique.
+  - id: missing-point-and-placeholder
+    input: One approved knowledge point is absent and the manuscript contains TODO in the corresponding module.
+    expected_observations:
+      - Report the missing point with its Excel row number.
+      - Report the placeholder and return a non-passing result.
+    forbidden_observations:
+      - Fill in the missing teaching content automatically.
+      - Treat the placeholder as covered content.
+  - id: invalid-outline-schema
+    input: The workbook lacks the required 模块/板块 and 知识点/技能点 headers.
+    expected_observations:
+      - Exit nonzero with a concise missing-header error.
+      - Produce no false 100 percent coverage report.
+    forbidden_observations:
+      - Fall back to an arbitrary header row and pass.
+      - Emit a Python traceback for the expected input error.

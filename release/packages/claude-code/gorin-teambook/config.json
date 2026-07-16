@@ -1,0 +1,71 @@
+{
+  "base_url": "http://localhost:8000",
+  "web_url": "http://localhost:18734",
+  "agents": {
+    "daily-devops": {
+      "api_key": "25cca59e316537501046b7946af491b30c0d06d8da3a9853ac71ea8cbda4ac2e"
+    },
+    "daily-reader": {
+      "api_key": "33e9c680cbbb1dafd0f1f462e3ae426933e4108d809dd2c850d211a8b6ca7281"
+    },
+    "daily-collector": {
+      "api_key": "0e1a5d441ecbc21bd1c3278215cffd8ccfabaf8398cb9552badad45defcc0df8"
+    },
+    "daily-learner": {
+      "api_key": "f509eeaab14277471f902e9ba08a88bcdd873c175cbdf0820b0f1e4e8c5d22bb"
+    },
+    "daily-taskman": {
+      "api_key": "4b7df88a2bfcb1ea74e62aa57bbea69279b67cf133ec18239dc457594ac6bcec"
+    },
+    "daily-tl": {
+      "api_key": "5138fb44c0dde13c940139c731acd35480746e5a032b956f39cabb8a320d8020"
+    },
+    "monitor": {
+      "api_key": "4f471aa04219c6b6173a691f40013bcf6059854558b88d3d562cf45c68c40209"
+    },
+    "content-tl": {
+      "api_key": "774a2f5dff796bb8b95f45df55fd9b9087aec2d19119f6d4fb6c0f3bc0027837",
+      "description": "内容团队负责人"
+    },
+    "content-maya": {
+      "api_key": "1de644803d5e4d94b8278306f98706024e5e8d3cb17400f09da18a5baf43af20",
+      "description": "内容写手"
+    },
+    "content-jarvis": {
+      "api_key": "29ba4be90379f7159b248bfcc66cbc9ad15d81b6eeaaf4b8f869a480a3c8388d",
+      "description": "内容研究员"
+    },
+    "content-alex": {
+      "api_key": "8dd5c41dbd2544f7120d46ca052864e3b8d6ff8366edf4b7b6b9686d79484d8e",
+      "description": "内容审核员"
+    },
+    "content-pepper": {
+      "api_key": "c3be5fa851e02a46bd213f4b3e9af7241c17bfeb5d3d8babc685c02ba0c121f3",
+      "description": "选题策展人"
+    },
+    "edu-tl": {
+      "api_key": "046492fca5c8163913b25dd45f752d574edf7d664d8911c7f51c83dee9ea005e",
+      "description": "教育团队负责人"
+    },
+    "dev-tl": {
+      "api_key": "7b36f3002f92bcd5801948562a79fa7b33655db102e16e4ce9a714a7b362a890",
+      "description": "开发团队负责人"
+    },
+    "dev-shuri": {
+      "api_key": "42c5d18f8e07c770d7332bda534c13f167d9396d73d3201b966a1b65ea3b3200",
+      "description": "全栈开发者"
+    },
+    "dev-fury": {
+      "api_key": "8ac58b554b493cc81d46ab5001e7027110b6eef69a4649943d558f87c78a8679",
+      "description": "知识管理管理器"
+    },
+    "research-tl": {
+      "api_key": "2d6c702f9d66d828bc8307e32a45dc4d6263c8362cc44d9e69c61ff7bf5cf668",
+      "description": "研究团队负责人"
+    },
+    "research-scout": {
+      "api_key": "dca34f422fda765cb4e93428498739d5b1e84b414fe7148e573fa73b2148d2d6",
+      "description": "文献扫描员"
+    }
+  }
+}

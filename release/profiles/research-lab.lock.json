@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "profile": "research-lab",
+  "skills": [
+    {
+      "id": "gorin-ai-builder-digest",
+      "version": "0.2.0",
+      "lifecycle": "deprecated",
+      "source": "skills/research/gorin-ai-builder-digest"
+    },
+    {
+      "id": "gorin-autoresearch",
+      "version": "0.2.0",
+      "lifecycle": "incubating",
+      "source": "skills/research/gorin-autoresearch"
+    }
+  ],
+  "repository_version": "2.0.0"
+}

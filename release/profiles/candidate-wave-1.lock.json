@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "profile": "candidate-wave-1",
+  "skills": [
+    {
+      "id": "gorin-code-review",
+      "version": "0.2.0",
+      "lifecycle": "candidate",
+      "source": "skills/engineering/gorin-code-review"
+    },
+    {
+      "id": "gorin-edu-markdown-polisher",
+      "version": "0.2.0",
+      "lifecycle": "candidate",
+      "source": "skills/education/gorin-edu-markdown-polisher"
+    },
+    {
+      "id": "gorin-edu-outline-review",
+      "version": "0.2.0",
+      "lifecycle": "candidate",
+      "source": "skills/education/gorin-edu-outline-review"
+    }
+  ],
+  "repository_version": "2.0.0"
+}

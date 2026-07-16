@@ -1,0 +1,35 @@
+schema_version: 1
+spec: passed
+schema: passed
+provenance_and_license: passed
+positive_triggers:
+  - review-current-diff
+  - review-staged-changes
+  - review-branch-range
+negative_triggers:
+  - implement-feature
+  - architecture-discussion
+  - review-document
+golden_cases:
+  - staged-only-change
+  - untracked-security-file
+  - clean-diff
+tests:
+  - command: node scripts/gorin-skills.mjs qualify --skill gorin-code-review
+    result: passed
+  - command: npm test
+    result: passed
+target_smoke:
+  agent-skills:
+    build: passed
+    install: passed
+  codex:
+    build: passed
+    install: passed
+  claude-code:
+    build: passed
+    install: passed
+  openclaw:
+    build: passed
+    install: passed
+runtime_output: clean

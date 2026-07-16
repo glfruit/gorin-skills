@@ -1,0 +1,290 @@
+{
+  "schema_version": 1,
+  "profile": "legacy-v1",
+  "end_of_support": "before-repository-major-3",
+  "compatibility_aliases": [
+    {
+      "alias": "agent-team-composer",
+      "canonical": "gorin-agent-team-composer"
+    },
+    {
+      "alias": "ai-builder-digest",
+      "canonical": "gorin-ai-builder-digest"
+    },
+    {
+      "alias": "autoresearch",
+      "canonical": "gorin-autoresearch"
+    },
+    {
+      "alias": "bearclaw-native",
+      "canonical": "gorin-bearclaw-native"
+    },
+    {
+      "alias": "code-review",
+      "canonical": "gorin-code-review"
+    },
+    {
+      "alias": "enhanced-skill-creator",
+      "canonical": "gorin-enhanced-skill-creator"
+    },
+    {
+      "alias": "harness-audit",
+      "canonical": "gorin-harness-audit"
+    },
+    {
+      "alias": "idea-creator",
+      "canonical": "gorin-idea-creator"
+    },
+    {
+      "alias": "log-watchdog",
+      "canonical": "gorin-log-watchdog"
+    },
+    {
+      "alias": "neobear",
+      "canonical": "gorin-neobear"
+    },
+    {
+      "alias": "oc-card",
+      "canonical": "gorin-oc-card"
+    },
+    {
+      "alias": "outline",
+      "canonical": "gorin-outline"
+    },
+    {
+      "alias": "pkm-core",
+      "canonical": "gorin-pkm-core"
+    },
+    {
+      "alias": "pkm-para-manager",
+      "canonical": "gorin-pkm-para-manager"
+    },
+    {
+      "alias": "pkm-save-note",
+      "canonical": "gorin-pkm-save-note"
+    },
+    {
+      "alias": "plugin-updater",
+      "canonical": "gorin-plugin-updater"
+    },
+    {
+      "alias": "safe-mode",
+      "canonical": "gorin-safe-mode"
+    },
+    {
+      "alias": "superdoc",
+      "canonical": "gorin-superdoc"
+    },
+    {
+      "alias": "teambook",
+      "canonical": "gorin-teambook"
+    },
+    {
+      "alias": "visual-knowledge-explainer",
+      "canonical": "gorin-visual-knowledge-explainer"
+    },
+    {
+      "alias": "web-reader",
+      "canonical": "gorin-web-reader"
+    },
+    {
+      "alias": "zk-router",
+      "canonical": "gorin-zk-router"
+    }
+  ],
+  "skills": [
+    {
+      "id": "gorin-agent-team-composer",
+      "version": "0.2.0",
+      "lifecycle": "incubating",
+      "source": "skills/agent-ops/gorin-agent-team-composer"
+    },
+    {
+      "id": "gorin-ai-builder-digest",
+      "version": "0.2.0",
+      "lifecycle": "deprecated",
+      "source": "skills/research/gorin-ai-builder-digest"
+    },
+    {
+      "id": "gorin-autoresearch",
+      "version": "0.2.0",
+      "lifecycle": "incubating",
+      "source": "skills/research/gorin-autoresearch"
+    },
+    {
+      "id": "gorin-bearclaw-native",
+      "version": "2.2.0",
+      "lifecycle": "incubating",
+      "source": "skills/content/gorin-bearclaw-native"
+    },
+    {
+      "id": "gorin-code-review",
+      "version": "0.2.0",
+      "lifecycle": "candidate",
+      "source": "skills/engineering/gorin-code-review"
+    },
+    {
+      "id": "gorin-edu-chapter-illustrator",
+      "version": "0.2.0",
+      "lifecycle": "incubating",
+      "source": "skills/education/gorin-edu-chapter-illustrator"
+    },
+    {
+      "id": "gorin-edu-diagram-designer",
+      "version": "0.2.0",
+      "lifecycle": "incubating",
+      "source": "skills/education/gorin-edu-diagram-designer"
+    },
+    {
+      "id": "gorin-edu-dispatch-builder",
+      "version": "0.2.0",
+      "lifecycle": "incubating",
+      "source": "skills/education/gorin-edu-dispatch-builder"
+    },
+    {
+      "id": "gorin-edu-docx-review",
+      "version": "0.2.0",
+      "lifecycle": "incubating",
+      "source": "skills/education/gorin-edu-docx-review"
+    },
+    {
+      "id": "gorin-edu-image-optimizer",
+      "version": "0.2.0",
+      "lifecycle": "incubating",
+      "source": "skills/education/gorin-edu-image-optimizer"
+    },
+    {
+      "id": "gorin-edu-infographic-designer",
+      "version": "0.2.0",
+      "lifecycle": "incubating",
+      "source": "skills/education/gorin-edu-infographic-designer"
+    },
+    {
+      "id": "gorin-edu-markdown-polisher",
+      "version": "0.2.0",
+      "lifecycle": "candidate",
+      "source": "skills/education/gorin-edu-markdown-polisher"
+    },
+    {
+      "id": "gorin-edu-outline-review",
+      "version": "0.2.0",
+      "lifecycle": "candidate",
+      "source": "skills/education/gorin-edu-outline-review"
+    },
+    {
+      "id": "gorin-edu-pptx",
+      "version": "0.2.0",
+      "lifecycle": "incubating",
+      "source": "skills/education/gorin-edu-pptx"
+    },
+    {
+      "id": "gorin-edu-xlsx",
+      "version": "0.2.0",
+      "lifecycle": "incubating",
+      "source": "skills/education/gorin-edu-xlsx"
+    },
+    {
+      "id": "gorin-enhanced-skill-creator",
+      "version": "4.1.0",
+      "lifecycle": "incubating",
+      "source": "skills/engineering/gorin-enhanced-skill-creator"
+    },
+    {
+      "id": "gorin-harness-audit",
+      "version": "0.2.0",
+      "lifecycle": "incubating",
+      "source": "skills/agent-ops/gorin-harness-audit"
+    },
+    {
+      "id": "gorin-idea-creator",
+      "version": "0.2.0",
+      "lifecycle": "incubating",
+      "source": "skills/knowledge/gorin-idea-creator"
+    },
+    {
+      "id": "gorin-log-watchdog",
+      "version": "0.2.0",
+      "lifecycle": "incubating",
+      "source": "skills/agent-ops/gorin-log-watchdog"
+    },
+    {
+      "id": "gorin-neobear",
+      "version": "0.2.0",
+      "lifecycle": "incubating",
+      "source": "skills/knowledge/gorin-neobear"
+    },
+    {
+      "id": "gorin-oc-card",
+      "version": "0.2.0",
+      "lifecycle": "incubating",
+      "source": "skills/agent-ops/gorin-oc-card"
+    },
+    {
+      "id": "gorin-outline",
+      "version": "1.1.0",
+      "lifecycle": "incubating",
+      "source": "skills/knowledge/gorin-outline"
+    },
+    {
+      "id": "gorin-pkm-core",
+      "version": "0.2.0",
+      "lifecycle": "incubating",
+      "source": "skills/knowledge/gorin-pkm-core"
+    },
+    {
+      "id": "gorin-pkm-para-manager",
+      "version": "0.2.0",
+      "lifecycle": "incubating",
+      "source": "skills/knowledge/gorin-pkm-para-manager"
+    },
+    {
+      "id": "gorin-pkm-save-note",
+      "version": "0.2.0",
+      "lifecycle": "incubating",
+      "source": "skills/knowledge/gorin-pkm-save-note"
+    },
+    {
+      "id": "gorin-plugin-updater",
+      "version": "1.1.0",
+      "lifecycle": "incubating",
+      "source": "skills/agent-ops/gorin-plugin-updater"
+    },
+    {
+      "id": "gorin-safe-mode",
+      "version": "0.2.0",
+      "lifecycle": "incubating",
+      "source": "skills/agent-ops/gorin-safe-mode"
+    },
+    {
+      "id": "gorin-superdoc",
+      "version": "1.1.0",
+      "lifecycle": "incubating",
+      "source": "skills/documents/gorin-superdoc"
+    },
+    {
+      "id": "gorin-teambook",
+      "version": "0.2.0",
+      "lifecycle": "incubating",
+      "source": "skills/agent-ops/gorin-teambook"
+    },
+    {
+      "id": "gorin-visual-knowledge-explainer",
+      "version": "0.2.0",
+      "lifecycle": "incubating",
+      "source": "skills/content/gorin-visual-knowledge-explainer"
+    },
+    {
+      "id": "gorin-web-reader",
+      "version": "0.2.0",
+      "lifecycle": "incubating",
+      "source": "skills/knowledge/gorin-web-reader"
+    },
+    {
+      "id": "gorin-zk-router",
+      "version": "0.2.0",
+      "lifecycle": "incubating",
+      "source": "skills/knowledge/gorin-zk-router"
+    }
+  ],
+  "repository_version": "2.0.0"
+}

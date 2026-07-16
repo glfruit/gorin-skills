@@ -1,0 +1,44 @@
+# OS
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# Editor
+.vscode/
+.idea/
+*.sublime-*
+
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+yarn.lock
+
+# Debug files
+/tmp/
+*.log
+bearclaw-*.png
+debug-*.png
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Build
+dist/
+build/
+*.zip
+!bearclaw-skill.zip
+
+# Test
+coverage/
+.nyc_output/
+
+# Personal
+notes.md
+TODO.md

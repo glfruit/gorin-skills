@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "profile": "agent-ops-lab",
+  "skills": [
+    {
+      "id": "gorin-agent-team-composer",
+      "version": "0.2.0",
+      "lifecycle": "incubating",
+      "source": "skills/agent-ops/gorin-agent-team-composer"
+    },
+    {
+      "id": "gorin-harness-audit",
+      "version": "0.2.0",
+      "lifecycle": "incubating",
+      "source": "skills/agent-ops/gorin-harness-audit"
+    },
+    {
+      "id": "gorin-log-watchdog",
+      "version": "0.2.0",
+      "lifecycle": "incubating",
+      "source": "skills/agent-ops/gorin-log-watchdog"
+    },
+    {
+      "id": "gorin-oc-card",
+      "version": "0.2.0",
+      "lifecycle": "incubating",
+      "source": "skills/agent-ops/gorin-oc-card"
+    },
+    {
+      "id": "gorin-plugin-updater",
+      "version": "1.1.0",
+      "lifecycle": "incubating",
+      "source": "skills/agent-ops/gorin-plugin-updater"
+    },
+    {
+      "id": "gorin-safe-mode",
+      "version": "0.2.0",
+      "lifecycle": "incubating",
+      "source": "skills/agent-ops/gorin-safe-mode"
+    },
+    {
+      "id": "gorin-teambook",
+      "version": "0.2.0",
+      "lifecycle": "incubating",
+      "source": "skills/agent-ops/gorin-teambook"
+    }
+  ],
+  "repository_version": "2.0.0"
+}

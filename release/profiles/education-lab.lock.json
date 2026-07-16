@@ -1,0 +1,67 @@
+{
+  "schema_version": 1,
+  "profile": "education-lab",
+  "skills": [
+    {
+      "id": "gorin-edu-chapter-illustrator",
+      "version": "0.2.0",
+      "lifecycle": "incubating",
+      "source": "skills/education/gorin-edu-chapter-illustrator"
+    },
+    {
+      "id": "gorin-edu-diagram-designer",
+      "version": "0.2.0",
+      "lifecycle": "incubating",
+      "source": "skills/education/gorin-edu-diagram-designer"
+    },
+    {
+      "id": "gorin-edu-dispatch-builder",
+      "version": "0.2.0",
+      "lifecycle": "incubating",
+      "source": "skills/education/gorin-edu-dispatch-builder"
+    },
+    {
+      "id": "gorin-edu-docx-review",
+      "version": "0.2.0",
+      "lifecycle": "incubating",
+      "source": "skills/education/gorin-edu-docx-review"
+    },
+    {
+      "id": "gorin-edu-image-optimizer",
+      "version": "0.2.0",
+      "lifecycle": "incubating",
+      "source": "skills/education/gorin-edu-image-optimizer"
+    },
+    {
+      "id": "gorin-edu-infographic-designer",
+      "version": "0.2.0",
+      "lifecycle": "incubating",
+      "source": "skills/education/gorin-edu-infographic-designer"
+    },
+    {
+      "id": "gorin-edu-markdown-polisher",
+      "version": "0.2.0",
+      "lifecycle": "candidate",
+      "source": "skills/education/gorin-edu-markdown-polisher"
+    },
+    {
+      "id": "gorin-edu-outline-review",
+      "version": "0.2.0",
+      "lifecycle": "candidate",
+      "source": "skills/education/gorin-edu-outline-review"
+    },
+    {
+      "id": "gorin-edu-pptx",
+      "version": "0.2.0",
+      "lifecycle": "incubating",
+      "source": "skills/education/gorin-edu-pptx"
+    },
+    {
+      "id": "gorin-edu-xlsx",
+      "version": "0.2.0",
+      "lifecycle": "incubating",
+      "source": "skills/education/gorin-edu-xlsx"
+    }
+  ],
+  "repository_version": "2.0.0"
+}

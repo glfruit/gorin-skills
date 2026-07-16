@@ -1,0 +1,45 @@
+# Agent Team Config - 招投标团队
+
+team:
+  name: "招投标团队"
+  slug: "招投标团队"
+  role: "招投标团队协调团队"
+  objective: "招投标全流程支持"
+  workflow_mode: "并行"
+  platforms: "telegram, discord"
+
+agents:
+  - name: "申报主管"
+    slug: "申报主管"
+    role: "Team Lead"
+    domain: "coordination"
+    responsibility: "统筹协调"
+    config:
+      model: "openai-codex/gpt-5.3-codex-spark"
+      max_retries: 3
+  - name: "信息雷达"
+    slug: "信息雷达"
+    role: "Research Scout"
+    domain: "research"
+    responsibility: "信息搜集"
+    config:
+      model: "openai-codex/gpt-5.3-codex-spark"
+      max_retries: 3
+  - name: "材料撰写师"
+    slug: "材料撰写师"
+    role: "Writer"
+    domain: "writing"
+    responsibility: "材料写作"
+    config:
+      model: "openai-codex/gpt-5.3-codex-spark"
+      max_retries: 3
+
+channels:
+  alert: "Telegram"
+  report: "Discord"
+  default: "Discord"
+
+limits:
+  max_concurrent: 3
+  timeout_per_agent: 300
+  timeout_total: 600

@@ -1,0 +1,22 @@
+[
+  {"input":"https://mp.weixin.qq.com/s/abc 教育数字化趋势", "source_context":"user", "expect_type":"literature", "expect_subtype":"articles"},
+  {"input":"https://arxiv.org/abs/2501.00001", "source_context":"user", "expect_type":"literature", "expect_subtype":"papers"},
+  {"input":"https://github.com/openclaw/openclaw", "source_context":"user", "expect_type":"literature", "expect_subtype":"code"},
+  {"input":"今天开会讨论下周排期", "source_context":"user", "expect_type":"meeting", "expect_subtype":""},
+  {"input":"一个想法：把router迁移到python", "source_context":"user", "expect_type":"idea", "expect_subtype":""},
+  {"input":"本周计划：完成Phase3并回归测试", "source_context":"user", "expect_type":"plan", "expect_subtype":""},
+  {"input":"月回顾：本月交付与风险", "source_context":"user", "expect_type":"review", "expect_subtype":""},
+  {"input":"我们决定采用索引优先策略", "source_context":"user", "expect_type":"decision", "expect_subtype":""},
+  {"input":"总结一下今天推进情况", "source_context":"user", "expect_type":"review", "expect_subtype":""},
+  {"input":"这个问题怎么处理？", "source_context":"user", "expect_type":"question", "expect_subtype":""},
+  {"input":"读书笔记：《认知觉醒》", "source_context":"user", "expect_type":"literature", "expect_subtype":"books"},
+  {"input":"短句", "source_context":"user", "expect_type":"fleeting", "expect_subtype":""},
+  {"input":"1. 任务A\n2. 任务B\n3. 任务C", "source_context":"user", "expect_type":"fleeting", "expect_subtype":""},
+  {"input":"这是一个很长的内容" , "source_context":"user", "expect_type":"fleeting", "expect_subtype":""},
+  {"input":"https://example.com 一段普通网页", "source_context":"daily-collector", "expect_type":"literature", "expect_subtype":"articles"},
+  {"input":"今天我们会议纪要：讨论课程设计", "source_context":"edu-tl", "expect_type":"meeting", "expect_subtype":""},
+  {"input":"TODO：补充原子卡片过滤规则", "source_context":"user", "expect_type":"plan", "expect_subtype":""},
+  {"input":"review 本周完成情况", "source_context":"user", "expect_type":"review", "expect_subtype":""},
+  {"input":"如何提升去重性能", "source_context":"user", "expect_type":"question", "expect_subtype":""},
+  {"input":"https://zhihu.com/question/1 读后感", "source_context":"user", "expect_type":"literature", "expect_subtype":"articles"}
+]

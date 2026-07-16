@@ -1,0 +1,39 @@
+schema_version: 1
+spec: passed
+schema: passed
+provenance_and_license: passed
+positive_triggers:
+  - download-translate-burn-video
+  - download-video-only-with-browser-auth
+  - review-automatic-captions
+negative_triggers:
+  - bypass-protected-video
+  - summarize-video-transcript
+  - translate-standalone-document
+golden_cases:
+  - manual-source-full-delivery
+  - automatic-source-reviewed-derivative
+  - no-suitable-subtitle-video-delivery
+  - authenticated-download-cookie-safety
+tests:
+  - command: PYTHONDONTWRITEBYTECODE=1 python3 skills/content/gorin-jzsub/scripts/fetch_video.py --self-test
+    result: passed
+  - command: PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s skills/content/gorin-jzsub/tests -p test_*.py
+    result: passed
+  - command: npm test
+    result: passed
+  - command: node scripts/gorin-skills.mjs qualify --skill gorin-jzsub
+    result: passed
+  - command: Real MLX acceptance through mlx_whisper_adapter.py transcribe on 605-second two-chunk and 4852.581-second nine-chunk authorized media samples
+    result: passed
+target_smoke:
+  agent-skills:
+    build: passed
+    install: passed
+  codex:
+    build: passed
+    install: passed
+  claude-code:
+    build: passed
+    install: passed
+runtime_output: clean

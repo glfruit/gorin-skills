@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{title}</title>
+  <style>
+    /* Slide Deck Template - Modern Theme */
+    :root {
+      --theme-primary: #0ea5e9;
+      --theme-secondary: #38bdf8;
+      --theme-text: #0f172a;
+      --theme-background: #0f172a;
+      --theme-slide-bg: #f8fafc;
+      --theme-card-bg: #ffffff;
+      --theme-card-border: #e2e8f0;
+      --theme-heading-text: #0f172a;
+      --font-size-base: 16px;
+      --font-size-large: 24px;
+      --border-radius: 12px;
+      --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+    
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background-color: var(--theme-background);
+      line-height: 1.6;
+      padding: 40px 20px;
+    }
+    
+    /* Slide Deck Container */
+    .slide-deck {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    
+    /* Slide */
+    .slide {
+      background: var(--theme-slide-bg);
+      border-radius: var(--border-radius);
+      padding: 4rem 3rem;
+      margin-bottom: 3rem;
+      box-shadow: var(--shadow);
+      min-height: 600px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+    
+    .slide h1 {
+      font-size: 3rem;
+      font-weight: 800;
+      color: var(--theme-heading-text);
+      margin-bottom: 1.5rem;
+      line-height: 1.2;
+    }
+    
+    .slide h2 {
+      font-size: 2.25rem;
+      font-weight: 700;
+      color: var(--theme-heading-text);
+      margin-bottom: 1.5rem;
+    }
+    
+    .slide h3 {
+      font-size: 1.75rem;
+      font-weight: 600;
+      color: var(--theme-heading-text);
+      margin-bottom: 1rem;
+    }
+    
+    .slide p {
+      font-size: 1.35rem;
+      color: #475569;
+      margin-bottom: 1.25rem;
+      line-height: 1.6;
+    }
+    
+    .slide ul {
+      list-style: none;
+      padding-left: 0;
+    }
+    
+    .slide li {
+      padding: 0.75rem 0;
+      padding-left: 2rem;
+      position: relative;
+      font-size: 1.25rem;
+    }
+    
+    .slide li::before {
+      content: '•';
+      color: var(--theme-primary);
+      font-size: 2rem;
+      position: absolute;
+      left: 0;
+      top: -0.5rem;
+    }
+    
+    .slide code {
+      background: #1e293b;
+      color: #e2e8f0;
+      padding: 0.25rem 0.75rem;
+      border-radius: 6px;
+      font-family: 'SFMono-Regular', Consolas, monospace;
+      font-size: 0.9em;
+    }
+    
+    .slide pre {
+      background: #1e293b;
+      color: #e2e8f0;
+      padding: 1.5rem;
+      border-radius: 8px;
+      font-family: 'SFMono-Regular', Consolas, monospace;
+      font-size: 0.9rem;
+      overflow-x: auto;
+      margin: 1.5rem 0;
+    }
+    
+    .slide .highlight {
+      color: var(--theme-primary);
+      font-weight: 600;
+    }
+    
+    /* Title Slide */
+    .slide.title-slide {
+      text-align: center;
+    }
+    
+    .slide.title-slide h1 {
+      font-size: 4rem;
+    }
+    
+    .slide.title-slide .subtitle {
+      font-size: 1.75rem;
+      color: #64748b;
+      margin-top: 2rem;
+    }
+    
+    .slide.title-slide .meta {
+      margin-top: 3rem;
+      color: #94a3b8;
+    }
+    
+    /* Content Slide */
+    .slide.content-slide {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 3rem;
+      align-items: center;
+    }
+    
+    .slide.content-slide .visual {
+      background: #f1f5f9;
+      border-radius: var(--border-radius);
+      padding: 2rem;
+      min-height: 300px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .slide.content-slide .visual .mermaid {
+      width: 100%;
+    }
+    
+    /* Responsive */
+    @media (max-width: 968px) {
+      .slide.content-slide {
+        grid-template-columns: 1fr;
+      }
+      .slide.title-slide h1 { font-size: 2.5rem; }
+    }
+  </style>
+</head>
+<body>
+  <article class="slide-deck modern-theme">
+    <!-- Title Slide -->
+    <section class="slide title-slide">
+      <h1>{title}</h1>
+      <p class="subtitle">{subtitle}</p>
+      {metadata_html}
+    </section>
+
+    <!-- Content Slides -->
+    {slides_html}
+  </article>
+</body>
+</html>

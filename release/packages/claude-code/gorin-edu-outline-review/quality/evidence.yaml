@@ -1,0 +1,37 @@
+schema_version: 1
+spec: passed
+schema: passed
+provenance_and_license: passed
+positive_triggers:
+  - compare-manuscript-outline
+  - outline-conformance-gate
+  - check-objective-verbs
+negative_triggers:
+  - teaching-quality-review
+  - rewrite-manuscript
+  - missing-outline-input
+golden_cases:
+  - complete-outline
+  - missing-point-and-placeholder
+  - invalid-outline-schema
+tests:
+  - command: node scripts/gorin-skills.mjs qualify --skill gorin-edu-outline-review
+    result: passed
+  - command: PYTHONDONTWRITEBYTECODE=1 uv run --isolated --no-project --with openpyxl==3.1.5 python -m unittest discover -s skills/education/gorin-edu-outline-review/tests -v
+    result: passed
+  - command: npm test
+    result: passed
+target_smoke:
+  agent-skills:
+    build: passed
+    install: passed
+  codex:
+    build: passed
+    install: passed
+  claude-code:
+    build: passed
+    install: passed
+  openclaw:
+    build: passed
+    install: passed
+runtime_output: clean

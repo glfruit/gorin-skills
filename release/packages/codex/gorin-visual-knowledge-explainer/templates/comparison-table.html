@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{title}</title>
+  <style>
+    /* Comparison Table Template - Default Theme */
+    :root {
+      --theme-primary: #2563eb;
+      --theme-text: #1e293b;
+      --theme-background: #f8fafc;
+      --theme-card-bg: #ffffff;
+      --theme-card-border: #e2e8f0;
+      --theme-heading-text: #0f172a;
+      --font-size-base: 16px;
+      --border-radius: 8px;
+      --shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+    
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background-color: var(--theme-background);
+      color: var(--theme-text);
+      line-height: 1.6;
+      padding: 20px;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    
+    /* Hero Section */
+    .hero-section {
+      text-align: center;
+      padding: 2.5rem 1.5rem;
+      margin-bottom: 2rem;
+      background: var(--theme-card-bg);
+      border-radius: var(--border-radius);
+      box-shadow: var(--shadow);
+    }
+    
+    .hero-section h1 {
+      font-size: 2.5rem;
+      font-weight: 800;
+      color: var(--theme-heading-text);
+      margin-bottom: 0.75rem;
+    }
+    
+    .hero-section .subtitle {
+      font-size: 1.25rem;
+      color: var(--theme-text);
+      opacity: 0.75;
+    }
+    
+    /* Comparison Table */
+    .comparison-table {
+      background: var(--theme-card-bg);
+      border: 1px solid var(--theme-card-border);
+      border-radius: var(--border-radius);
+      padding: 2rem;
+      margin-bottom: 2rem;
+      box-shadow: var(--shadow);
+      overflow-x: auto;
+    }
+    
+    .comparison-table h2 {
+      font-size: 1.5rem;
+      color: var(--theme-heading-text);
+      margin-bottom: 1.5rem;
+      text-align: center;
+    }
+    
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1rem;
+    }
+    
+    thead {
+      background: var(--theme-primary);
+      color: white;
+    }
+    
+    th, td {
+      padding: 1rem;
+      border: 1px solid var(--theme-card-border);
+      text-align: left;
+    }
+    
+    th {
+      font-weight: 600;
+    }
+    
+    tr:nth-child(even) {
+      background: #f8fafc;
+    }
+    
+    .better {
+      color: #16a34a;
+      font-weight: 600;
+    }
+    
+    .worse {
+      color: #dc2626;
+      font-weight: 600;
+    }
+    
+    /* Summary Section */
+    .summary {
+      background: #ecfdf5;
+      border: 1px solid #d1fae5;
+      border-radius: var(--border-radius);
+      padding: 2rem;
+    }
+    
+    .summary h2 {
+      font-size: 1.5rem;
+      color: #065f46;
+      margin-bottom: 1.25rem;
+    }
+    
+    .summary ul {
+      list-style: none;
+      padding-left: 0;
+    }
+    
+    .summary li {
+      padding: 0.75rem 0;
+      padding-left: 2rem;
+      position: relative;
+    }
+    
+    .summary li::before {
+      content: '✅';
+      position: absolute;
+      left: 0;
+    }
+    
+    /* Key Takeaways */
+    .key-takeaways {
+      background: #fff3cd;
+      border: 1px solid #ffe69c;
+      border-radius: var(--border-radius);
+      padding: 2rem;
+      margin-top: 2rem;
+    }
+    
+    .key-takeaways h2 {
+      font-size: 1.5rem;
+      color: #854d0e;
+      margin-bottom: 1.25rem;
+    }
+    
+    .key-takeaways ul {
+      list-style: none;
+      padding-left: 0;
+    }
+    
+    .key-takeaways li {
+      padding: 0.75rem 0;
+      padding-left: 2rem;
+      position: relative;
+    }
+    
+    .key-takeaways li::before {
+      content: '💡';
+      position: absolute;
+      left: 0;
+    }
+    
+    /* Responsive */
+    @media (max-width: 768px) {
+      .hero-section h1 { font-size: 1.8rem; }
+      th, td { padding: 0.75rem; font-size: 0.9rem; }
+    }
+  </style>
+</head>
+<body>
+  <article class="comparison-page default-theme">
+    <!-- Hero Section -->
+    <header class="hero-section">
+      <h1>{title}</h1>
+      <p class="subtitle">{subtitle}</p>
+    </header>
+
+    <!-- Comparison Table -->
+    <section class="comparison-table">
+      <h2>Comparison</h2>
+      <table>
+        <thead>
+          {table_headers_html}
+        </thead>
+        <tbody>
+          {table_rows_html}
+        </tbody>
+      </table>
+    </section>
+
+    <!-- Summary -->
+    {summary_html}
+
+    <!-- Key Takeaways -->
+    {key_takeaways_html}
+  </article>
+</body>
+</html>

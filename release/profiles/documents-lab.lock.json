@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "profile": "documents-lab",
+  "skills": [
+    {
+      "id": "gorin-superdoc",
+      "version": "1.1.0",
+      "lifecycle": "incubating",
+      "source": "skills/documents/gorin-superdoc"
+    }
+  ],
+  "repository_version": "2.0.0"
+}

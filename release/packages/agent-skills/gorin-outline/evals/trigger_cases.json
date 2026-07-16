@@ -1,0 +1,12 @@
+{
+  "cases": [
+    {"prompt": "在outline知识库里创建一个新文档", "should_trigger": true, "note": "direct trigger"},
+    {"prompt": "搜索知识库里的教学大纲", "should_trigger": true, "note": "knowledge base search"},
+    {"prompt": "把这篇内容导入outline", "should_trigger": true, "note": "import to outline"},
+    {"prompt": "outline里有哪些文档", "should_trigger": true, "note": "list docs"},
+    {"prompt": "创建新的wiki页面", "should_trigger": true, "note": "wiki trigger"},
+    {"prompt": "编辑这个docx文件", "should_trigger": false, "note": "docx editing → superdoc"},
+    {"prompt": "把这个PDF转成markdown", "should_trigger": false, "note": "PDF → pdf skill"},
+    {"prompt": "在obsidian笔记里添加链接", "should_trigger": false, "note": "obsidian → pkm"}
+  ]
+}

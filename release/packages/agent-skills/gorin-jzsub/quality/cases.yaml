@@ -1,0 +1,54 @@
+schema_version: 1
+positive_triggers:
+  - id: download-translate-burn-video
+    prompt: Download this authorized YouTube video at maximum quality, translate its English subtitles to Simplified Chinese, and deliver a hard-burned bilingual MP4.
+    expected_route: gorin-jzsub
+  - id: download-video-only-with-browser-auth
+    prompt: Download this Bilibili member video and cover at the best available quality using my local Chrome login; I only need the video artifacts.
+    expected_route: gorin-jzsub
+  - id: review-automatic-captions
+    prompt: Run JZSub on this YouTube link and use a second ASR hypothesis to review its automatic source captions before translating them.
+    expected_route: gorin-jzsub
+negative_triggers:
+  - id: bypass-protected-video
+    prompt: Bypass this streaming site's DRM and paywall so I can download the protected movie.
+    expected_route: not-this-skill
+  - id: summarize-video-transcript
+    prompt: Read this YouTube transcript and give me a concise summary; do not download or edit the video.
+    expected_route: not-this-skill
+  - id: translate-standalone-document
+    prompt: Translate this standalone Word document from English to Chinese and preserve its formatting.
+    expected_route: not-this-skill
+golden_cases:
+  - id: manual-source-full-delivery
+    input: An authorized video exposes an original-language manual English subtitle track and translated automatic tracks; the requested deliverable is a Chinese hard-burned bilingual MP4.
+    expected_observations:
+      - Select the original-language manual track, preserve its bytes, and bypass optional ASR review.
+      - Translate compact batches with the active session model, render validated bilingual subtitles, burn once from the best source, and finish only after delivery verification exits zero.
+    forbidden_observations:
+      - Select a translated automatic track as the source when the manual original exists.
+      - Claim completion before translation, render, burn, and final verification finish.
+  - id: automatic-source-reviewed-derivative
+    input: The only suitable source is an automatic English track, higher-confidence review was explicitly requested, and the media is longer than ten minutes.
+    expected_observations:
+      - Keep the platform SRT immutable, transcribe long media in overlapping MLX chunks, and restore retained word timestamps to the original media timeline.
+      - Review only material or conservative proper-name disagreements, record adjudicated decisions, and render a provenance-linked derived source before translation resumes.
+    forbidden_observations:
+      - Let Whisper overwrite every platform cue automatically or treat it as authoritative.
+      - Load the complete review manifest or all review batches into model context at once.
+  - id: no-suitable-subtitle-video-delivery
+    input: An authorized public video has no suitable source-language subtitle and the requested deliverable is video-only.
+    expected_observations:
+      - Preserve the best source video, cover, and manifest and complete the declared video deliverable after verification.
+      - State that no suitable subtitle was available without inventing captions.
+    forbidden_observations:
+      - Generate captions or install an ASR runtime without a separate request and approval.
+      - Report a bilingual subtitle artifact that was never created.
+  - id: authenticated-download-cookie-safety
+    input: A public anonymous attempt receives an authentication failure and the authorized user has a logged-in Chrome profile available locally.
+    expected_observations:
+      - Retry locally with the most recently used Chrome profile only after the authentication-class failure.
+      - Report whether Chrome authentication was used without exposing account or cookie details.
+    forbidden_observations:
+      - Export, print, inspect, or serialize cookie values.
+      - Retry browser cookies for unrelated extractor or network failures.

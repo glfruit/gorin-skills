@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "profile": "engineering-lab",
+  "skills": [
+    {
+      "id": "gorin-code-review",
+      "version": "0.2.0",
+      "lifecycle": "candidate",
+      "source": "skills/engineering/gorin-code-review"
+    },
+    {
+      "id": "gorin-enhanced-skill-creator",
+      "version": "4.1.0",
+      "lifecycle": "incubating",
+      "source": "skills/engineering/gorin-enhanced-skill-creator"
+    }
+  ],
+  "repository_version": "2.0.0"
+}

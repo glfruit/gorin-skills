@@ -1,0 +1,17 @@
+# Dependencies
+node_modules/
+*.log
+.DS_Store
+
+# Test outputs
+test-output/
+
+# IDE
+.vscode/
+.idea/
+
+# Build outputs
+dist/
+build/
+*.js
+*.js.map

@@ -1,0 +1,15 @@
+{
+  "name": "agent-team-composer",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Generate OpenClaw team scaffolds from natural language",
+  "scripts": {
+    "start": "ts-node scripts/main.ts",
+    "check": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.5",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.7.3"
+  }
+}

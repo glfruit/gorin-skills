@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "profile": "content-lab",
+  "skills": [
+    {
+      "id": "gorin-bearclaw-native",
+      "version": "2.2.0",
+      "lifecycle": "incubating",
+      "source": "skills/content/gorin-bearclaw-native"
+    },
+    {
+      "id": "gorin-visual-knowledge-explainer",
+      "version": "0.2.0",
+      "lifecycle": "incubating",
+      "source": "skills/content/gorin-visual-knowledge-explainer"
+    }
+  ],
+  "repository_version": "2.0.0"
+}

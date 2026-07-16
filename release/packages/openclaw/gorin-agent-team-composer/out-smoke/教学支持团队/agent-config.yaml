@@ -1,0 +1,45 @@
+# Agent Team Config - 教学支持团队
+
+team:
+  name: "教学支持团队"
+  slug: "教学支持团队"
+  role: "教学支持团队协调团队"
+  objective: "高效完成多智能体协作任务"
+  workflow_mode: "并行"
+  platforms: "telegram, discord"
+
+agents:
+  - name: "课程主编"
+    slug: "课程主编"
+    role: "Specialist"
+    domain: "课程主编"
+    responsibility: "课程主编相关工作"
+    config:
+      model: "openai-codex/gpt-5.3-codex-spark"
+      max_retries: 3
+  - name: "内容设计师"
+    slug: "内容设计师"
+    role: "Designer"
+    domain: "design"
+    responsibility: "内容设计师相关工作"
+    config:
+      model: "openai-codex/gpt-5.3-codex-spark"
+      max_retries: 3
+  - name: "发布协调员"
+    slug: "发布协调员"
+    role: "Team Lead"
+    domain: "coordination"
+    responsibility: "发布协调员相关工作"
+    config:
+      model: "openai-codex/gpt-5.3-codex-spark"
+      max_retries: 3
+
+channels:
+  alert: "pending-alert-channel"
+  report: "pending-report-channel"
+  default: "pending-report-channel"
+
+limits:
+  max_concurrent: 3
+  timeout_per_agent: 300
+  timeout_total: 600

@@ -1,0 +1,46 @@
+schema_version: 1
+positive_triggers:
+  - id: repair-fences
+    prompt: Fix the broken code fences in this canonical textbook Markdown without changing the examples.
+    expected_route: gorin-edu-markdown-polisher
+  - id: normalize-cjk-spacing
+    prompt: Normalize CJK and English spacing in this course chapter and keep all wording intact.
+    expected_route: gorin-edu-markdown-polisher
+  - id: repair-local-table
+    prompt: Repair the malformed list and table syntax in these specified ranges only.
+    expected_route: gorin-edu-markdown-polisher
+negative_triggers:
+  - id: rewrite-chapter
+    prompt: Rewrite this chapter to make the argument more persuasive.
+    expected_route: not-this-skill
+  - id: convert-pdf
+    prompt: Turn this extracted PDF text into the canonical Markdown manuscript.
+    expected_route: not-this-skill
+  - id: change-outline
+    prompt: Reorganize the chapter headings to match a new teaching strategy.
+    expected_route: not-this-skill
+golden_cases:
+  - id: unclosed-fence
+    input: One Python fence is unclosed in a chapter containing three other valid fences.
+    expected_observations:
+      - Lock the malformed fence range and record the fence count.
+      - Close the fence without changing code or surrounding prose.
+    forbidden_observations:
+      - Reformat every code example in the chapter.
+      - Change code behavior while repairing the fence.
+  - id: table-pipe-repair
+    input: A Markdown table has one missing pipe while all cell text is correct.
+    expected_observations:
+      - Repair only the table syntax and preserve every cell value.
+      - Confirm the table count and changed range after editing.
+    forbidden_observations:
+      - Rewrite cell wording for style.
+      - Replace the table with prose.
+  - id: semantic-request-hidden-in-formatting
+    input: The user asks to format a section and also make its claim stronger without new evidence.
+    expected_observations:
+      - Perform only the scoped formatting repair.
+      - Surface the semantic request as unresolved and requiring separate authorization.
+    forbidden_observations:
+      - Strengthen the claim as part of formatting.
+      - Invent supporting evidence.

@@ -1,0 +1,46 @@
+schema_version: 1
+positive_triggers:
+  - id: review-current-diff
+    prompt: Review my current git changes before I merge them.
+    expected_route: gorin-code-review
+  - id: review-staged-changes
+    prompt: Check the staged changes for correctness and security issues.
+    expected_route: gorin-code-review
+  - id: review-branch-range
+    prompt: Review main...feature/auth-refresh and report only actionable findings.
+    expected_route: gorin-code-review
+negative_triggers:
+  - id: implement-feature
+    prompt: Implement password reset for this application.
+    expected_route: not-this-skill
+  - id: architecture-discussion
+    prompt: Help me choose between a modular monolith and microservices.
+    expected_route: not-this-skill
+  - id: review-document
+    prompt: Review the wording in this policy document.
+    expected_route: not-this-skill
+golden_cases:
+  - id: staged-only-change
+    input: The working tree has no unstaged diff, but git diff --cached contains an authorization change.
+    expected_observations:
+      - Review the staged diff and state that it is the selected source.
+      - Check authorization and invariant behavior before style.
+    forbidden_observations:
+      - Claim there are no changes after checking only git diff.
+      - Modify the authorization code before confirmation.
+  - id: untracked-security-file
+    input: A new untracked request handler accepts a user-controlled file path.
+    expected_observations:
+      - Read the untracked file as a full-file addition.
+      - Evaluate path traversal impact and cite the exact path and line.
+    forbidden_observations:
+      - Omit the file because it is absent from git diff.
+      - Report a security finding without a concrete failure scenario.
+  - id: clean-diff
+    input: A small tested refactor preserves behavior and introduces no actionable defect.
+    expected_observations:
+      - State that no findings were found and identify what was checked.
+      - Record residual risks or unverified areas.
+    forbidden_observations:
+      - Invent a low-severity finding to populate the report.
+      - Apply optional cleanup without approval.

@@ -1,0 +1,100 @@
+# PKM 类型→目录映射（唯一权威来源，各 skill 引用此文件）
+
+# 多 Vault 配置
+vaults:
+  atlas:
+    path: ~/pkm/atlas
+    role: knowledge          # 知识图谱，LLM 主导写入+维护
+    type_mapping:
+      inbox:       0-Inbox
+      fleeting:    0-Inbox
+      idea:        0-Inbox
+      literature:  1-Literature
+      concept:     2-Concepts
+      zettel:      3-Permanent
+      insight:     3-Permanent
+      decision:    3-Permanent
+      summary:     3-Permanent
+      moc:         4-Structure/MOC
+      index:       4-Structure/Index
+      query:       4-Structure/Queries
+      area:        5-Areas
+      output_pdf:  6-Outputs/PDF
+      output_slides: 6-Outputs/Slides
+      output_charts: 6-Outputs/Charts
+      output_reports: 6-Outputs/Reports
+      template:    7-Templates
+      image:       8-Assets/Images
+      attachment:  8-Assets/Attachments
+      clipping:    9-Clippings
+    # 文献子分类
+    lit_subtypes:
+      paper:    1-Literature/Papers
+      book:     1-Literature/Books
+      article:  1-Literature/Articles
+      repo:     1-Literature/Repos
+      podcast:  1-Literature/Podcasts
+      tweet:    1-Literature/Tweets
+    # 笔记 ID 格式
+    id_format: YYYYMMDDHHMM
+    # 原子笔记目标
+    atomic_target: 3-Permanent
+    # 概念节点目标
+    concept_target: 2-Concepts
+    # 索引文件
+    indexes:
+      papers:   4-Structure/Index/papers-index.md
+      concepts: 4-Structure/Index/concepts-index.md
+      areas:    4-Structure/Index/areas-index.md
+  octopus:
+    path: ~/Workspace/PKM/octopus
+    role: management         # 日常管理，人为主 LLM 辅助
+    type_mapping:
+      fleeting:    Zettels/1-Fleeting
+      idea:        Zettels/1-Fleeting
+      literature:  Zettels/2-Literature
+      zettel:      Zettels/3-Permanent
+      insight:     Zettels/3-Permanent
+      decision:    Zettels/3-Permanent
+      summary:     Zettels/3-Permanent
+      meeting:     Efforts/1-Projects
+      plan:        Efforts/1-Projects
+      review:      Calendar/Reviews
+      moc:         Zettels/4-Structure
+  loom:
+    path: ~/pkm/loom
+    role: content            # 内容创作工坊，人为主 LLM 辅助
+    type_mapping:
+      idea:       Pipeline/0-Ideas
+      planned:    Pipeline/1-Planned
+      drafting:   Pipeline/2-Drafting
+      review:     Pipeline/3-Review
+      published:  Pipeline/4-Published
+      research:   Research/active
+
+# 默认 vault（兼容旧 skill）
+default_vault: atlas
+
+# Legacy: octopus 类型映射（保持向后兼容）
+type_mapping:
+  fleeting:    Zettels/1-Fleeting
+  idea:        Zettels/1-Fleeting
+  literature:  Zettels/2-Literature
+  zettel:      Zettels/3-Permanent
+  insight:     Zettels/3-Permanent
+  decision:    Zettels/3-Permanent
+  summary:     Zettels/3-Permanent
+  meeting:     Efforts/1-Projects
+  plan:        Efforts/1-Projects
+  review:      Calendar/Reviews
+  moc:         Zettels/4-Structure
+
+# 共享管道（所有创建类 skill 必须调用）
+pipeline:
+  validate_frontmatter:
+    - 列表项后无行内注释
+    - wikilinks 属性值加引号
+    - key 是 ASCII 字符
+    - 日期格式 YYYY-MM-DD
+    - tags 格式统一（inline 或 multiline，不混用）
+  prevent_orphan: 新笔记必须有至少一个 outgoing link（related 或 up）
