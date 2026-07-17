@@ -41,8 +41,14 @@ Select the delivery target from the user's intent and pass `--deliver`:
 - `video`: video, cover, and any source subtitle files; no translation, render, or burn.
 - `subs`: only the original subtitle files, no video streams; fails when the platform has no suitable subtitle.
 - `bilingual-subs`: subtitles plus translation and rendered bilingual SRT/ASS; no video download and no burn.
+- `library`: Source Master, cover, source/target/bilingual soft subtitles, and an
+  immutable Acquisition Package; no burn and no compatibility transcode by default.
 
-`video` and `subs` finish at exit 0. `full` and `bilingual-subs` continue through Exit 3; a reviewed `full` job may have two ordered Exit 3 stages. For `bilingual-subs`, finish after render and `verify_delivery.py` without burning.
+`video` and `subs` finish at exit 0. `full`, `bilingual-subs`, and `library`
+continue through Exit 3; a reviewed `full` or `library` job may have two ordered
+Exit 3 stages. For `bilingual-subs`, finish after render and
+`verify_delivery.py` without burning. For `library`, build and verify the
+Acquisition Package after render.
 
 Authentication behavior:
 
@@ -106,6 +112,27 @@ python3 <skill-dir>/scripts/subtitle_pipeline.py render \
 
 This first regroups translated cue pairs into sentence-aligned timed display segments, then creates source, target-language, bilingual SRT, and MiSans Bold ASS. The original text remains unchanged. Each caption is one bottom-anchored stack—source directly above the translation—whose PlayRes and wrap widths follow the video's aspect ratio, so the two languages can never overlap. Portrait video automatically uses smaller 36/40 source/translation sizes and a larger 120-unit bottom safe area; landscape keeps the 42/46 sizes and 50-unit margin. Libass draws one translucent background panel measured from the exact rendered glyph layout, so line boxes cannot double-paint into dark bands.
 
+For a `library` deliverable, build the immutable Acquisition Package after the
+render command succeeds. Supply actual translation provenance. Until a
+versioned automatic Translation Quality Gate exists, use `operator_reviewed`
+only after a human has reviewed the translation; never relabel structural
+validation as `machine_validated`.
+
+```bash
+python3 <skill-dir>/scripts/package_delivery.py \
+  "<job-dir>/download-manifest.json" \
+  --translation-provider "<provider>" \
+  --translation-model "<model>" \
+  --quality-status operator_reviewed \
+  --quality-rules-version "operator-review-v1"
+```
+
+The builder consumes only explicitly declared Execution Manifest records,
+copies into a staging package, verifies checksums and role completeness, then
+atomically promotes `<job-dir>/acquisition-package`. If the selected audio
+language is absent but independently known, pass `--source-audio-language`;
+do not use it to guess through a multi-audio ambiguity.
+
 Burn once from the best source intermediate (`full` deliverable only):
 
 ```bash
@@ -123,7 +150,10 @@ Finally run:
 python3 <skill-dir>/scripts/verify_delivery.py "<job-dir>/download-manifest.json"
 ```
 
-Exit 3 identifies the unfinished stage; continue it immediately. Report success only after exit 0 and a non-empty bilingual MP4 exists when subtitles were available.
+Exit 3 identifies the unfinished stage; continue it immediately. Report
+success only after exit 0 and the required final artifact exists: a non-empty
+bilingual MP4 for `full`, verified rendered subtitles for `bilingual-subs`, or
+a verified `delivery-manifest.json` and Acquisition Package for `library`.
 
 ## Preflight and failures
 

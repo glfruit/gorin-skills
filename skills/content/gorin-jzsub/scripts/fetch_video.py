@@ -29,7 +29,7 @@ from typing import Any, NamedTuple, Sequence
 
 FORMAT_SELECTOR = "bv*+ba/b"
 MANIFEST_NAME = "download-manifest.json"
-DELIVERABLES = ("full", "video", "subs", "bilingual-subs")
+DELIVERABLES = ("full", "video", "subs", "bilingual-subs", "library")
 SUBTITLE_ONLY_DELIVERABLES = frozenset({"subs", "bilingual-subs"})
 YOUTUBE_SKIP_TRANSLATIONS = "youtube:skip=translated_subs"
 AUTO_BROWSER_COOKIES = "auto"
@@ -598,6 +598,33 @@ def available_subtitle_summary(
     ]
 
 
+def source_audio_track_from_probe(info: dict[str, Any]) -> dict[str, Any] | None:
+    requested = info.get("requested_formats")
+    candidates = requested if isinstance(requested, list) else [info]
+    audio_candidates = [
+        candidate
+        for candidate in candidates
+        if isinstance(candidate, dict)
+        and candidate.get("acodec") not in {None, "none"}
+    ]
+    if len(audio_candidates) != 1:
+        return None
+    audio = audio_candidates[0]
+    format_id = audio.get("format_id")
+    if not isinstance(format_id, str) or not format_id:
+        return None
+    language = (
+        audio.get("language")
+        or info.get("language")
+        or info.get("original_language")
+    )
+    return {
+        "format_id": format_id,
+        "language": language if isinstance(language, str) and language else None,
+        "selection_evidence": ["yt_dlp_requested_format"],
+    }
+
+
 def download_output_templates(base: str, cover_name: str) -> tuple[str, str]:
     return (
         f"{base}.intermediate.%(ext)s",
@@ -796,7 +823,8 @@ def _ffprobe(path: Path, executable: str) -> dict[str, Any]:
                 "format=format_name,duration,size,bit_rate:"
                 "stream=index,codec_type,codec_name,profile,level,bit_rate,"
                 "width,height,avg_frame_rate,r_frame_rate,pix_fmt,"
-                "color_transfer,color_space,color_primaries,channels,sample_rate"
+                "color_transfer,color_space,color_primaries,channels,sample_rate:"
+                "stream_tags=language"
             ),
             "-of",
             "json",
@@ -942,6 +970,20 @@ def _manifest_base(
             "extractor": info.get("extractor_key") or info.get("extractor"),
             "id": str(info.get("id")),
             "title": str(info.get("title") or "untitled"),
+            "description": str(info.get("description") or ""),
+            "channel_id": info.get("channel_id") or info.get("uploader_id"),
+            "channel_name": info.get("channel") or info.get("uploader"),
+            "upload_date": info.get("upload_date") or info.get("release_date"),
+            "tags": info.get("tags") if isinstance(info.get("tags"), list) else [],
+            "source_type": (
+                "completed_live_vod"
+                if info.get("live_status") == "was_live"
+                else (
+                    "short"
+                    if "/shorts/" in str(info.get("webpage_url") or url)
+                    else "video"
+                )
+            ),
             "duration_seconds": info.get("duration"),
             "declared_language": info.get("language") or info.get("original_language"),
             # Probed display size lets subtitle-only jobs lay out captions
@@ -964,6 +1006,7 @@ def _manifest_base(
             "intermediate_container": "mkv",
             "subtitle": choice._asdict() if choice else None,
             "subtitle_candidates": available_subtitle_summary(info, target_language),
+            "source_audio_track": source_audio_track_from_probe(info),
         },
         "warnings": [],
     }
@@ -1269,8 +1312,10 @@ def execute(args: argparse.Namespace) -> Path | None:
     _validate_browser_spec(args.browser_cookies)
     deliverable = getattr(args, "deliver", "full")
     review_auto_subs = bool(getattr(args, "review_auto_subs", False))
-    if review_auto_subs and deliverable != "full":
-        raise FetchError("--review-auto-subs is only supported with --deliver full")
+    if review_auto_subs and deliverable not in {"full", "library"}:
+        raise FetchError(
+            "--review-auto-subs is only supported with --deliver full or library"
+        )
     if args.dry_run:
         print(json.dumps(_dry_run_plan(args), ensure_ascii=False, indent=2, sort_keys=True))
         return None
@@ -1312,6 +1357,11 @@ def execute(args: argparse.Namespace) -> Path | None:
             "A subtitle-only delivery was requested, but the platform advertises "
             f"no suitable source subtitle outside the target language {target_language!r}"
         )
+    if deliverable == "library" and choice is None:
+        raise FetchError(
+            "A library delivery requires a Source Transcript; no suitable platform "
+            "subtitle was advertised"
+        )
     manifest = _manifest_base(
         info=info,
         url=url,
@@ -1322,6 +1372,11 @@ def execute(args: argparse.Namespace) -> Path | None:
         deliverable=deliverable,
         target_language=target_language,
     )
+    if deliverable == "library" and manifest["selection"]["source_audio_track"] is None:
+        raise FetchError(
+            "Library delivery could not prove one selected Source Audio Track from "
+            "the yt-dlp probe; use a source with an unambiguous audio selection"
+        )
     manifest["execution"] = {
         "resume": bool(args.resume),
         "asr_review_requested": review_auto_subs,
@@ -1503,6 +1558,38 @@ def execute(args: argparse.Namespace) -> Path | None:
 
 def run_self_tests() -> bool:
     class FetchVideoTests(unittest.TestCase):
+        def test_probe_records_one_requested_source_audio_track(self) -> None:
+            selected = source_audio_track_from_probe(
+                {
+                    "original_language": "en",
+                    "requested_formats": [
+                        {"format_id": "399", "vcodec": "av01", "acodec": "none"},
+                        {"format_id": "140", "vcodec": "none", "acodec": "mp4a"},
+                    ],
+                }
+            )
+
+            self.assertEqual(
+                selected,
+                {
+                    "format_id": "140",
+                    "language": "en",
+                    "selection_evidence": ["yt_dlp_requested_format"],
+                },
+            )
+
+        def test_probe_refuses_ambiguous_source_audio_tracks(self) -> None:
+            selected = source_audio_track_from_probe(
+                {
+                    "requested_formats": [
+                        {"format_id": "140", "acodec": "mp4a"},
+                        {"format_id": "251", "acodec": "opus"},
+                    ]
+                }
+            )
+
+            self.assertIsNone(selected)
+
         def test_delivery_names_follow_target_language(self) -> None:
             names = delivery_names("Parking / Sensor", "zh-CN")
             self.assertEqual(names["cover"], "封面.jpg")
@@ -2029,7 +2116,9 @@ def build_parser() -> argparse.ArgumentParser:
             "Delivery target: 'full' burns bilingual captions into MP4 (default); "
             "'video' downloads video, cover, and source subtitle files without the "
             "translation pipeline; 'subs' downloads only the source subtitle files; "
-            "'bilingual-subs' also translates and renders SRT/ASS without video or burn"
+            "'bilingual-subs' also translates and renders SRT/ASS without video or burn; "
+            "'library' preserves the Source Master and renders soft subtitles for an "
+            "immutable Acquisition Package without burn"
         ),
     )
     parser.add_argument(

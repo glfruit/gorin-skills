@@ -162,6 +162,54 @@ class VerifyDeliveryTests(unittest.TestCase):
         self.assertTrue(result["complete"])
         self.assertEqual(result["stage"], "bilingual_subs_complete")
 
+    def test_library_deliverable_requires_an_acquisition_package_after_render(self) -> None:
+        inputs = self.root / "subtitles" / "translation-input"
+        inputs.mkdir(parents=True)
+        batch = inputs / "batch-0001.json"
+        batch.write_text("{}", encoding="utf-8")
+        outputs = self.root / "subtitles" / "translation-output"
+        outputs.mkdir()
+        (outputs / "batch-0001.json").write_text("{}", encoding="utf-8")
+        (self.root / "subtitles" / "subtitle-manifest.json").write_text(
+            json.dumps(
+                {
+                    "translation_batches": [{"path": str(batch)}],
+                    "translation_output_dir": str(outputs),
+                }
+            ),
+            encoding="utf-8",
+        )
+        rendered = self.root / "subtitles" / "rendered"
+        rendered.mkdir()
+        (rendered / "bilingual.ass").write_text("[Script Info]\n", encoding="utf-8")
+        (rendered / "validation.json").write_text("{}", encoding="utf-8")
+        self.manifest.write_text(
+            json.dumps(
+                {
+                    "status": "bilingual_required",
+                    "deliverable": "library",
+                    "output_directory": str(self.root),
+                    "artifacts": {
+                        "intermediate": {"path": self.source.name},
+                        "subtitle": {
+                            "language": "en",
+                            "source_srt": {"path": self.subtitle.name},
+                        },
+                    },
+                }
+            ),
+            encoding="utf-8",
+        )
+
+        result = delivery.assess_delivery(self.manifest)
+
+        self.assertFalse(result["complete"])
+        self.assertEqual(result["stage"], "library_package_required")
+        self.assertEqual(
+            result["missing"],
+            [str((self.root / "acquisition-package/delivery-manifest.json").resolve())],
+        )
+
     def test_full_delivery_uses_manifest_bilingual_filename(self) -> None:
         inputs = self.root / "subtitles" / "translation-input"
         inputs.mkdir(parents=True)

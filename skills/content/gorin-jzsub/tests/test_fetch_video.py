@@ -16,6 +16,30 @@ import unittest
 SCRIPT = Path(__file__).resolve().parents[1] / "scripts" / "fetch_video.py"
 
 
+class FetchVideoLibraryDeliveryTests(unittest.TestCase):
+    def test_library_delivery_is_a_non_burning_dry_run_target(self) -> None:
+        result = subprocess.run(
+            [
+                sys.executable,
+                str(SCRIPT),
+                "https://www.youtube.com/watch?v=fixture",
+                "--output-dir",
+                "/tmp/gorin-jzsub-library-fixture",
+                "--deliver",
+                "library",
+                "--dry-run",
+            ],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        plan = json.loads(result.stdout)
+        self.assertEqual(plan["deliverable"], "library")
+        self.assertFalse(plan["files_written"])
+
+
 class FetchVideoRuntimeDiagnosticsTests(unittest.TestCase):
     def _advance_manifest(self, manifest_path: Path) -> tuple[int, dict[str, object]]:
         spec = importlib.util.spec_from_file_location("jzsub_test_fetch_video", SCRIPT)
