@@ -1,0 +1,5 @@
+schema_version: 1
+summary: Add the bounded OpenAI-compatible API adapter, paid-attempt preflight, capability circuit evidence, and deterministic translation quality gate.
+repository: minor
+skills:
+  gorin-jzsub: minor

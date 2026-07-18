@@ -19,7 +19,7 @@ import urllib.parse
 
 
 DELIVERY_SCHEMA_VERSION = "1.1.0"
-GORIN_JZSUB_VERSION = "0.5.0"
+GORIN_JZSUB_VERSION = "0.7.0"
 PACKAGE_DIRECTORY_NAME = "acquisition-package"
 LANGUAGE_TAG = re.compile(r"^[A-Za-z]{2,3}(?:-[A-Za-z0-9]{2,8})*$")
 LOCALIZATION_FAILURES = frozenset({"provider_failed", "validation_failed", "retry_exhausted"})
@@ -371,6 +371,7 @@ def build_library_package(
     translation_model: str,
     quality_status: str,
     quality_rules_version: str,
+    translation_execution_manifest: Path | None = None,
     source_audio_language: str | None = None,
     localized_metadata: Path | None = None,
     localization_failure: str | None = None,
@@ -443,13 +444,95 @@ def build_library_package(
     if validation_report.get("target_language") != target_language:
         raise PackageError("rendered subtitle target language differs from the job")
 
-    if quality_status != "operator_reviewed":
+    if quality_status not in {"operator_reviewed", "machine_validated"}:
+        raise PackageError("translation quality status is not publishable")
+    if quality_status == "machine_validated" and translation_execution_manifest is None:
         raise PackageError(
             "library v0.4 requires operator_reviewed until an automatic quality gate exists"
         )
     provider = _required_string(translation_provider, "translation provider")
     model = _required_string(translation_model, "translation model")
     rules_version = _required_string(quality_rules_version, "quality rules version")
+    if quality_status == "machine_validated":
+        if rules_version != "deterministic-v1":
+            raise PackageError(
+                "machine_validated translation requires deterministic-v1 rules"
+            )
+        assert translation_execution_manifest is not None
+        execution_path = translation_execution_manifest.expanduser().resolve()
+        if not execution_path.is_relative_to(job_root):
+            raise PackageError("Translation Execution Manifest must be inside the job")
+        execution = _read_json(execution_path)
+        execution_provider = execution.get("provider")
+        expected_provider = execution.get("formal_translation_provider")
+        if (
+            execution.get("status") != "succeeded"
+            or execution.get("formal_translation_promoted") is not True
+            or execution.get("quality_status") != "machine_validated"
+            or not isinstance(execution_provider, dict)
+            or execution_provider != expected_provider
+            or execution_provider.get("model") != model
+            or provider
+            not in {
+                execution_provider.get("adapter"),
+                execution_provider.get("service"),
+            }
+        ):
+            raise PackageError(
+                "Translation Execution Manifest does not match promoted translation provenance"
+            )
+        successful_batches = [
+            batch
+            for batch in execution.get("batch_diagnostics", [])
+            if isinstance(batch, dict) and batch.get("outcome") == "succeeded"
+        ]
+        if not successful_batches or any(
+            batch.get("translation_provider") != execution_provider
+            for batch in successful_batches
+        ):
+            raise PackageError(
+                "Translation Execution Manifest mixes formal cue Providers"
+            )
+        review = execution.get("high_assurance_review")
+        paid_attempt = execution.get("paid_attempt")
+        translation_reservation_id = (
+            paid_attempt.get("reservation", {}).get("id")
+            if isinstance(paid_attempt, dict)
+            else None
+        )
+        if (
+            not isinstance(review, dict)
+            or review.get("translation_contribution") is not False
+        ):
+            raise PackageError(
+                "High Assurance Review must not contribute translation text"
+            )
+        if review.get("requested") is True and (
+            set(review)
+            != {
+                "requested",
+                "review_attempt_id",
+                "reviewer",
+                "reservation_id",
+                "decision",
+                "reviewed_locations",
+                "issue_locations",
+                "translation_contribution",
+            }
+            or not isinstance(review.get("reviewer"), dict)
+            or review["reviewer"] == execution_provider
+            or not isinstance(review.get("reservation_id"), str)
+            or not review["reservation_id"]
+            or not isinstance(review.get("review_attempt_id"), str)
+            or not review["review_attempt_id"]
+            or review["review_attempt_id"] == execution.get("attempt_id")
+            or review["reservation_id"] == translation_reservation_id
+            or review.get("decision") not in {"pass", "reject"}
+            or not isinstance(review.get("reviewed_locations"), list)
+            or not review["reviewed_locations"]
+            or not isinstance(review.get("issue_locations"), list)
+        ):
+            raise PackageError("High Assurance Review evidence is incomplete")
 
     video_stream = _stream(artifacts, "video")
     audio_stream = _stream(artifacts, "audio")
@@ -768,10 +851,11 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--translation-model", required=True)
     parser.add_argument(
         "--quality-status",
-        choices=("operator_reviewed",),
+        choices=("machine_validated", "operator_reviewed"),
         required=True,
     )
     parser.add_argument("--quality-rules-version", required=True)
+    parser.add_argument("--translation-execution-manifest", type=Path)
     parser.add_argument("--source-audio-language")
     localization = parser.add_mutually_exclusive_group()
     localization.add_argument("--localized-metadata", type=Path)
@@ -792,6 +876,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             translation_model=args.translation_model,
             quality_status=args.quality_status,
             quality_rules_version=args.quality_rules_version,
+            translation_execution_manifest=args.translation_execution_manifest,
             source_audio_language=args.source_audio_language,
             localized_metadata=args.localized_metadata,
             localization_failure=args.localization_failure,
