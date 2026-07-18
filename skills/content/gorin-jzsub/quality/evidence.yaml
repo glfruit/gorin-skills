@@ -20,6 +20,8 @@ tests:
     result: passed
   - command: PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s skills/content/gorin-jzsub/tests -p test_*.py
     result: passed
+  - command: PYTHONDONTWRITEBYTECODE=1 python3 -m unittest skills/content/gorin-jzsub/tests/test_translation_executor.py
+    result: passed
   - command: npm test
     result: passed
   - command: node scripts/gorin-skills.mjs qualify --skill gorin-jzsub
