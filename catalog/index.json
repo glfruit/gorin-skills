@@ -306,7 +306,7 @@
     },
     {
       "id": "gorin-jzsub",
-      "version": "0.6.0",
+      "version": "0.7.0",
       "domain": "content",
       "lifecycle": "candidate",
       "ownership": "first-party",
@@ -316,7 +316,7 @@
         "codex",
         "claude-code"
       ],
-      "description": "JZSub downloads maximum-quality videos, covers, and source subtitles from YouTube, Bilibili, and other yt-dlp platforms; translates foreign subtitles interactively or through an isolated non-interactive Codex executor; creates bilingual captions; and burns them into MP4. Use for video download, video-only or subtitle-only delivery, Chrome-authenticated download, bilingual subtitles, unattended Codex translation, or hard-burned caption delivery.",
+      "description": "JZSub downloads maximum-quality videos, covers, and source subtitles from YouTube, Bilibili, and other yt-dlp platforms; translates foreign subtitles interactively or through a non-interactive Codex/OpenAI-compatible executor; creates bilingual captions; and burns them into MP4. Use for video download, video-only or subtitle-only delivery, Chrome-authenticated download, bilingual subtitles, unattended translation, or hard-burned caption delivery.",
       "source": "skills/content/gorin-jzsub"
     },
     {

@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import contextlib
 import importlib.util
+import io
 import json
 from pathlib import Path
 import shutil
@@ -174,6 +176,90 @@ class PackageDeliveryTests(unittest.TestCase):
                 quality_status="machine_validated",
                 quality_rules_version="fixture-rules-1",
             )
+
+    def test_accepts_machine_validated_with_matching_executor_evidence(self) -> None:
+        execution_manifest = self.root / "translation-executions/attempt-1/execution-manifest.json"
+        execution_manifest.parent.mkdir(parents=True)
+        provider = {"adapter": "openai-compatible", "service": "deepseek", "model": "fixture-model"}
+        execution_manifest.write_text(
+            json.dumps(
+                {
+                    "schema_version": "1.0.0",
+                    "attempt_id": "attempt-1",
+                    "status": "succeeded",
+                    "formal_translation_promoted": True,
+                    "quality_status": "machine_validated",
+                    "provider": provider,
+                    "formal_translation_provider": provider,
+                    "paid_attempt": {
+                        "media_job_id": "fixture-media-job",
+                        "ordinal": 1,
+                        "reservation": {
+                            "id": "fixture-translation-reservation",
+                            "max_input_tokens": 10000,
+                            "max_output_tokens": 10000,
+                        },
+                        "additional_attempt_approval": None,
+                    },
+                    "batch_diagnostics": [
+                        {
+                            "outcome": "succeeded",
+                            "translation_provider": provider,
+                            "quality_repairs": 1,
+                        }
+                    ],
+                    "high_assurance_review": {
+                        "requested": True,
+                        "review_attempt_id": "fixture-review-attempt",
+                        "reviewer": {
+                            "adapter": "openai-compatible",
+                            "service": "openai",
+                            "model": "review-fixture-model",
+                        },
+                        "reservation_id": "fixture-review-reservation",
+                        "decision": "pass",
+                        "reviewed_locations": ["seg-000001"],
+                        "issue_locations": [],
+                        "translation_contribution": False,
+                    },
+                }
+            ),
+            encoding="utf-8",
+        )
+
+        package = packaging.build_library_package(
+            self.download_manifest,
+            translation_provider="deepseek",
+            translation_model="fixture-model",
+            quality_status="machine_validated",
+            quality_rules_version="deterministic-v1",
+            translation_execution_manifest=execution_manifest,
+        )
+
+        manifest = json.loads(
+            (package / "delivery-manifest.json").read_text(encoding="utf-8")
+        )
+        self.assertEqual(
+            manifest["provenance"]["translation"]["quality_status"],
+            "machine_validated",
+        )
+        with contextlib.redirect_stdout(io.StringIO()):
+            exit_code = packaging.main(
+                [
+                    str(self.download_manifest),
+                    "--translation-provider",
+                    "deepseek",
+                    "--translation-model",
+                    "fixture-model",
+                    "--quality-status",
+                    "machine_validated",
+                    "--quality-rules-version",
+                    "deterministic-v1",
+                    "--translation-execution-manifest",
+                    str(execution_manifest),
+                ]
+            )
+        self.assertEqual(exit_code, 0)
 
     def test_builds_a_separate_localized_metadata_projection_with_protected_spans(self) -> None:
         source = json.loads(self.download_manifest.read_text(encoding="utf-8"))

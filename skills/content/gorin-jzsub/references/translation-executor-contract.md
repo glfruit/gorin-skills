@@ -1,7 +1,7 @@
 # Non-interactive Translation Executor contract
 
 Use `translation_executor.py` for exactly one complete Source Transcript
-attempt. V1 supports the `codex` adapter. The request and every progress/final
+attempt. V1 supports the `codex` and `openai-compatible` adapters. The request and every progress/final
 record use `schema_version: "1.0.0"`; unknown fields and schema majors fail
 closed.
 
@@ -37,6 +37,54 @@ search and uses a never-escalate approval policy, so subtitle prompt injection
 cannot turn translation into host inspection. Provision authentication directly
 in the dedicated home; never copy or inspect the interactive home.
 
+For one paid API Attempt, set `provider.adapter` to `openai-compatible`, choose
+exactly one `provider.service` (`deepseek` or `openai`), and provide
+`paid_attempt`, `quality`, and the closed circuit state in the request. Pass a
+deployment config separately:
+
+```json
+{
+  "paid_attempt": {
+    "media_job_id": "job-123",
+    "ordinal": 1,
+    "reservation": {
+      "id": "reservation-123",
+      "max_input_tokens": 50000,
+      "max_output_tokens": 20000
+    },
+    "additional_attempt_approval": null
+  },
+  "quality": {
+    "rules_version": "deterministic-v1",
+    "max_repairs": 1,
+    "high_assurance_review": false
+  },
+  "circuit_breaker": {"state": "closed"}
+}
+```
+
+```json
+{
+  "schema_version": "1.0.0",
+  "service": "deepseek",
+  "base_url": "https://api.deepseek.com/v1",
+  "credential_env": "TRANSLATION_API_KEY_REF"
+}
+```
+
+```bash
+python3 <skill-dir>/scripts/translation_executor.py run \
+  --request <api-request.json> \
+  --api-config <api-config.json>
+```
+
+The config stores a credential environment-variable name, never its value.
+The selected service must match the request. Token reservation, paid Attempt
+ordinal, second-Attempt approval evidence, and circuit state are checked before
+the credential is resolved or any HTTP request is sent. Authentication and
+shared configuration failures open the capability circuit and are never
+retried inside the Attempt.
+
 Progress is append-only JSONL with monotonic `sequence`. Events are
 `attempt_started`, `batch_started`, `batch_succeeded`, `attempt_succeeded`,
 `attempt_failed`, or `attempt_cancelled`. The process writes exactly one final
@@ -51,12 +99,30 @@ result object to stdout and exits with:
 | 23 | `timeout` | batch deadline exceeded |
 | 24 | `invalid_structure` | malformed, incomplete, reordered, or token-damaged output |
 | 25 | `cancelled` | cooperative cancellation observed |
-| 26 | `software_error` | invalid request/configuration or executor defect |
+| 26 | `software_error` | invalid request or executor defect |
+| 27 | `quality_rejected` | deterministic quality risk remains after repair |
+| 28 | `budget_exhausted` | paid reservation or approval is insufficient |
+| 29 | `configuration` | shared Provider config/credential/circuit failure |
 
 Retries remain inside the same attempt and Provider. Each retry receives the
 same source-locked batch. Cue IDs, order, and protected URLs, timestamps,
 hashtags, handles, email addresses, model identifiers, and numerals must match
 before a batch enters staging.
+
+After structural validation, `deterministic-v1` rejects empty/copy/refusal,
+repetition, abnormal length, target-language mismatch, and protected-token
+damage. One complete batch repair may run with the same Provider. A remaining
+risk returns `needs_attention` with `quality_rejected`; it is never promoted.
+The Execution Manifest identifies the sole Provider for all formal cue text and
+records that optional High Assurance Review has zero translation contribution.
+When High Assurance is requested, its evidence names a different reviewer
+Provider, a separate Review Attempt and reservation, `pass`/`reject`, reviewed
+cue IDs, and issue locations. The reviewed IDs must cover the Executor's
+deterministic per-batch sample and every cue flagged before repair. Review and
+translation Attempt/reservation identities must differ, and the contract has
+no field through which reviewer text can enter formal output. A review rejection is
+`quality_rejected`. Codex requests that predate the quality field receive the
+same deterministic defaults, so omission cannot bypass the gate.
 
 No batch file is written to the formal `translation-output` directory during
 execution. Only after every batch passes both adapter validation and the
