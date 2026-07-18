@@ -181,6 +181,28 @@ class FetchVideoSourceBoundaryTests(unittest.TestCase):
                 }
             )
 
+    def test_labeled_and_unlabeled_audio_candidates_fail_closed(self) -> None:
+        with self.assertRaises(fetch_video.SourceAudioSelectionError):
+            fetch_video.source_audio_track_from_probe(
+                {
+                    "formats": [
+                        {
+                            "format_id": "140-en",
+                            "vcodec": "none",
+                            "acodec": "aac",
+                            "language": "en",
+                            "abr": 128,
+                        },
+                        {
+                            "format_id": "251-und",
+                            "vcodec": "none",
+                            "acodec": "opus",
+                            "abr": 160,
+                        },
+                    ]
+                }
+            )
+
     def test_active_and_upcoming_sources_return_deferred_evidence(self) -> None:
         active = fetch_video.source_availability_from_probe(
             {"live_status": "is_live", "release_timestamp": 1784300000}

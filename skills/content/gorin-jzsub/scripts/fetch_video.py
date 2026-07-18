@@ -714,7 +714,10 @@ def source_audio_track_from_probe(
             )
         audio = max(matching, key=_audio_quality)
         evidence.append("operator_language_override")
-    elif len(audio_candidates) == 1 or len(_audio_language_identities(audio_candidates)) == 1:
+    elif len(audio_candidates) == 1 or (
+        all(candidate.get("language") for candidate in audio_candidates)
+        and len(_audio_language_identities(audio_candidates)) == 1
+    ):
         audio = max(audio_candidates, key=_audio_quality)
         evidence.append("single_audio_track")
     else:
