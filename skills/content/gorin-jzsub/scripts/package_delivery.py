@@ -29,6 +29,9 @@ PROTECTED_SPAN_PATTERNS = (
     re.compile(r"(?<!\d)(?:\d{1,2}:)?\d{1,2}:\d{2}(?!\d)"),
     re.compile(r"(?<![\w])#[\w-]+", re.UNICODE),
 )
+CHAPTER_TIMESTAMP = re.compile(
+    r"^\s*((?:\d{1,2}:)?\d{1,2}:\d{2})(?:\s+|$)", re.MULTILINE
+)
 
 
 class PackageError(RuntimeError):
@@ -310,6 +313,10 @@ def _protected_spans(*values: str) -> Counter[str]:
     return spans
 
 
+def _chapter_timestamps(value: str) -> list[str]:
+    return [match.group(1) for match in CHAPTER_TIMESTAMP.finditer(value)]
+
+
 def _localized_metadata_input(
     path: Path,
     *,
@@ -345,6 +352,10 @@ def _localized_metadata_input(
         title, description
     ):
         raise PackageError("localized metadata did not preserve protected spans")
+    if _chapter_timestamps(source_description) != _chapter_timestamps(description):
+        raise PackageError(
+            "localized metadata did not preserve chapter timestamp structure"
+        )
     return {
         "locale": locale,
         "title": title,
@@ -463,9 +474,14 @@ def build_library_package(
         raise PackageError(
             "Source Audio Track selection lacks single/original/default/override evidence"
         )
+    selected_audio_language = audio_selection.get("language")
+    if source_audio_language is not None and selected_audio_language:
+        raise PackageError(
+            "--source-audio-language cannot relabel an existing Source Audio Track selection"
+        )
     audio_language = _language(
-        source_audio_language
-        or audio_selection.get("language")
+        selected_audio_language
+        or source_audio_language
         or source.get("declared_language"),
         "Source Audio Track language",
     )
@@ -494,6 +510,38 @@ def build_library_package(
             raise PackageError(
                 "existing Acquisition Package translation provenance differs from this run"
             )
+        existing_metadata = existing.get("metadata")
+        if not isinstance(existing_metadata, dict):
+            raise PackageError("existing Acquisition Package metadata is invalid")
+        if localized_metadata is not None:
+            desired_projection = _localized_metadata_input(
+                localized_metadata,
+                job_root=job_root,
+                target_language=target_language,
+                source_title=_required_string(source.get("title"), "source title"),
+                source_description=str(source.get("description") or ""),
+            )
+            projections = existing_metadata.get("localized_projections")
+            if not isinstance(projections, list) or len(projections) != 1:
+                raise PackageError(
+                    "existing Acquisition Package localized metadata differs from this run"
+                )
+            projection_reference = projections[0]
+            projection_path = (
+                _package_file(destination, projection_reference.get("path"))
+                if isinstance(projection_reference, dict)
+                else None
+            )
+            if projection_path is None or _read_json(projection_path) != desired_projection:
+                raise PackageError(
+                    "existing Acquisition Package localized metadata differs from this run"
+                )
+        elif localization_failure is not None:
+            expected_warning = f"localized_metadata_{localization_failure}"
+            if existing_metadata.get("localization_warnings") != [expected_warning]:
+                raise PackageError(
+                    "existing Acquisition Package localization warning differs from this run"
+                )
         existing_artifacts = {
             artifact["role"]: artifact
             for artifact in existing["artifacts"]

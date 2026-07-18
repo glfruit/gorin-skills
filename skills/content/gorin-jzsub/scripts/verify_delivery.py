@@ -93,6 +93,20 @@ def assess_delivery(download_manifest: Path) -> dict[str, Any]:
         if "release_timestamp" in availability:
             result["release_timestamp"] = availability["release_timestamp"]
         return result
+    if download.get("status") == "needs_attention":
+        attention = download.get("attention")
+        if not isinstance(attention, dict):
+            raise DeliveryError("needs-attention manifest has no classification evidence")
+        if attention.get("reason") != "source_audio_ambiguous":
+            raise DeliveryError("needs-attention manifest has an invalid reason")
+        return {
+            "complete": False,
+            "stage": "needs_attention",
+            "deliverable": deliverable,
+            "job_dir": str(job_dir),
+            "missing": [],
+            **attention,
+        }
     artifacts = download.get("artifacts")
     if not isinstance(artifacts, dict):
         raise DeliveryError("download manifest has no artifacts object")

@@ -719,10 +719,13 @@ def source_audio_track_from_probe(
         audio = max(audio_candidates, key=_audio_quality)
         evidence.append("single_audio_track")
     else:
-        original_or_default = []
+        original_or_default: list[tuple[dict[str, Any], tuple[str, ...]]] = []
         for candidate in audio_candidates:
             markers = _audio_platform_markers(candidate)
-            if markers and _languages_match(candidate.get("language"), declared_language):
+            if markers and (
+                not declared_language
+                or _languages_match(candidate.get("language"), declared_language)
+            ):
                 original_or_default.append((candidate, markers))
         if not original_or_default:
             raise SourceAudioSelectionError(
@@ -730,20 +733,32 @@ def source_audio_track_from_probe(
                 "lack a unique platform original/default marker; pass "
                 "--source-audio-language only with independent evidence"
             )
-        best_score = max(_audio_quality(candidate) for candidate, _ in original_or_default)
-        best = [
-            (candidate, markers)
-            for candidate, markers in original_or_default
-            if _audio_quality(candidate) == best_score
-        ]
-        if len(best) != 1:
+        marked_identities = _audio_language_identities(
+            [candidate for candidate, _ in original_or_default]
+        )
+        if len(marked_identities) != 1:
             raise SourceAudioSelectionError(
                 "Source Audio Track selection needs_attention: multiple plausible "
                 "original/default audio candidates remain"
             )
-        audio, markers = best[0]
+        identity = next(iter(marked_identities))
+        same_track_formats = [
+            candidate
+            for candidate in audio_candidates
+            if _language_base(str(candidate.get("language") or "und")) == identity
+        ]
+        audio = max(same_track_formats, key=_audio_quality)
+        markers = tuple(
+            dict.fromkeys(
+                marker
+                for candidate, candidate_markers in original_or_default
+                if _language_base(str(candidate.get("language") or "und")) == identity
+                for marker in candidate_markers
+            )
+        )
         evidence.extend(markers)
-        evidence.append("source_language_match")
+        if declared_language:
+            evidence.append("source_language_match")
 
     format_id = audio.get("format_id")
     language = (
@@ -766,6 +781,16 @@ def source_audio_track_from_probe(
         result["bitrate_bps"] = bitrate_bps
         result["selection_evidence"].append("yt_dlp_format_bitrate")
     return result
+
+
+def source_audio_candidate_languages(info: dict[str, Any]) -> list[str]:
+    return sorted(
+        {
+            str(candidate.get("language"))
+            for candidate in _audio_candidates(info)
+            if candidate.get("language")
+        }
+    )
 
 
 def source_availability_from_probe(info: dict[str, Any]) -> dict[str, Any] | None:
@@ -791,7 +816,7 @@ def source_availability_from_probe(info: dict[str, Any]) -> dict[str, Any] | Non
 def source_type_from_probe(info: dict[str, Any], fallback_url: str) -> str:
     if info.get("live_status") == "was_live":
         return "completed_live_vod"
-    if "/shorts/" in str(info.get("webpage_url") or fallback_url):
+    if "/shorts/" in str(info.get("webpage_url") or "") or "/shorts/" in fallback_url:
         return "short"
     return "video"
 
@@ -1265,6 +1290,22 @@ def _advance_bilingual_stage(download_manifest: Path) -> int:
             )
         )
         return 3
+    if manifest.get("status") == "needs_attention":
+        attention = manifest.get("attention")
+        if not isinstance(attention, dict):
+            raise FetchError("Needs-attention manifest has no classification evidence")
+        print(
+            json.dumps(
+                {
+                    "complete": False,
+                    "status": "needs_attention",
+                    **attention,
+                },
+                ensure_ascii=False,
+                sort_keys=True,
+            )
+        )
+        return 3
     output_value = manifest.get("output_directory")
     output_dir = (
         Path(output_value).expanduser().resolve()
@@ -1578,9 +1619,36 @@ def execute(args: argparse.Namespace) -> Path | None:
             "A library delivery requires a Source Transcript; no suitable platform "
             "subtitle was advertised"
         )
-    source_audio_track = source_audio_track_from_probe(
-        info, getattr(args, "source_audio_language", None)
-    )
+    try:
+        source_audio_track = source_audio_track_from_probe(
+            info, getattr(args, "source_audio_language", None)
+        )
+    except SourceAudioSelectionError:
+        manifest = _manifest_base(
+            info=info,
+            url=url,
+            output_dir=output_dir,
+            browser_cookies=effective_browser_cookies,
+            allow_remote_ejs=args.allow_remote_ejs,
+            choice=choice,
+            deliverable=deliverable,
+            target_language=target_language,
+        )
+        manifest["status"] = "needs_attention"
+        manifest["attention"] = {
+            "reason": "source_audio_ambiguous",
+            "available_languages": source_audio_candidate_languages(info),
+            "override": "source_audio_language",
+        }
+        manifest["execution"] = {
+            "complete": False,
+            "next_stage": None,
+            "resume": bool(args.resume),
+        }
+        manifest["authentication"]["mode"] = authentication_mode
+        destination = _write_manifest(output_dir, manifest)
+        print(f"Needs-attention manifest: {destination}", file=sys.stderr)
+        return destination
     manifest = _manifest_base(
         info=info,
         url=url,

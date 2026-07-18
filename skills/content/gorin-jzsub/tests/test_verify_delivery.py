@@ -71,6 +71,30 @@ class VerifyDeliveryTests(unittest.TestCase):
         self.assertEqual(result["reason"], "upcoming_premiere")
         self.assertEqual(result["release_timestamp"], 1784400000)
 
+    def test_audio_ambiguity_is_a_classified_needs_attention_state(self) -> None:
+        self.manifest.write_text(
+            json.dumps(
+                {
+                    "status": "needs_attention",
+                    "deliverable": "library",
+                    "output_directory": str(self.root),
+                    "attention": {
+                        "reason": "source_audio_ambiguous",
+                        "available_languages": ["en", "fr"],
+                        "override": "source_audio_language",
+                    },
+                    "execution": {"complete": False, "next_stage": None},
+                }
+            ),
+            encoding="utf-8",
+        )
+
+        result = delivery.assess_delivery(self.manifest)
+
+        self.assertFalse(result["complete"])
+        self.assertEqual(result["stage"], "needs_attention")
+        self.assertEqual(result["reason"], "source_audio_ambiguous")
+
     def test_subtitled_job_with_only_translation_inputs_is_incomplete(self) -> None:
         inputs = self.root / "subtitles" / "translation-input"
         inputs.mkdir(parents=True)

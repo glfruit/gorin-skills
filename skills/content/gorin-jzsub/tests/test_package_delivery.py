@@ -250,6 +250,32 @@ class PackageDeliveryTests(unittest.TestCase):
                 localized_metadata=localized,
             )
 
+    def test_rejects_localized_metadata_that_breaks_chapter_line_structure(self) -> None:
+        source = json.loads(self.download_manifest.read_text(encoding="utf-8"))
+        source["source"]["description"] = "00:30 Chapter one"
+        self.download_manifest.write_text(json.dumps(source), encoding="utf-8")
+        localized = self.root / "localized-metadata.zh-CN.json"
+        localized.write_text(
+            json.dumps(
+                {
+                    "locale": "zh-CN",
+                    "title": "本地化标题",
+                    "description": "第一章 00:30",
+                }
+            ),
+            encoding="utf-8",
+        )
+
+        with self.assertRaisesRegex(packaging.PackageError, "chapter timestamp structure"):
+            packaging.build_library_package(
+                self.download_manifest,
+                translation_provider="codex",
+                translation_model="fixture-model",
+                quality_status="operator_reviewed",
+                quality_rules_version="fixture-rules-1",
+                localized_metadata=localized,
+            )
+
     def test_localization_failure_keeps_snapshot_and_records_a_bounded_warning(self) -> None:
         package = packaging.build_library_package(
             self.download_manifest,
@@ -301,8 +327,69 @@ class PackageDeliveryTests(unittest.TestCase):
                 self.assertEqual(
                     manifest["provenance"]["source_transcript"]["kind"], expected
                 )
+                if source_kind == "asr":
+                    artifacts = {
+                        artifact["role"]: artifact for artifact in manifest["artifacts"]
+                    }
+                    self.assertEqual(
+                        artifacts["source_subtitle"]["sha256"],
+                        artifacts["source_transcript"]["sha256"],
+                    )
                 shutil.rmtree(package)
                 self._write_job()
+
+    def test_source_audio_language_override_cannot_relabel_an_existing_selection(self) -> None:
+        with self.assertRaisesRegex(packaging.PackageError, "cannot relabel"):
+            packaging.build_library_package(
+                self.download_manifest,
+                translation_provider="codex",
+                translation_model="fixture-model",
+                quality_status="operator_reviewed",
+                quality_rules_version="fixture-rules-1",
+                source_audio_language="fr",
+            )
+
+    def test_existing_package_rejects_a_different_localized_projection_intent(self) -> None:
+        first = self.root / "localized-first.json"
+        first.write_text(
+            json.dumps(
+                {
+                    "locale": "zh-CN",
+                    "title": "第一个标题",
+                    "description": "第一个简介",
+                }
+            ),
+            encoding="utf-8",
+        )
+        packaging.build_library_package(
+            self.download_manifest,
+            translation_provider="codex",
+            translation_model="fixture-model",
+            quality_status="operator_reviewed",
+            quality_rules_version="fixture-rules-1",
+            localized_metadata=first,
+        )
+        second = self.root / "localized-second.json"
+        second.write_text(
+            json.dumps(
+                {
+                    "locale": "zh-CN",
+                    "title": "第二个标题",
+                    "description": "第二个简介",
+                }
+            ),
+            encoding="utf-8",
+        )
+
+        with self.assertRaisesRegex(packaging.PackageError, "localized metadata differs"):
+            packaging.build_library_package(
+                self.download_manifest,
+                translation_provider="codex",
+                translation_model="fixture-model",
+                quality_status="operator_reviewed",
+                quality_rules_version="fixture-rules-1",
+                localized_metadata=second,
+            )
 
 
 if __name__ == "__main__":

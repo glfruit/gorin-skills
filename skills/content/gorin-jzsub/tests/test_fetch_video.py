@@ -78,6 +78,58 @@ class FetchVideoSourceBoundaryTests(unittest.TestCase):
         self.assertIn("platform_original", selected["selection_evidence"])
         self.assertIn("source_language_match", selected["selection_evidence"])
 
+    def test_unique_platform_original_is_selected_without_top_level_language(self) -> None:
+        selected = fetch_video.source_audio_track_from_probe(
+            {
+                "formats": [
+                    {
+                        "format_id": "251-en",
+                        "vcodec": "none",
+                        "acodec": "opus",
+                        "language": "en",
+                        "format_note": "English original",
+                        "abr": 128,
+                    },
+                    {
+                        "format_id": "251-zh",
+                        "vcodec": "none",
+                        "acodec": "opus",
+                        "language": "zh-CN",
+                        "format_note": "Chinese dubbed",
+                        "abr": 160,
+                    },
+                ]
+            }
+        )
+
+        self.assertEqual(selected["format_id"], "251-en")
+        self.assertIn("platform_original", selected["selection_evidence"])
+
+    def test_multiple_platform_original_identities_do_not_use_bitrate_as_a_tiebreak(self) -> None:
+        info = {
+            "formats": [
+                {
+                    "format_id": "251-en",
+                    "vcodec": "none",
+                    "acodec": "opus",
+                    "language": "en",
+                    "format_note": "English original",
+                    "abr": 128,
+                },
+                {
+                    "format_id": "251-fr",
+                    "vcodec": "none",
+                    "acodec": "opus",
+                    "language": "fr",
+                    "format_note": "French original",
+                    "abr": 192,
+                },
+            ]
+        }
+
+        with self.assertRaises(fetch_video.SourceAudioSelectionError):
+            fetch_video.source_audio_track_from_probe(info)
+
     def test_ambiguous_audio_fails_closed_and_language_override_recovers(self) -> None:
         info = {
             "formats": [
@@ -125,7 +177,7 @@ class FetchVideoSourceBoundaryTests(unittest.TestCase):
     def test_shorts_and_completed_live_vod_use_stable_source_types(self) -> None:
         short = fetch_video.source_type_from_probe(
             {
-                "webpage_url": "https://www.youtube.com/shorts/short-fixture",
+                "webpage_url": "https://www.youtube.com/watch?v=short-fixture",
                 "live_status": "not_live",
             },
             "https://www.youtube.com/shorts/short-fixture",
@@ -200,6 +252,59 @@ class FetchVideoSourceBoundaryTests(unittest.TestCase):
             )
             self.assertEqual(manifest["availability"]["reason"], "active_livestream")
             self.assertFalse(manifest["execution"]["complete"])
+
+    def test_ambiguous_audio_cli_writes_structured_needs_attention_result(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            bin_dir = root / "bin"
+            output_dir = root / "output"
+            bin_dir.mkdir()
+            fake_ytdlp = bin_dir / "yt-dlp"
+            fake_ytdlp.write_text(
+                f"#!{sys.executable}\n"
+                + textwrap.dedent(
+                    """\
+                    import json
+                    print(json.dumps({
+                        "id": "ambiguous-audio",
+                        "title": "Ambiguous audio",
+                        "extractor_key": "Youtube",
+                        "webpage_url": "https://www.youtube.com/watch?v=ambiguous-audio",
+                        "duration": 1,
+                        "subtitles": {"en": [{"ext": "srt"}]},
+                        "automatic_captions": {},
+                        "formats": [
+                            {"format_id": "251-en", "vcodec": "none", "acodec": "opus", "language": "en", "abr": 128},
+                            {"format_id": "251-fr", "vcodec": "none", "acodec": "opus", "language": "fr", "abr": 144},
+                        ],
+                    }))
+                    """
+                ),
+                encoding="utf-8",
+            )
+            fake_ytdlp.chmod(0o755)
+
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    str(SCRIPT),
+                    "https://www.youtube.com/watch?v=ambiguous-audio",
+                    "--output-dir",
+                    str(output_dir),
+                    "--deliver",
+                    "library",
+                ],
+                capture_output=True,
+                text=True,
+                env={**os.environ, "PATH": str(bin_dir)},
+                check=False,
+            )
+
+            self.assertEqual(result.returncode, 3, result.stderr)
+            payload = json.loads(result.stdout)
+            self.assertEqual(payload["status"], "needs_attention")
+            self.assertEqual(payload["reason"], "source_audio_ambiguous")
+            self.assertEqual(payload["available_languages"], ["en", "fr"])
 
 
 class FetchVideoLibraryDeliveryTests(unittest.TestCase):
