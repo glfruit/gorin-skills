@@ -1,0 +1,5 @@
+schema_version: 1
+summary: Add a non-burning library deliverable that emits a verified immutable Acquisition Package.
+repository: minor
+skills:
+  gorin-jzsub: minor

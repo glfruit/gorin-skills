@@ -29,7 +29,7 @@ from typing import Any, NamedTuple, Sequence
 
 FORMAT_SELECTOR = "bv*+ba/b"
 MANIFEST_NAME = "download-manifest.json"
-DELIVERABLES = ("full", "video", "subs", "bilingual-subs")
+DELIVERABLES = ("full", "video", "subs", "bilingual-subs", "library")
 SUBTITLE_ONLY_DELIVERABLES = frozenset({"subs", "bilingual-subs"})
 YOUTUBE_SKIP_TRANSLATIONS = "youtube:skip=translated_subs"
 AUTO_BROWSER_COOKIES = "auto"
@@ -69,6 +69,12 @@ class FetchError(RuntimeError):
 
 class SubtitleSelectionError(FetchError):
     """No suitable original-language subtitle matched the requested policy."""
+
+
+class SourceAudioSelectionError(FetchError):
+    """Source Audio Track candidates require explicit operator attention."""
+
+    classification = "needs_attention"
 
 
 class SubtitleChoice(NamedTuple):
@@ -598,6 +604,244 @@ def available_subtitle_summary(
     ]
 
 
+def _languages_match(left: Any, right: Any) -> bool:
+    if not isinstance(left, str) or not left or not isinstance(right, str) or not right:
+        return False
+    left_base = _language_base(left)
+    right_base = _language_base(right)
+    if left_base == right_base:
+        return True
+    return any(left_base in group and right_base in group for group in _LANGUAGE_ALIAS_GROUPS)
+
+
+def _audio_candidates(info: dict[str, Any]) -> list[dict[str, Any]]:
+    formats = info.get("formats")
+    candidates = formats if isinstance(formats, list) else []
+    audio_only = [
+        candidate
+        for candidate in candidates
+        if isinstance(candidate, dict)
+        and candidate.get("acodec") not in {None, "none"}
+        and candidate.get("vcodec") in {None, "none"}
+        and isinstance(candidate.get("format_id"), str)
+        and candidate.get("format_id")
+    ]
+    if audio_only:
+        return audio_only
+    requested = info.get("requested_formats")
+    requested_candidates = requested if isinstance(requested, list) else [info]
+    return [
+        candidate
+        for candidate in requested_candidates
+        if isinstance(candidate, dict)
+        and candidate.get("acodec") not in {None, "none"}
+        and isinstance(candidate.get("format_id"), str)
+        and candidate.get("format_id")
+    ]
+
+
+def _audio_platform_markers(candidate: dict[str, Any]) -> tuple[str, ...]:
+    note = " ".join(
+        str(candidate.get(field) or "")
+        for field in ("format_note", "format", "language", "name")
+    ).lower()
+    markers: list[str] = []
+    if candidate.get("is_original") is True or re.search(r"\boriginal\b", note):
+        markers.append("platform_original")
+    if (
+        candidate.get("is_default") is True
+        or candidate.get("audio_is_default") is True
+        or re.search(r"\bdefault\b", note)
+    ):
+        markers.append("platform_default")
+    return tuple(markers)
+
+
+def _audio_quality(candidate: dict[str, Any]) -> tuple[float, float]:
+    def number(value: Any) -> float:
+        try:
+            return float(value)
+        except (TypeError, ValueError):
+            return 0.0
+
+    return (
+        number(candidate.get("abr") or candidate.get("tbr")),
+        number(candidate.get("quality")),
+    )
+
+
+def _audio_language_identities(candidates: Sequence[dict[str, Any]]) -> set[str]:
+    return {
+        _language_base(language)
+        for candidate in candidates
+        if isinstance((language := candidate.get("language")), str) and language
+    }
+
+
+def source_audio_track_from_probe(
+    info: dict[str, Any], source_audio_language: str | None = None
+) -> dict[str, Any] | None:
+    audio_candidates = _audio_candidates(info)
+    if not audio_candidates:
+        return None
+
+    declared_language = info.get("original_language") or info.get("language")
+    evidence: list[str] = []
+    if source_audio_language:
+        if not re.fullmatch(
+            r"[A-Za-z]{2,3}(?:-[A-Za-z0-9]{1,8})*", source_audio_language.strip()
+        ):
+            raise SourceAudioSelectionError(
+                "Source Audio Track selection needs_attention: "
+                "--source-audio-language must be a language tag"
+            )
+        matching = [
+            candidate
+            for candidate in audio_candidates
+            if _languages_match(candidate.get("language"), source_audio_language)
+        ]
+        if not matching:
+            available = sorted(
+                {
+                    str(candidate.get("language"))
+                    for candidate in audio_candidates
+                    if candidate.get("language")
+                }
+            )
+            raise SourceAudioSelectionError(
+                "Source Audio Track selection needs_attention: requested "
+                f"language {source_audio_language!r} is unavailable; candidates: {available}"
+            )
+        audio = max(matching, key=_audio_quality)
+        evidence.append("operator_language_override")
+    elif len(audio_candidates) == 1 or (
+        all(candidate.get("language") for candidate in audio_candidates)
+        and len(_audio_language_identities(audio_candidates)) == 1
+    ):
+        audio = max(audio_candidates, key=_audio_quality)
+        evidence.append("single_audio_track")
+    else:
+        original_or_default: list[tuple[dict[str, Any], tuple[str, ...]]] = []
+        for candidate in audio_candidates:
+            markers = _audio_platform_markers(candidate)
+            if markers and (
+                not declared_language
+                or _languages_match(candidate.get("language"), declared_language)
+            ):
+                original_or_default.append((candidate, markers))
+        if not original_or_default:
+            raise SourceAudioSelectionError(
+                "Source Audio Track selection needs_attention: multiple audio candidates "
+                "lack a unique platform original/default marker; pass "
+                "--source-audio-language only with independent evidence"
+            )
+        marked_identities = _audio_language_identities(
+            [candidate for candidate, _ in original_or_default]
+        )
+        if not marked_identities:
+            if len(original_or_default) != 1:
+                raise SourceAudioSelectionError(
+                    "Source Audio Track selection needs_attention: multiple unlabeled "
+                    "original/default audio candidates remain"
+                )
+            audio, markers = original_or_default[0]
+        elif len(marked_identities) != 1:
+            raise SourceAudioSelectionError(
+                "Source Audio Track selection needs_attention: multiple plausible "
+                "original/default audio candidates remain"
+            )
+        else:
+            identity = next(iter(marked_identities))
+            same_track_formats = [
+                candidate
+                for candidate in audio_candidates
+                if isinstance(candidate.get("language"), str)
+                and _language_base(candidate["language"]) == identity
+            ]
+            audio = max(same_track_formats, key=_audio_quality)
+            markers = tuple(
+                dict.fromkeys(
+                    marker
+                    for candidate, candidate_markers in original_or_default
+                    if isinstance(candidate.get("language"), str)
+                    and _language_base(candidate["language"]) == identity
+                    for marker in candidate_markers
+                )
+            )
+        evidence.extend(markers)
+        if declared_language:
+            evidence.append("source_language_match")
+
+    format_id = audio.get("format_id")
+    language = (
+        audio.get("language")
+        or source_audio_language
+        or info.get("language")
+        or info.get("original_language")
+    )
+    result = {
+        "format_id": format_id,
+        "language": language if isinstance(language, str) and language else None,
+        "selection_evidence": evidence,
+    }
+    raw_bitrate = audio.get("abr") or audio.get("tbr")
+    try:
+        bitrate_bps = round(float(raw_bitrate) * 1000)
+    except (TypeError, ValueError):
+        bitrate_bps = 0
+    if bitrate_bps > 0:
+        result["bitrate_bps"] = bitrate_bps
+        result["selection_evidence"].append("yt_dlp_format_bitrate")
+    return result
+
+
+def source_audio_candidate_languages(info: dict[str, Any]) -> list[str]:
+    return sorted(
+        {
+            str(candidate.get("language"))
+            for candidate in _audio_candidates(info)
+            if candidate.get("language")
+        }
+    )
+
+
+def source_availability_from_probe(info: dict[str, Any]) -> dict[str, Any] | None:
+    live_status = info.get("live_status")
+    reasons = {
+        "is_live": "active_livestream",
+        "is_upcoming": "upcoming_premiere",
+    }
+    reason = reasons.get(live_status)
+    if reason is None:
+        return None
+    evidence: dict[str, Any] = {
+        "status": "source_deferred",
+        "reason": reason,
+        "live_status": live_status,
+    }
+    release_timestamp = info.get("release_timestamp")
+    if isinstance(release_timestamp, (int, float)) and release_timestamp > 0:
+        evidence["release_timestamp"] = release_timestamp
+    return evidence
+
+
+def source_type_from_probe(info: dict[str, Any], fallback_url: str) -> str:
+    if info.get("live_status") == "was_live":
+        return "completed_live_vod"
+    if "/shorts/" in str(info.get("webpage_url") or "") or "/shorts/" in fallback_url:
+        return "short"
+    return "video"
+
+
+def format_selector_for_source_audio(source_audio_track: dict[str, Any] | None) -> str:
+    if not isinstance(source_audio_track, dict):
+        return FORMAT_SELECTOR
+    format_id = source_audio_track.get("format_id")
+    if not isinstance(format_id, str) or not format_id:
+        raise FetchError("Source Audio Track has no platform format ID")
+    return f"bv*+{format_id}/b[format_id={format_id}]"
+
+
 def download_output_templates(base: str, cover_name: str) -> tuple[str, str]:
     return (
         f"{base}.intermediate.%(ext)s",
@@ -614,6 +858,7 @@ def _download_video_and_cover(
     browser_cookies: str | None,
     allow_remote_ejs: bool,
     executable: str,
+    format_selector: str = FORMAT_SELECTOR,
 ) -> subprocess.CompletedProcess[str]:
     command = ytdlp_common_args(browser_cookies, allow_remote_ejs, executable)
     video_template, cover_template = download_output_templates(base, cover_name)
@@ -622,7 +867,7 @@ def _download_video_and_cover(
             "-P",
             str(output_dir),
             "-f",
-            FORMAT_SELECTOR,
+            format_selector,
             "--merge-output-format",
             "mkv",
             "--remux-video",
@@ -796,7 +1041,8 @@ def _ffprobe(path: Path, executable: str) -> dict[str, Any]:
                 "format=format_name,duration,size,bit_rate:"
                 "stream=index,codec_type,codec_name,profile,level,bit_rate,"
                 "width,height,avg_frame_rate,r_frame_rate,pix_fmt,"
-                "color_transfer,color_space,color_primaries,channels,sample_rate"
+                "color_transfer,color_space,color_primaries,channels,sample_rate:"
+                "stream_tags=language"
             ),
             "-of",
             "json",
@@ -930,7 +1176,9 @@ def _manifest_base(
     choice: SubtitleChoice | None,
     deliverable: str = "full",
     target_language: str = DEFAULT_TARGET_LANGUAGE,
+    source_audio_track: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
+    format_selector = format_selector_for_source_audio(source_audio_track)
     return {
         "schema_version": 1,
         "created_at": dt.datetime.now(dt.timezone.utc).isoformat(),
@@ -942,6 +1190,12 @@ def _manifest_base(
             "extractor": info.get("extractor_key") or info.get("extractor"),
             "id": str(info.get("id")),
             "title": str(info.get("title") or "untitled"),
+            "description": str(info.get("description") or ""),
+            "channel_id": info.get("channel_id") or info.get("uploader_id"),
+            "channel_name": info.get("channel") or info.get("uploader"),
+            "upload_date": info.get("upload_date") or info.get("release_date"),
+            "tags": info.get("tags") if isinstance(info.get("tags"), list) else [],
+            "source_type": source_type_from_probe(info, url),
             "duration_seconds": info.get("duration"),
             "declared_language": info.get("language") or info.get("original_language"),
             # Probed display size lets subtitle-only jobs lay out captions
@@ -960,10 +1214,11 @@ def _manifest_base(
         },
         "selection": {
             "playlist_allowed": False,
-            "format": FORMAT_SELECTOR,
+            "format": format_selector,
             "intermediate_container": "mkv",
             "subtitle": choice._asdict() if choice else None,
             "subtitle_candidates": available_subtitle_summary(info, target_language),
+            "source_audio_track": source_audio_track,
         },
         "warnings": [],
     }
@@ -1030,6 +1285,39 @@ def _advance_bilingual_stage(download_manifest: Path) -> int:
         raise FetchError(f"Could not read download manifest: {download_manifest}") from exc
     if not isinstance(manifest, dict):
         raise FetchError("Download manifest root must be an object")
+    if manifest.get("status") == "source_deferred":
+        availability = manifest.get("availability")
+        if not isinstance(availability, dict):
+            raise FetchError("Deferred source manifest has no availability evidence")
+        print(
+            json.dumps(
+                {
+                    "complete": False,
+                    "status": "source_deferred",
+                    "next_stage": "source_availability_retry",
+                    **availability,
+                },
+                ensure_ascii=False,
+                sort_keys=True,
+            )
+        )
+        return 3
+    if manifest.get("status") == "needs_attention":
+        attention = manifest.get("attention")
+        if not isinstance(attention, dict):
+            raise FetchError("Needs-attention manifest has no classification evidence")
+        print(
+            json.dumps(
+                {
+                    "complete": False,
+                    "status": "needs_attention",
+                    **attention,
+                },
+                ensure_ascii=False,
+                sort_keys=True,
+            )
+        )
+        return 3
     output_value = manifest.get("output_directory")
     output_dir = (
         Path(output_value).expanduser().resolve()
@@ -1255,6 +1543,7 @@ def _dry_run_plan(args: argparse.Namespace) -> dict[str, Any]:
         "browser_cookie_value_logged": False,
         "allow_remote_ejs": args.allow_remote_ejs,
         "review_auto_subs": bool(getattr(args, "review_auto_subs", False)),
+        "source_audio_language": getattr(args, "source_audio_language", None),
         "resume": args.resume,
         "probe_only": args.probe_only,
         "format": FORMAT_SELECTOR,
@@ -1269,8 +1558,10 @@ def execute(args: argparse.Namespace) -> Path | None:
     _validate_browser_spec(args.browser_cookies)
     deliverable = getattr(args, "deliver", "full")
     review_auto_subs = bool(getattr(args, "review_auto_subs", False))
-    if review_auto_subs and deliverable != "full":
-        raise FetchError("--review-auto-subs is only supported with --deliver full")
+    if review_auto_subs and deliverable not in {"full", "library"}:
+        raise FetchError(
+            "--review-auto-subs is only supported with --deliver full or library"
+        )
     if args.dry_run:
         print(json.dumps(_dry_run_plan(args), ensure_ascii=False, indent=2, sort_keys=True))
         return None
@@ -1306,12 +1597,70 @@ def execute(args: argparse.Namespace) -> Path | None:
         )
     subtitles_only = deliverable in SUBTITLE_ONLY_DELIVERABLES
     target_language = _validated_target_language(getattr(args, "target_lang", None))
+    availability = source_availability_from_probe(info)
+    if availability is not None:
+        manifest = _manifest_base(
+            info=info,
+            url=url,
+            output_dir=output_dir,
+            browser_cookies=effective_browser_cookies,
+            allow_remote_ejs=args.allow_remote_ejs,
+            choice=None,
+            deliverable=deliverable,
+            target_language=target_language,
+        )
+        manifest["status"] = "source_deferred"
+        manifest["availability"] = availability
+        manifest["execution"] = {
+            "complete": False,
+            "next_stage": "source_availability_retry",
+            "resume": bool(args.resume),
+        }
+        manifest["authentication"]["mode"] = authentication_mode
+        destination = _write_manifest(output_dir, manifest)
+        print(f"Deferred source manifest: {destination}", file=sys.stderr)
+        return destination
     choice = select_source_subtitle(info, args.source_lang, target_language)
     if subtitles_only and choice is None:
         raise FetchError(
             "A subtitle-only delivery was requested, but the platform advertises "
             f"no suitable source subtitle outside the target language {target_language!r}"
         )
+    if deliverable == "library" and choice is None:
+        raise FetchError(
+            "A library delivery requires a Source Transcript; no suitable platform "
+            "subtitle was advertised"
+        )
+    try:
+        source_audio_track = source_audio_track_from_probe(
+            info, getattr(args, "source_audio_language", None)
+        )
+    except SourceAudioSelectionError:
+        manifest = _manifest_base(
+            info=info,
+            url=url,
+            output_dir=output_dir,
+            browser_cookies=effective_browser_cookies,
+            allow_remote_ejs=args.allow_remote_ejs,
+            choice=choice,
+            deliverable=deliverable,
+            target_language=target_language,
+        )
+        manifest["status"] = "needs_attention"
+        manifest["attention"] = {
+            "reason": "source_audio_ambiguous",
+            "available_languages": source_audio_candidate_languages(info),
+            "override": "source_audio_language",
+        }
+        manifest["execution"] = {
+            "complete": False,
+            "next_stage": None,
+            "resume": bool(args.resume),
+        }
+        manifest["authentication"]["mode"] = authentication_mode
+        destination = _write_manifest(output_dir, manifest)
+        print(f"Needs-attention manifest: {destination}", file=sys.stderr)
+        return destination
     manifest = _manifest_base(
         info=info,
         url=url,
@@ -1321,7 +1670,13 @@ def execute(args: argparse.Namespace) -> Path | None:
         choice=choice,
         deliverable=deliverable,
         target_language=target_language,
+        source_audio_track=source_audio_track,
     )
+    if deliverable == "library" and manifest["selection"]["source_audio_track"] is None:
+        raise FetchError(
+            "Library delivery could not prove one selected Source Audio Track from "
+            "the yt-dlp probe; use a source with an unambiguous audio selection"
+        )
     manifest["execution"] = {
         "resume": bool(args.resume),
         "asr_review_requested": review_auto_subs,
@@ -1361,6 +1716,7 @@ def execute(args: argparse.Namespace) -> Path | None:
                 browser_cookies=effective_browser_cookies,
                 allow_remote_ejs=args.allow_remote_ejs,
                 executable=yt_dlp,
+                format_selector=manifest["selection"]["format"],
             )
         )
 
@@ -1503,6 +1859,46 @@ def execute(args: argparse.Namespace) -> Path | None:
 
 def run_self_tests() -> bool:
     class FetchVideoTests(unittest.TestCase):
+        def test_probe_records_one_requested_source_audio_track(self) -> None:
+            selected = source_audio_track_from_probe(
+                {
+                    "original_language": "en",
+                    "requested_formats": [
+                        {"format_id": "399", "vcodec": "av01", "acodec": "none"},
+                        {
+                            "format_id": "140",
+                            "vcodec": "none",
+                            "acodec": "mp4a",
+                            "abr": 129.5,
+                        },
+                    ],
+                }
+            )
+
+            self.assertEqual(
+                selected,
+                {
+                    "format_id": "140",
+                    "language": "en",
+                    "bitrate_bps": 129500,
+                    "selection_evidence": [
+                        "single_audio_track",
+                        "yt_dlp_format_bitrate",
+                    ],
+                },
+            )
+
+        def test_probe_refuses_ambiguous_source_audio_tracks(self) -> None:
+            with self.assertRaises(SourceAudioSelectionError):
+                source_audio_track_from_probe(
+                    {
+                        "requested_formats": [
+                            {"format_id": "140", "acodec": "mp4a", "language": "en"},
+                            {"format_id": "251", "acodec": "opus", "language": "fr"},
+                        ]
+                    }
+                )
+
         def test_delivery_names_follow_target_language(self) -> None:
             names = delivery_names("Parking / Sensor", "zh-CN")
             self.assertEqual(names["cover"], "封面.jpg")
@@ -2013,6 +2409,13 @@ def build_parser() -> argparse.ArgumentParser:
         help="Override original subtitle language selection, e.g. en, en-orig, ja, or ko",
     )
     parser.add_argument(
+        "--source-audio-language",
+        help=(
+            "Select an independently identified original audio language when "
+            "multiple audio candidates are ambiguous; never inferred from target language"
+        ),
+    )
+    parser.add_argument(
         "--target-lang",
         default=DEFAULT_TARGET_LANGUAGE,
         help=(
@@ -2029,7 +2432,9 @@ def build_parser() -> argparse.ArgumentParser:
             "Delivery target: 'full' burns bilingual captions into MP4 (default); "
             "'video' downloads video, cover, and source subtitle files without the "
             "translation pipeline; 'subs' downloads only the source subtitle files; "
-            "'bilingual-subs' also translates and renders SRT/ASS without video or burn"
+            "'bilingual-subs' also translates and renders SRT/ASS without video or burn; "
+            "'library' preserves the Source Master and renders soft subtitles for an "
+            "immutable Acquisition Package without burn"
         ),
     )
     parser.add_argument(

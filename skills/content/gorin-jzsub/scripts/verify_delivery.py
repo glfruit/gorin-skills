@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import importlib.util
 import json
 from pathlib import Path
 import sys
@@ -45,7 +46,20 @@ def _existing_video_artifact(job_dir: Path, artifacts: dict[str, Any]) -> Path |
     return None
 
 
-DELIVERABLES = ("full", "video", "subs", "bilingual-subs")
+DELIVERABLES = ("full", "video", "subs", "bilingual-subs", "library")
+
+
+def _verify_library_package(package_dir: Path) -> None:
+    script = Path(__file__).resolve().with_name("package_delivery.py")
+    spec = importlib.util.spec_from_file_location("jzsub_package_delivery", script)
+    if spec is None or spec.loader is None:
+        raise DeliveryError("could not load the library Package Builder")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    try:
+        module.verify_acquisition_package(package_dir)
+    except module.PackageError as exc:
+        raise DeliveryError(f"invalid library Acquisition Package: {exc}") from exc
 
 
 def assess_delivery(download_manifest: Path) -> dict[str, Any]:
@@ -60,10 +74,43 @@ def assess_delivery(download_manifest: Path) -> dict[str, Any]:
     deliverable = download.get("deliverable")
     if deliverable not in DELIVERABLES:
         deliverable = "full"
+    if download.get("status") == "source_deferred":
+        availability = download.get("availability")
+        if not isinstance(availability, dict):
+            raise DeliveryError("deferred source manifest has no availability evidence")
+        reason = availability.get("reason")
+        if reason not in {"active_livestream", "upcoming_premiere"}:
+            raise DeliveryError("deferred source manifest has an invalid reason")
+        result = {
+            "complete": False,
+            "stage": "source_deferred",
+            "deliverable": deliverable,
+            "job_dir": str(job_dir),
+            "missing": [],
+            "reason": reason,
+            "live_status": availability.get("live_status"),
+        }
+        if "release_timestamp" in availability:
+            result["release_timestamp"] = availability["release_timestamp"]
+        return result
+    if download.get("status") == "needs_attention":
+        attention = download.get("attention")
+        if not isinstance(attention, dict):
+            raise DeliveryError("needs-attention manifest has no classification evidence")
+        if attention.get("reason") != "source_audio_ambiguous":
+            raise DeliveryError("needs-attention manifest has an invalid reason")
+        return {
+            "complete": False,
+            "stage": "needs_attention",
+            "deliverable": deliverable,
+            "job_dir": str(job_dir),
+            "missing": [],
+            **attention,
+        }
     artifacts = download.get("artifacts")
     if not isinstance(artifacts, dict):
         raise DeliveryError("download manifest has no artifacts object")
-    if deliverable in ("full", "video") and _existing_video_artifact(job_dir, artifacts) is None:
+    if deliverable in ("full", "video", "library") and _existing_video_artifact(job_dir, artifacts) is None:
         raise DeliveryError("no declared video artifact exists on disk")
 
     def complete(stage: str, **extra: Any) -> dict[str, Any]:
@@ -84,7 +131,7 @@ def assess_delivery(download_manifest: Path) -> dict[str, Any]:
     )
     if subtitle is not None and not subtitle.is_file():
         raise DeliveryError(f"declared source subtitle is missing: {subtitle}")
-    if deliverable in ("subs", "bilingual-subs") and subtitle is None:
+    if deliverable in ("subs", "bilingual-subs", "library") and subtitle is None:
         raise DeliveryError(
             "a subtitle delivery was requested, but the manifest declares no source subtitle"
         )
@@ -101,6 +148,8 @@ def assess_delivery(download_manifest: Path) -> dict[str, Any]:
     if not has_dialogue:
         # full falls back to plain video; bilingual-subs still delivered the
         # source subtitle files even though nothing was translatable.
+        if deliverable == "library":
+            raise DeliveryError("library delivery requires a dialogue Source Transcript")
         stage = "video_only_complete" if deliverable == "full" else "subs_complete"
         return complete(stage)
 
@@ -151,6 +200,20 @@ def assess_delivery(download_manifest: Path) -> dict[str, Any]:
         }
     if deliverable == "bilingual-subs":
         return complete("bilingual_subs_complete", rendered_dir=str(rendered_dir))
+    if deliverable == "library":
+        package_manifest = job_dir / "acquisition-package" / "delivery-manifest.json"
+        if not package_manifest.is_file():
+            return {
+                "complete": False,
+                "stage": "library_package_required",
+                "job_dir": str(job_dir),
+                "missing": [str(package_manifest)],
+            }
+        _verify_library_package(package_manifest.parent)
+        return complete(
+            "library_complete",
+            acquisition_package=str(package_manifest.parent),
+        )
 
     delivery_names = download.get("delivery_names")
     burned_name = (

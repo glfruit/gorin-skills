@@ -41,8 +41,14 @@ Select the delivery target from the user's intent and pass `--deliver`:
 - `video`: video, cover, and any source subtitle files; no translation, render, or burn.
 - `subs`: only the original subtitle files, no video streams; fails when the platform has no suitable subtitle.
 - `bilingual-subs`: subtitles plus translation and rendered bilingual SRT/ASS; no video download and no burn.
+- `library`: Source Master, cover, source/target/bilingual soft subtitles, and an
+  immutable Acquisition Package; no burn and no compatibility transcode by default.
 
-`video` and `subs` finish at exit 0. `full` and `bilingual-subs` continue through Exit 3; a reviewed `full` job may have two ordered Exit 3 stages. For `bilingual-subs`, finish after render and `verify_delivery.py` without burning.
+`video` and `subs` finish at exit 0. `full`, `bilingual-subs`, and `library`
+continue through Exit 3; a reviewed `full` or `library` job may have two ordered
+Exit 3 stages. For `bilingual-subs`, finish after render and
+`verify_delivery.py` without burning. For `library`, build and verify the
+Acquisition Package after render.
 
 Authentication behavior:
 
@@ -106,6 +112,42 @@ python3 <skill-dir>/scripts/subtitle_pipeline.py render \
 
 This first regroups translated cue pairs into sentence-aligned timed display segments, then creates source, target-language, bilingual SRT, and MiSans Bold ASS. The original text remains unchanged. Each caption is one bottom-anchored stack—source directly above the translation—whose PlayRes and wrap widths follow the video's aspect ratio, so the two languages can never overlap. Portrait video automatically uses smaller 36/40 source/translation sizes and a larger 120-unit bottom safe area; landscape keeps the 42/46 sizes and 50-unit margin. Libass draws one translucent background panel measured from the exact rendered glyph layout, so line boxes cannot double-paint into dark bands.
 
+For a `library` deliverable, build the immutable Acquisition Package after the
+render command succeeds. Supply actual translation provenance. Until a
+versioned automatic Translation Quality Gate exists, use `operator_reviewed`
+only after a human has reviewed the translation; never relabel structural
+validation as `machine_validated`.
+
+If the probe reports multiple audio languages without a unique platform
+original/default marker, the fetch exits with a classified `needs_attention`
+error. Resume in a fresh job with `fetch_video.py --source-audio-language
+<language>` only when the original language is independently known. This
+selection changes the yt-dlp format selector before download; the subtitle
+target language is never audio-selection evidence.
+
+```bash
+python3 <skill-dir>/scripts/package_delivery.py \
+  "<job-dir>/download-manifest.json" \
+  --translation-provider "<provider>" \
+  --translation-model "<model>" \
+  --quality-status operator_reviewed \
+  --quality-rules-version "operator-review-v1"
+```
+
+To add a `zh-CN` Localized Metadata Projection, write a job-local JSON object
+containing only `locale`, `title`, and `description`, then pass
+`--localized-metadata <path>`. The builder verifies that URLs, timestamps,
+email addresses, and hashtags remain byte-for-byte present before promoting
+the projection. If bounded localization retries are exhausted, omit the input
+and pass `--localization-failure retry_exhausted`; the source Metadata Snapshot
+remains authoritative and the package records a bounded publishable warning.
+
+The builder consumes only explicitly declared Execution Manifest records,
+copies into a staging package, verifies checksums and role completeness, then
+atomically promotes `<job-dir>/acquisition-package`. If the selected audio
+language is absent but independently known, pass `--source-audio-language`;
+do not use it to guess through a multi-audio ambiguity.
+
 Burn once from the best source intermediate (`full` deliverable only):
 
 ```bash
@@ -123,7 +165,10 @@ Finally run:
 python3 <skill-dir>/scripts/verify_delivery.py "<job-dir>/download-manifest.json"
 ```
 
-Exit 3 identifies the unfinished stage; continue it immediately. Report success only after exit 0 and a non-empty bilingual MP4 exists when subtitles were available.
+Exit 3 identifies the unfinished stage; continue it immediately. Report
+success only after exit 0 and the required final artifact exists: a non-empty
+bilingual MP4 for `full`, verified rendered subtitles for `bilingual-subs`, or
+a verified `delivery-manifest.json` and Acquisition Package for `library`.
 
 ## Preflight and failures
 
@@ -132,6 +177,8 @@ Exit 3 identifies the unfinished stage; continue it immediately. Report success 
 - YouTube requires a supported JavaScript runtime; prefer Deno 2.3+. Treat the selected yt-dlp executable's runtime diagnostics as authoritative because package wrappers may provide a runtime that is not visible in the parent shell's `PATH`. Read [platform-notes.md](references/platform-notes.md) only for extractor, format, subtitle, JS-runtime, or PO-token errors.
 - Read [chrome-auth.md](references/chrome-auth.md) only for authentication failures.
 - If source-language selection is ambiguous, ask for `--source-lang`; never assume a translated track is original.
+- If Source Audio Track selection is ambiguous, require independently evidenced
+  `--source-audio-language`; never derive it from `--target-lang` or bitrate.
 - If MP4 remux fails, keep the best source and perform only the final burn transcode.
 - Warn that the compatibility burn does not promise HDR preservation.
 

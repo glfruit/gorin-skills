@@ -42,6 +42,59 @@ class VerifyDeliveryTests(unittest.TestCase):
     def tearDown(self) -> None:
         self.temporary.cleanup()
 
+    def test_deferred_source_is_pending_without_becoming_a_download_error(self) -> None:
+        self.manifest.write_text(
+            json.dumps(
+                {
+                    "status": "source_deferred",
+                    "deliverable": "library",
+                    "output_directory": str(self.root),
+                    "availability": {
+                        "status": "source_deferred",
+                        "reason": "upcoming_premiere",
+                        "live_status": "is_upcoming",
+                        "release_timestamp": 1784400000,
+                    },
+                    "execution": {
+                        "complete": False,
+                        "next_stage": "source_availability_retry",
+                    },
+                }
+            ),
+            encoding="utf-8",
+        )
+
+        result = delivery.assess_delivery(self.manifest)
+
+        self.assertFalse(result["complete"])
+        self.assertEqual(result["stage"], "source_deferred")
+        self.assertEqual(result["reason"], "upcoming_premiere")
+        self.assertEqual(result["release_timestamp"], 1784400000)
+
+    def test_audio_ambiguity_is_a_classified_needs_attention_state(self) -> None:
+        self.manifest.write_text(
+            json.dumps(
+                {
+                    "status": "needs_attention",
+                    "deliverable": "library",
+                    "output_directory": str(self.root),
+                    "attention": {
+                        "reason": "source_audio_ambiguous",
+                        "available_languages": ["en", "fr"],
+                        "override": "source_audio_language",
+                    },
+                    "execution": {"complete": False, "next_stage": None},
+                }
+            ),
+            encoding="utf-8",
+        )
+
+        result = delivery.assess_delivery(self.manifest)
+
+        self.assertFalse(result["complete"])
+        self.assertEqual(result["stage"], "needs_attention")
+        self.assertEqual(result["reason"], "source_audio_ambiguous")
+
     def test_subtitled_job_with_only_translation_inputs_is_incomplete(self) -> None:
         inputs = self.root / "subtitles" / "translation-input"
         inputs.mkdir(parents=True)
@@ -161,6 +214,54 @@ class VerifyDeliveryTests(unittest.TestCase):
         result = delivery.assess_delivery(self.manifest)
         self.assertTrue(result["complete"])
         self.assertEqual(result["stage"], "bilingual_subs_complete")
+
+    def test_library_deliverable_requires_an_acquisition_package_after_render(self) -> None:
+        inputs = self.root / "subtitles" / "translation-input"
+        inputs.mkdir(parents=True)
+        batch = inputs / "batch-0001.json"
+        batch.write_text("{}", encoding="utf-8")
+        outputs = self.root / "subtitles" / "translation-output"
+        outputs.mkdir()
+        (outputs / "batch-0001.json").write_text("{}", encoding="utf-8")
+        (self.root / "subtitles" / "subtitle-manifest.json").write_text(
+            json.dumps(
+                {
+                    "translation_batches": [{"path": str(batch)}],
+                    "translation_output_dir": str(outputs),
+                }
+            ),
+            encoding="utf-8",
+        )
+        rendered = self.root / "subtitles" / "rendered"
+        rendered.mkdir()
+        (rendered / "bilingual.ass").write_text("[Script Info]\n", encoding="utf-8")
+        (rendered / "validation.json").write_text("{}", encoding="utf-8")
+        self.manifest.write_text(
+            json.dumps(
+                {
+                    "status": "bilingual_required",
+                    "deliverable": "library",
+                    "output_directory": str(self.root),
+                    "artifacts": {
+                        "intermediate": {"path": self.source.name},
+                        "subtitle": {
+                            "language": "en",
+                            "source_srt": {"path": self.subtitle.name},
+                        },
+                    },
+                }
+            ),
+            encoding="utf-8",
+        )
+
+        result = delivery.assess_delivery(self.manifest)
+
+        self.assertFalse(result["complete"])
+        self.assertEqual(result["stage"], "library_package_required")
+        self.assertEqual(
+            result["missing"],
+            [str((self.root / "acquisition-package/delivery-manifest.json").resolve())],
+        )
 
     def test_full_delivery_uses_manifest_bilingual_filename(self) -> None:
         inputs = self.root / "subtitles" / "translation-input"
