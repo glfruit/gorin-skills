@@ -118,6 +118,13 @@ versioned automatic Translation Quality Gate exists, use `operator_reviewed`
 only after a human has reviewed the translation; never relabel structural
 validation as `machine_validated`.
 
+If the probe reports multiple audio languages without a unique platform
+original/default marker, the fetch exits with a classified `needs_attention`
+error. Resume in a fresh job with `fetch_video.py --source-audio-language
+<language>` only when the original language is independently known. This
+selection changes the yt-dlp format selector before download; the subtitle
+target language is never audio-selection evidence.
+
 ```bash
 python3 <skill-dir>/scripts/package_delivery.py \
   "<job-dir>/download-manifest.json" \
@@ -126,6 +133,14 @@ python3 <skill-dir>/scripts/package_delivery.py \
   --quality-status operator_reviewed \
   --quality-rules-version "operator-review-v1"
 ```
+
+To add a `zh-CN` Localized Metadata Projection, write a job-local JSON object
+containing only `locale`, `title`, and `description`, then pass
+`--localized-metadata <path>`. The builder verifies that URLs, timestamps,
+email addresses, and hashtags remain byte-for-byte present before promoting
+the projection. If bounded localization retries are exhausted, omit the input
+and pass `--localization-failure retry_exhausted`; the source Metadata Snapshot
+remains authoritative and the package records a bounded publishable warning.
 
 The builder consumes only explicitly declared Execution Manifest records,
 copies into a staging package, verifies checksums and role completeness, then
@@ -162,6 +177,8 @@ a verified `delivery-manifest.json` and Acquisition Package for `library`.
 - YouTube requires a supported JavaScript runtime; prefer Deno 2.3+. Treat the selected yt-dlp executable's runtime diagnostics as authoritative because package wrappers may provide a runtime that is not visible in the parent shell's `PATH`. Read [platform-notes.md](references/platform-notes.md) only for extractor, format, subtitle, JS-runtime, or PO-token errors.
 - Read [chrome-auth.md](references/chrome-auth.md) only for authentication failures.
 - If source-language selection is ambiguous, ask for `--source-lang`; never assume a translated track is original.
+- If Source Audio Track selection is ambiguous, require independently evidenced
+  `--source-audio-language`; never derive it from `--target-lang` or bitrate.
 - If MP4 remux fails, keep the best source and perform only the final burn transcode.
 - Warn that the compatibility burn does not promise HDR preservation.
 

@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+from collections import Counter
 import datetime as dt
 import hashlib
 import json
@@ -17,10 +18,17 @@ from typing import Any, Sequence
 import urllib.parse
 
 
-DELIVERY_SCHEMA_VERSION = "1.0.0"
-GORIN_JZSUB_VERSION = "0.4.0"
+DELIVERY_SCHEMA_VERSION = "1.1.0"
+GORIN_JZSUB_VERSION = "0.5.0"
 PACKAGE_DIRECTORY_NAME = "acquisition-package"
 LANGUAGE_TAG = re.compile(r"^[A-Za-z]{2,3}(?:-[A-Za-z0-9]{2,8})*$")
+LOCALIZATION_FAILURES = frozenset({"provider_failed", "validation_failed", "retry_exhausted"})
+PROTECTED_SPAN_PATTERNS = (
+    re.compile(r"https?://[^\s<>\"']+", re.IGNORECASE),
+    re.compile(r"\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b", re.IGNORECASE),
+    re.compile(r"(?<!\d)(?:\d{1,2}:)?\d{1,2}:\d{2}(?!\d)"),
+    re.compile(r"(?<![\w])#[\w-]+", re.UNICODE),
+)
 
 
 class PackageError(RuntimeError):
@@ -275,6 +283,14 @@ def _artifact_record(
     return record
 
 
+def _unique_strings(values: Sequence[Any]) -> list[str]:
+    result: list[str] = []
+    for value in values:
+        if isinstance(value, str) and value and value not in result:
+            result.append(value)
+    return result
+
+
 def _transcript_kind(value: Any) -> str:
     normalized = str(value or "").lower()
     if normalized in {"manual", "subtitles", "platform_manual"}:
@@ -286,6 +302,57 @@ def _transcript_kind(value: Any) -> str:
     raise PackageError("source transcript kind is not recognized")
 
 
+def _protected_spans(*values: str) -> Counter[str]:
+    spans: Counter[str] = Counter()
+    for value in values:
+        for pattern in PROTECTED_SPAN_PATTERNS:
+            spans.update(match.group(0).rstrip(".,;:!?，。；：！？") for match in pattern.finditer(value))
+    return spans
+
+
+def _localized_metadata_input(
+    path: Path,
+    *,
+    job_root: Path,
+    target_language: str,
+    source_title: str,
+    source_description: str,
+) -> dict[str, Any]:
+    candidate = path.expanduser()
+    if not candidate.is_absolute():
+        candidate = job_root / candidate
+    if candidate.is_symlink():
+        raise PackageError("localized metadata input must not be a symlink")
+    try:
+        candidate = candidate.resolve(strict=True)
+    except FileNotFoundError as exc:
+        raise PackageError("localized metadata input is missing") from exc
+    if not candidate.is_relative_to(job_root) or not candidate.is_file():
+        raise PackageError("localized metadata input must be inside the job directory")
+    localized = _read_json(candidate)
+    if set(localized) != {"locale", "title", "description"}:
+        raise PackageError(
+            "localized metadata input must contain only locale, title, and description"
+        )
+    locale = _language(localized.get("locale"), "localized metadata locale")
+    if locale != target_language:
+        raise PackageError("localized metadata locale differs from the target language")
+    title = _required_string(localized.get("title"), "localized metadata title")
+    description = localized.get("description")
+    if not isinstance(description, str):
+        raise PackageError("localized metadata description must be a string")
+    if _protected_spans(source_title, source_description) != _protected_spans(
+        title, description
+    ):
+        raise PackageError("localized metadata did not preserve protected spans")
+    return {
+        "locale": locale,
+        "title": title,
+        "description": description,
+        "protected_spans_preserved": True,
+    }
+
+
 def build_library_package(
     download_manifest: Path,
     *,
@@ -294,6 +361,8 @@ def build_library_package(
     quality_status: str,
     quality_rules_version: str,
     source_audio_language: str | None = None,
+    localized_metadata: Path | None = None,
+    localization_failure: str | None = None,
     tool_revision: str | None = None,
 ) -> Path:
     download_manifest = download_manifest.expanduser().resolve()
@@ -325,6 +394,12 @@ def build_library_package(
         raise PackageError("library delivery requires a source subtitle")
     source_language = _language(subtitle.get("language"), "source subtitle language")
     target_language = _language(download.get("target_language"), "target language")
+    if localized_metadata is not None and localization_failure is not None:
+        raise PackageError(
+            "localized metadata input and localization failure are mutually exclusive"
+        )
+    if localization_failure is not None and localization_failure not in LOCALIZATION_FAILURES:
+        raise PackageError("localized metadata failure classification is not recognized")
 
     master_record = artifacts.get("lossless_mp4_master") or artifacts.get(
         "intermediate"
@@ -334,8 +409,11 @@ def build_library_package(
     transcript_source = _job_file(
         job_root, subtitle.get("source_srt"), "Source Transcript"
     )
+    transcript_kind = _transcript_kind(subtitle.get("kind"))
     source_subtitle_source = _job_file(
-        job_root, subtitle.get("original"), "source subtitle"
+        job_root,
+        subtitle.get("original") if transcript_kind != "asr" else subtitle.get("source_srt"),
+        "source subtitle",
     )
     rendered_root = job_root / "subtitles" / "rendered"
     target_source = _job_file(
@@ -367,6 +445,24 @@ def build_library_package(
     audio_selection = selection.get("source_audio_track")
     if not isinstance(audio_selection, dict):
         raise PackageError("download manifest has no Source Audio Track selection")
+    audio_selection_evidence = _unique_strings(
+        audio_selection.get("selection_evidence", [])
+        if isinstance(audio_selection.get("selection_evidence"), list)
+        else []
+    )
+    if not any(
+        item
+        in {
+            "single_audio_track",
+            "platform_original",
+            "platform_default",
+            "operator_language_override",
+        }
+        for item in audio_selection_evidence
+    ):
+        raise PackageError(
+            "Source Audio Track selection lacks single/original/default/override evidence"
+        )
     audio_language = _language(
         source_audio_language
         or audio_selection.get("language")
@@ -466,6 +562,28 @@ def build_library_package(
             metadata_snapshot["tags"] = tags
         metadata_path = staging / "metadata" / "source.json"
         _write_json(metadata_path, metadata_snapshot)
+        localized_references: list[dict[str, Any]] = []
+        localization_warnings: list[str] = []
+        if localized_metadata is not None:
+            projection = _localized_metadata_input(
+                localized_metadata,
+                job_root=job_root,
+                target_language=target_language,
+                source_title=metadata_snapshot["title"],
+                source_description=metadata_snapshot["description"],
+            )
+            projection_path = staging / "metadata" / f"{target_language}.json"
+            _write_json(projection_path, projection)
+            localized_references.append(
+                {
+                    "locale": target_language,
+                    **_file_reference(projection_path, staging),
+                }
+            )
+        elif localization_failure is not None:
+            localization_warnings.append(
+                f"localized_metadata_{localization_failure}"
+            )
 
         source_master_media = {
             "kind": "video",
@@ -485,15 +603,12 @@ def build_library_package(
                     audio_stream.get("codec_name"), "audio codec"
                 ),
                 "bitrate_bps": audio_bitrate,
-                "selection_evidence": [
-                    "single_audio_stream",
-                    bitrate_evidence,
-                    *[
-                        str(item)
-                        for item in audio_selection.get("selection_evidence", [])
-                        if isinstance(item, str) and item
-                    ],
-                ],
+                "selection_evidence": _unique_strings(
+                    [
+                        bitrate_evidence,
+                        *audio_selection_evidence,
+                    ]
+                ),
             },
         }
         artifact_records = [
@@ -555,13 +670,18 @@ def build_library_package(
             },
             "metadata": {
                 "snapshot": _file_reference(metadata_path, staging),
-                "localized_projections": [],
+                "localized_projections": localized_references,
+                **(
+                    {"localization_warnings": localization_warnings}
+                    if localization_warnings
+                    else {}
+                ),
             },
             "artifacts": artifact_records,
             "provenance": {
                 "acquisition_tool": tool,
                 "source_transcript": {
-                    "kind": _transcript_kind(subtitle.get("kind")),
+                    "kind": transcript_kind,
                     "language": source_language,
                     "artifact_path": "artifacts/source-transcript.srt",
                 },
@@ -605,6 +725,12 @@ def _parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("--quality-rules-version", required=True)
     parser.add_argument("--source-audio-language")
+    localization = parser.add_mutually_exclusive_group()
+    localization.add_argument("--localized-metadata", type=Path)
+    localization.add_argument(
+        "--localization-failure",
+        choices=tuple(sorted(LOCALIZATION_FAILURES)),
+    )
     parser.add_argument("--tool-revision")
     return parser
 
@@ -619,6 +745,8 @@ def main(argv: Sequence[str] | None = None) -> int:
             quality_status=args.quality_status,
             quality_rules_version=args.quality_rules_version,
             source_audio_language=args.source_audio_language,
+            localized_metadata=args.localized_metadata,
+            localization_failure=args.localization_failure,
             tool_revision=args.tool_revision,
         )
     except (PackageError, OSError) as exc:

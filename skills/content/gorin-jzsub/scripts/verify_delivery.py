@@ -74,6 +74,25 @@ def assess_delivery(download_manifest: Path) -> dict[str, Any]:
     deliverable = download.get("deliverable")
     if deliverable not in DELIVERABLES:
         deliverable = "full"
+    if download.get("status") == "source_deferred":
+        availability = download.get("availability")
+        if not isinstance(availability, dict):
+            raise DeliveryError("deferred source manifest has no availability evidence")
+        reason = availability.get("reason")
+        if reason not in {"active_livestream", "upcoming_premiere"}:
+            raise DeliveryError("deferred source manifest has an invalid reason")
+        result = {
+            "complete": False,
+            "stage": "source_deferred",
+            "deliverable": deliverable,
+            "job_dir": str(job_dir),
+            "missing": [],
+            "reason": reason,
+            "live_status": availability.get("live_status"),
+        }
+        if "release_timestamp" in availability:
+            result["release_timestamp"] = availability["release_timestamp"]
+        return result
     artifacts = download.get("artifacts")
     if not isinstance(artifacts, dict):
         raise DeliveryError("download manifest has no artifacts object")

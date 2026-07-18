@@ -3,6 +3,7 @@ from __future__ import annotations
 import importlib.util
 import json
 from pathlib import Path
+import shutil
 import tempfile
 import unittest
 
@@ -68,7 +69,7 @@ class PackageDeliveryTests(unittest.TestCase):
                     "format_id": "140",
                     "language": "en",
                     "bitrate_bps": 128000,
-                    "selection_evidence": ["yt_dlp_requested_format"],
+                    "selection_evidence": ["single_audio_track"],
                 }
             },
             "artifacts": {
@@ -112,7 +113,7 @@ class PackageDeliveryTests(unittest.TestCase):
         manifest = json.loads(
             (package / "delivery-manifest.json").read_text(encoding="utf-8")
         )
-        self.assertEqual(manifest["schema_version"], "1.0.0")
+        self.assertEqual(manifest["schema_version"], "1.1.0")
         self.assertEqual(manifest["source"]["source_id"], "dQw4w9WgXcQ")
         self.assertEqual(
             {artifact["role"] for artifact in manifest["artifacts"]},
@@ -127,6 +128,15 @@ class PackageDeliveryTests(unittest.TestCase):
         )
         self.assertEqual(manifest["metadata"]["localized_projections"], [])
         self.assertEqual(manifest["provenance"]["translation"]["provider"], "codex")
+        source_master = next(
+            artifact
+            for artifact in manifest["artifacts"]
+            if artifact["role"] == "source_master"
+        )
+        self.assertEqual(
+            source_master["media"]["source_audio_track"]["selection_evidence"],
+            ["yt_dlp_requested_format_bitrate", "single_audio_track"],
+        )
         self.assertTrue((package / "artifacts/source-master.mp4").is_file())
         self.assertTrue((package / "metadata/source.json").is_file())
         self.assertEqual(
@@ -164,6 +174,135 @@ class PackageDeliveryTests(unittest.TestCase):
                 quality_status="machine_validated",
                 quality_rules_version="fixture-rules-1",
             )
+
+    def test_builds_a_separate_localized_metadata_projection_with_protected_spans(self) -> None:
+        source = json.loads(self.download_manifest.read_text(encoding="utf-8"))
+        source["source"]["title"] = "Release notes #Archive"
+        source["source"]["description"] = (
+            "00:30 Chapter one\nhttps://example.com/watch?v=1\n"
+            "mail@example.com\n#Archive"
+        )
+        self.download_manifest.write_text(json.dumps(source), encoding="utf-8")
+        localized = self.root / "localized-metadata.zh-CN.json"
+        localized.write_text(
+            json.dumps(
+                {
+                    "locale": "zh-CN",
+                    "title": "发布说明 #Archive",
+                    "description": (
+                        "00:30 第一章\nhttps://example.com/watch?v=1\n"
+                        "mail@example.com\n#Archive"
+                    ),
+                }
+            ),
+            encoding="utf-8",
+        )
+
+        package = packaging.build_library_package(
+            self.download_manifest,
+            translation_provider="codex",
+            translation_model="fixture-model",
+            quality_status="operator_reviewed",
+            quality_rules_version="fixture-rules-1",
+            localized_metadata=localized,
+        )
+
+        manifest = json.loads(
+            (package / "delivery-manifest.json").read_text(encoding="utf-8")
+        )
+        self.assertEqual(manifest["schema_version"], "1.1.0")
+        self.assertEqual(
+            manifest["metadata"]["localized_projections"][0]["locale"], "zh-CN"
+        )
+        projection = json.loads(
+            (package / "metadata/zh-CN.json").read_text(encoding="utf-8")
+        )
+        snapshot = json.loads(
+            (package / "metadata/source.json").read_text(encoding="utf-8")
+        )
+        self.assertEqual(snapshot["title"], "Release notes #Archive")
+        self.assertEqual(projection["title"], "发布说明 #Archive")
+        self.assertTrue(projection["protected_spans_preserved"])
+
+    def test_rejects_localized_metadata_that_changes_a_protected_span(self) -> None:
+        source = json.loads(self.download_manifest.read_text(encoding="utf-8"))
+        source["source"]["description"] = "Docs: https://example.com/source"
+        self.download_manifest.write_text(json.dumps(source), encoding="utf-8")
+        localized = self.root / "localized-metadata.zh-CN.json"
+        localized.write_text(
+            json.dumps(
+                {
+                    "locale": "zh-CN",
+                    "title": "本地化标题",
+                    "description": "文档：https://example.com/changed",
+                }
+            ),
+            encoding="utf-8",
+        )
+
+        with self.assertRaisesRegex(packaging.PackageError, "protected spans"):
+            packaging.build_library_package(
+                self.download_manifest,
+                translation_provider="codex",
+                translation_model="fixture-model",
+                quality_status="operator_reviewed",
+                quality_rules_version="fixture-rules-1",
+                localized_metadata=localized,
+            )
+
+    def test_localization_failure_keeps_snapshot_and_records_a_bounded_warning(self) -> None:
+        package = packaging.build_library_package(
+            self.download_manifest,
+            translation_provider="codex",
+            translation_model="fixture-model",
+            quality_status="operator_reviewed",
+            quality_rules_version="fixture-rules-1",
+            localization_failure="retry_exhausted",
+        )
+
+        manifest = json.loads(
+            (package / "delivery-manifest.json").read_text(encoding="utf-8")
+        )
+        self.assertEqual(manifest["metadata"]["localized_projections"], [])
+        self.assertEqual(
+            manifest["metadata"]["localization_warnings"],
+            ["localized_metadata_retry_exhausted"],
+        )
+        snapshot = json.loads(
+            (package / "metadata/source.json").read_text(encoding="utf-8")
+        )
+        self.assertEqual(snapshot["title"], "Fixture title")
+        self.assertEqual(snapshot["description"], "Fixture description")
+
+    def test_records_each_supported_source_transcript_provenance(self) -> None:
+        for source_kind, expected in (
+            ("manual", "platform_manual"),
+            ("automatic", "platform_automatic"),
+            ("asr", "asr"),
+        ):
+            with self.subTest(source_kind=source_kind):
+                source = json.loads(self.download_manifest.read_text(encoding="utf-8"))
+                source["artifacts"]["subtitle"]["kind"] = source_kind
+                if source_kind == "asr":
+                    source["artifacts"]["subtitle"]["original"] = None
+                self.download_manifest.write_text(json.dumps(source), encoding="utf-8")
+
+                package = packaging.build_library_package(
+                    self.download_manifest,
+                    translation_provider="codex",
+                    translation_model="fixture-model",
+                    quality_status="operator_reviewed",
+                    quality_rules_version="fixture-rules-1",
+                )
+
+                manifest = json.loads(
+                    (package / "delivery-manifest.json").read_text(encoding="utf-8")
+                )
+                self.assertEqual(
+                    manifest["provenance"]["source_transcript"]["kind"], expected
+                )
+                shutil.rmtree(package)
+                self._write_job()
 
 
 if __name__ == "__main__":

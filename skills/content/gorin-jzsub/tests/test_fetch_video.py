@@ -14,6 +14,192 @@ import unittest
 
 
 SCRIPT = Path(__file__).resolve().parents[1] / "scripts" / "fetch_video.py"
+SPEC = importlib.util.spec_from_file_location("jzsub_test_fetch_video_module", SCRIPT)
+assert SPEC is not None and SPEC.loader is not None
+fetch_video = importlib.util.module_from_spec(SPEC)
+SPEC.loader.exec_module(fetch_video)
+
+
+class FetchVideoSourceBoundaryTests(unittest.TestCase):
+    def test_single_audio_track_is_selected_with_explicit_evidence(self) -> None:
+        selected = fetch_video.source_audio_track_from_probe(
+            {
+                "original_language": "en",
+                "formats": [
+                    {
+                        "format_id": "140",
+                        "vcodec": "none",
+                        "acodec": "aac",
+                        "language": "en",
+                        "abr": 96,
+                    },
+                    {
+                        "format_id": "251",
+                        "vcodec": "none",
+                        "acodec": "opus",
+                        "language": "en",
+                        "abr": 128,
+                    }
+                ],
+            }
+        )
+
+        self.assertEqual(selected["format_id"], "251")
+        self.assertEqual(selected["language"], "en")
+        self.assertEqual(selected["bitrate_bps"], 128000)
+        self.assertIn("single_audio_track", selected["selection_evidence"])
+
+    def test_original_audio_wins_over_a_higher_bitrate_chinese_dub(self) -> None:
+        selected = fetch_video.source_audio_track_from_probe(
+            {
+                "original_language": "en",
+                "formats": [
+                    {
+                        "format_id": "251-en",
+                        "vcodec": "none",
+                        "acodec": "opus",
+                        "language": "en",
+                        "format_note": "English original (default)",
+                        "abr": 128,
+                    },
+                    {
+                        "format_id": "251-zh",
+                        "vcodec": "none",
+                        "acodec": "opus",
+                        "language": "zh-CN",
+                        "format_note": "Chinese dubbed",
+                        "abr": 160,
+                    },
+                ],
+            }
+        )
+
+        self.assertEqual(selected["format_id"], "251-en")
+        self.assertIn("platform_original", selected["selection_evidence"])
+        self.assertIn("source_language_match", selected["selection_evidence"])
+
+    def test_ambiguous_audio_fails_closed_and_language_override_recovers(self) -> None:
+        info = {
+            "formats": [
+                {
+                    "format_id": "251-en",
+                    "vcodec": "none",
+                    "acodec": "opus",
+                    "language": "en",
+                    "abr": 128,
+                },
+                {
+                    "format_id": "251-fr",
+                    "vcodec": "none",
+                    "acodec": "opus",
+                    "language": "fr",
+                    "abr": 144,
+                },
+            ]
+        }
+
+        with self.assertRaises(fetch_video.SourceAudioSelectionError) as raised:
+            fetch_video.source_audio_track_from_probe(info)
+        self.assertEqual(raised.exception.classification, "needs_attention")
+
+        selected = fetch_video.source_audio_track_from_probe(
+            info, source_audio_language="fr"
+        )
+        self.assertEqual(selected["format_id"], "251-fr")
+        self.assertIn("operator_language_override", selected["selection_evidence"])
+
+    def test_active_and_upcoming_sources_return_deferred_evidence(self) -> None:
+        active = fetch_video.source_availability_from_probe(
+            {"live_status": "is_live", "release_timestamp": 1784300000}
+        )
+        upcoming = fetch_video.source_availability_from_probe(
+            {"live_status": "is_upcoming", "release_timestamp": 1784400000}
+        )
+
+        self.assertEqual(active["status"], "source_deferred")
+        self.assertEqual(active["reason"], "active_livestream")
+        self.assertEqual(upcoming["status"], "source_deferred")
+        self.assertEqual(upcoming["reason"], "upcoming_premiere")
+        self.assertEqual(upcoming["release_timestamp"], 1784400000)
+
+    def test_shorts_and_completed_live_vod_use_stable_source_types(self) -> None:
+        short = fetch_video.source_type_from_probe(
+            {
+                "webpage_url": "https://www.youtube.com/shorts/short-fixture",
+                "live_status": "not_live",
+            },
+            "https://www.youtube.com/shorts/short-fixture",
+        )
+        completed_live = fetch_video.source_type_from_probe(
+            {
+                "webpage_url": "https://www.youtube.com/watch?v=live-fixture",
+                "live_status": "was_live",
+            },
+            "https://www.youtube.com/watch?v=live-fixture",
+        )
+
+        self.assertEqual(short, "short")
+        self.assertEqual(completed_live, "completed_live_vod")
+
+    def test_download_selector_uses_the_proven_source_audio_format(self) -> None:
+        selector = fetch_video.format_selector_for_source_audio(
+            {"format_id": "251-en"}
+        )
+
+        self.assertEqual(selector, "bv*+251-en/b[format_id=251-en]")
+
+    def test_active_source_cli_writes_deferred_manifest_without_downloading(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            bin_dir = root / "bin"
+            output_dir = root / "output"
+            bin_dir.mkdir()
+            fake_ytdlp = bin_dir / "yt-dlp"
+            fake_ytdlp.write_text(
+                f"#!{sys.executable}\n"
+                + textwrap.dedent(
+                    """\
+                    import json
+                    print(json.dumps({
+                        "id": "active-fixture",
+                        "title": "Active fixture",
+                        "extractor_key": "Youtube",
+                        "webpage_url": "https://www.youtube.com/watch?v=active-fixture",
+                        "live_status": "is_live",
+                        "release_timestamp": 1784300000,
+                        "subtitles": {},
+                        "automatic_captions": {},
+                    }))
+                    """
+                ),
+                encoding="utf-8",
+            )
+            fake_ytdlp.chmod(0o755)
+
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    str(SCRIPT),
+                    "https://www.youtube.com/watch?v=active-fixture",
+                    "--output-dir",
+                    str(output_dir),
+                    "--deliver",
+                    "library",
+                ],
+                capture_output=True,
+                text=True,
+                env={**os.environ, "PATH": str(bin_dir)},
+                check=False,
+            )
+
+            self.assertEqual(result.returncode, 3, result.stderr)
+            payload = json.loads(result.stdout)
+            self.assertEqual(payload["status"], "source_deferred")
+            manifest = json.loads(
+                (output_dir / "download-manifest.json").read_text(encoding="utf-8")
+            )
+            self.assertEqual(manifest["availability"]["reason"], "active_livestream")
+            self.assertFalse(manifest["execution"]["complete"])
 
 
 class FetchVideoLibraryDeliveryTests(unittest.TestCase):

@@ -1,0 +1,5 @@
+schema_version: 1
+summary: Validate original audio selection, deferred live sources, transcript provenance, and protected localized metadata projections.
+repository: minor
+skills:
+  gorin-jzsub: minor

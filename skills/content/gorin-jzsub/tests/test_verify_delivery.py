@@ -42,6 +42,35 @@ class VerifyDeliveryTests(unittest.TestCase):
     def tearDown(self) -> None:
         self.temporary.cleanup()
 
+    def test_deferred_source_is_pending_without_becoming_a_download_error(self) -> None:
+        self.manifest.write_text(
+            json.dumps(
+                {
+                    "status": "source_deferred",
+                    "deliverable": "library",
+                    "output_directory": str(self.root),
+                    "availability": {
+                        "status": "source_deferred",
+                        "reason": "upcoming_premiere",
+                        "live_status": "is_upcoming",
+                        "release_timestamp": 1784400000,
+                    },
+                    "execution": {
+                        "complete": False,
+                        "next_stage": "source_availability_retry",
+                    },
+                }
+            ),
+            encoding="utf-8",
+        )
+
+        result = delivery.assess_delivery(self.manifest)
+
+        self.assertFalse(result["complete"])
+        self.assertEqual(result["stage"], "source_deferred")
+        self.assertEqual(result["reason"], "upcoming_premiere")
+        self.assertEqual(result["release_timestamp"], 1784400000)
+
     def test_subtitled_job_with_only_translation_inputs_is_incomplete(self) -> None:
         inputs = self.root / "subtitles" / "translation-input"
         inputs.mkdir(parents=True)
