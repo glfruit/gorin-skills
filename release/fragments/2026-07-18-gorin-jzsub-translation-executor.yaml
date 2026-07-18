@@ -1,0 +1,5 @@
+schema_version: 1
+summary: Add a provider-neutral non-interactive Translation Executor and isolated Codex adapter with atomic attempt promotion and stable failure classes.
+repository: minor
+skills:
+  gorin-jzsub: minor
