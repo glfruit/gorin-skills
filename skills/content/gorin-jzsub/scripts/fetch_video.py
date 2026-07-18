@@ -618,11 +618,20 @@ def source_audio_track_from_probe(info: dict[str, Any]) -> dict[str, Any] | None
         or info.get("language")
         or info.get("original_language")
     )
-    return {
+    result = {
         "format_id": format_id,
         "language": language if isinstance(language, str) and language else None,
         "selection_evidence": ["yt_dlp_requested_format"],
     }
+    raw_bitrate = audio.get("abr") or audio.get("tbr")
+    try:
+        bitrate_bps = round(float(raw_bitrate) * 1000)
+    except (TypeError, ValueError):
+        bitrate_bps = 0
+    if bitrate_bps > 0:
+        result["bitrate_bps"] = bitrate_bps
+        result["selection_evidence"].append("yt_dlp_requested_format_abr")
+    return result
 
 
 def download_output_templates(base: str, cover_name: str) -> tuple[str, str]:
@@ -1564,7 +1573,12 @@ def run_self_tests() -> bool:
                     "original_language": "en",
                     "requested_formats": [
                         {"format_id": "399", "vcodec": "av01", "acodec": "none"},
-                        {"format_id": "140", "vcodec": "none", "acodec": "mp4a"},
+                        {
+                            "format_id": "140",
+                            "vcodec": "none",
+                            "acodec": "mp4a",
+                            "abr": 129.5,
+                        },
                     ],
                 }
             )
@@ -1574,7 +1588,11 @@ def run_self_tests() -> bool:
                 {
                     "format_id": "140",
                     "language": "en",
-                    "selection_evidence": ["yt_dlp_requested_format"],
+                    "bitrate_bps": 129500,
+                    "selection_evidence": [
+                        "yt_dlp_requested_format",
+                        "yt_dlp_requested_format_abr",
+                    ],
                 },
             )
 

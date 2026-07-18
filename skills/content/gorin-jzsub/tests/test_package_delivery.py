@@ -67,6 +67,7 @@ class PackageDeliveryTests(unittest.TestCase):
                 "source_audio_track": {
                     "format_id": "140",
                     "language": "en",
+                    "bitrate_bps": 128000,
                     "selection_evidence": ["yt_dlp_requested_format"],
                 }
             },
@@ -86,7 +87,6 @@ class PackageDeliveryTests(unittest.TestCase):
                         "index": 1,
                         "codec_type": "audio",
                         "codec_name": "aac",
-                        "bit_rate": "128000",
                     },
                 ],
                 "subtitle": {

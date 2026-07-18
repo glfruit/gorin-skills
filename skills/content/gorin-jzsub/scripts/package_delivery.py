@@ -373,7 +373,14 @@ def build_library_package(
         or source.get("declared_language"),
         "Source Audio Track language",
     )
-    audio_bitrate = int(_positive_number(audio_stream.get("bit_rate"), "audio bitrate"))
+    stream_bitrate = audio_stream.get("bit_rate")
+    bitrate_value = stream_bitrate or audio_selection.get("bitrate_bps")
+    audio_bitrate = int(_positive_number(bitrate_value, "audio bitrate"))
+    bitrate_evidence = (
+        "ffprobe_stream_bitrate"
+        if stream_bitrate is not None
+        else "yt_dlp_requested_format_bitrate"
+    )
     duration = _positive_number(source.get("duration_seconds"), "source duration")
 
     source_id = _required_string(source.get("id"), "source ID")
@@ -480,6 +487,7 @@ def build_library_package(
                 "bitrate_bps": audio_bitrate,
                 "selection_evidence": [
                     "single_audio_stream",
+                    bitrate_evidence,
                     *[
                         str(item)
                         for item in audio_selection.get("selection_evidence", [])
