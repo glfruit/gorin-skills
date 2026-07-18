@@ -160,6 +160,27 @@ class FetchVideoSourceBoundaryTests(unittest.TestCase):
         self.assertEqual(selected["format_id"], "251-fr")
         self.assertIn("operator_language_override", selected["selection_evidence"])
 
+    def test_multiple_unlabeled_audio_candidates_fail_closed(self) -> None:
+        with self.assertRaises(fetch_video.SourceAudioSelectionError):
+            fetch_video.source_audio_track_from_probe(
+                {
+                    "formats": [
+                        {
+                            "format_id": "140",
+                            "vcodec": "none",
+                            "acodec": "aac",
+                            "abr": 128,
+                        },
+                        {
+                            "format_id": "251",
+                            "vcodec": "none",
+                            "acodec": "opus",
+                            "abr": 160,
+                        },
+                    ]
+                }
+            )
+
     def test_active_and_upcoming_sources_return_deferred_evidence(self) -> None:
         active = fetch_video.source_availability_from_probe(
             {"live_status": "is_live", "release_timestamp": 1784300000}

@@ -671,12 +671,11 @@ def _audio_quality(candidate: dict[str, Any]) -> tuple[float, float]:
 
 
 def _audio_language_identities(candidates: Sequence[dict[str, Any]]) -> set[str]:
-    identities = {
+    return {
         _language_base(language)
         for candidate in candidates
         if isinstance((language := candidate.get("language")), str) and language
     }
-    return identities or {"und"}
 
 
 def source_audio_track_from_probe(
@@ -715,7 +714,7 @@ def source_audio_track_from_probe(
             )
         audio = max(matching, key=_audio_quality)
         evidence.append("operator_language_override")
-    elif len(_audio_language_identities(audio_candidates)) == 1:
+    elif len(audio_candidates) == 1 or len(_audio_language_identities(audio_candidates)) == 1:
         audio = max(audio_candidates, key=_audio_quality)
         evidence.append("single_audio_track")
     else:
@@ -736,26 +735,36 @@ def source_audio_track_from_probe(
         marked_identities = _audio_language_identities(
             [candidate for candidate, _ in original_or_default]
         )
-        if len(marked_identities) != 1:
+        if not marked_identities:
+            if len(original_or_default) != 1:
+                raise SourceAudioSelectionError(
+                    "Source Audio Track selection needs_attention: multiple unlabeled "
+                    "original/default audio candidates remain"
+                )
+            audio, markers = original_or_default[0]
+        elif len(marked_identities) != 1:
             raise SourceAudioSelectionError(
                 "Source Audio Track selection needs_attention: multiple plausible "
                 "original/default audio candidates remain"
             )
-        identity = next(iter(marked_identities))
-        same_track_formats = [
-            candidate
-            for candidate in audio_candidates
-            if _language_base(str(candidate.get("language") or "und")) == identity
-        ]
-        audio = max(same_track_formats, key=_audio_quality)
-        markers = tuple(
-            dict.fromkeys(
-                marker
-                for candidate, candidate_markers in original_or_default
-                if _language_base(str(candidate.get("language") or "und")) == identity
-                for marker in candidate_markers
+        else:
+            identity = next(iter(marked_identities))
+            same_track_formats = [
+                candidate
+                for candidate in audio_candidates
+                if isinstance(candidate.get("language"), str)
+                and _language_base(candidate["language"]) == identity
+            ]
+            audio = max(same_track_formats, key=_audio_quality)
+            markers = tuple(
+                dict.fromkeys(
+                    marker
+                    for candidate, candidate_markers in original_or_default
+                    if isinstance(candidate.get("language"), str)
+                    and _language_base(candidate["language"]) == identity
+                    for marker in candidate_markers
+                )
             )
-        )
         evidence.extend(markers)
         if declared_language:
             evidence.append("source_language_match")
