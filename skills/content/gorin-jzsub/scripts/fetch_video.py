@@ -128,19 +128,24 @@ def delivery_names(title: Any, target_language: str) -> dict[str, str]:
         clean_title = f"_{clean_title}"
     language = _language_base(target_language)
     if language in {"zh", "zho", "chi", "cmn", "yue", "wuu"}:
-        cover = "封面.jpg"
+        cover_prefix = "封面"
         prefix = "双语字幕版"
     elif language in {"ja", "jpn"}:
-        cover = "カバー.jpg"
+        cover_prefix = "カバー"
         prefix = "二言語字幕版"
     else:
-        cover = "cover.jpg"
+        cover_prefix = "cover"
         prefix = "Bilingual Subtitled"
     suffix = "」.mp4"
-    budget = 240 - len(f"{prefix}「{suffix}".encode("utf-8"))
+    # The cover name carries the title too, so both names share one budget:
+    # 240 bytes keeps the pair inside common filesystem limits.
+    budget = min(
+        240 - len(f"{cover_prefix}-.jpg".encode("utf-8")),
+        240 - len(f"{prefix}「{suffix}".encode("utf-8")),
+    )
     clean_title = _truncate_utf8(clean_title, max(1, budget)).rstrip(" ._") or "untitled"
     return {
-        "cover": cover,
+        "cover": f"{cover_prefix}-{clean_title}.jpg",
         "bilingual_video": f"{prefix}「{clean_title}」.mp4",
     }
 

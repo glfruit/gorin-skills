@@ -1,5 +1,5 @@
 schema_version: 1
-version: 0.7.0
+version: 0.8.0
 domain: content
 lifecycle: candidate
 ownership: first-party
@@ -15,7 +15,7 @@ provenance:
   adaptation_note: Renamed for the gorin namespace, moved target metadata into repository adapters, and retained upstream scripts, tests, and references for local evolution.
   sources:
     - url: https://github.com/pengchujin/jzsub
-      revision: b122dd18809082b44c9b7bf7380a3e3e04870c7a
+      revision: 222a90265d2a8797ca258eb1a980cee0863a8311
       license: MIT
 host_actions:
   - action: Install missing yt-dlp, JavaScript runtime, libass-enabled FFmpeg, ffprobe, or MiSans dependencies
