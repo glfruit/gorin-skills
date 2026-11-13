@@ -5,9 +5,10 @@ mirror or Git submodule.
 
 - Upstream repository: <https://github.com/pengchujin/jzsub>
 - Imported path: `skills/content/gorin-jzsub`
-- Pinned revision: `b122dd18809082b44c9b7bf7380a3e3e04870c7a`
+- Pinned revision: `222a90265d2a8797ca258eb1a980cee0863a8311` (upstream `Include video title in cover filenames`)
 - Nearest release context at import: `v1.8.1` (the pinned revision is newer)
 - Imported on: 2026-07-15
+- Last upstream sync: 2026-11-13 (`222a902`: cover filenames carry the video title)
 - License: MIT; see `LICENSE.upstream`
 
 ## Initial adaptation

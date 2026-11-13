@@ -1,0 +1,5 @@
+schema_version: 1
+summary: Port upstream jzsub 222a902 so cover artifacts carry the video title (封面-视频名.jpg) instead of a fixed 封面.jpg, sharing one 240-byte filename budget with the burned video.
+repository: patch
+skills:
+  gorin-jzsub: minor
